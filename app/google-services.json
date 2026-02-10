@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "45691320759",
+    "project_id": "aguamap-9ad45",
+    "storage_bucket": "aguamap-9ad45.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45691320759:android:a155571e800d12d441d032",
+        "android_client_info": {
+          "package_name": "cat.copernic.aguamap1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9t_M6-gCl_QIkuqansB0dub7-7f2Un0U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

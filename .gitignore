@@ -1,0 +1,23 @@
+# --- Android Studio & IntelliJ ---
+.gradle/
+build/
+*.iml
+.idea/
+local.properties
+
+# --- Especificos de Android ---
+captures/
+.externalNativeBuild
+.cxx
+*.apk
+*.aar
+*.jks
+*.keystore
+
+# --- Archivos de sistema ---
+.DS_Store
+Thumbs.db
+
+# --- Firebase ---
+# Si el equipo usa la misma DB de Firebase, comenten la siguiente línea
+# google-services.json
