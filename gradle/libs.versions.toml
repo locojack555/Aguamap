@@ -12,6 +12,7 @@ composeBom = "2024.09.00"
 services = "4.4.2"
 firebaseBom = "33.1.1"
 navigationCompose = "2.7.7"
+adsMobileSdk = "0.23.0-beta01"
 
 
 [libraries]
@@ -35,6 +36,7 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics"}
 firebase-auth = { module = "com.google.firebase:firebase-auth-ktx"}
 
 androidx-navigation-compose = {module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose"}
+ads-mobile-sdk = { group = "com.google.android.libraries.ads.mobile.sdk", name = "ads-mobile-sdk", version.ref = "adsMobileSdk" }
 
 
 [plugins]
