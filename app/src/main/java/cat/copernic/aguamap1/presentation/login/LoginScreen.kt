@@ -25,13 +25,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
@@ -39,10 +42,20 @@ import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Blue20
 import cat.copernic.aguamap1.ui.theme.Negro
+import cat.copernic.aguamap1.ui.theme.PurpleGrey40
+import com.google.firebase.auth.FirebaseAuth
 
-@Preview(showBackground = true)
+//@Preview
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    navigateToForgotPassword: () -> Unit = {},
+    navigateToHome: () -> Unit = {},
+    navigateToSingUp: () -> Unit = {},
+    auth: FirebaseAuth
+) {
+    var email: String by remember { mutableStateOf("") }
+    var password: String by remember { mutableStateOf("") }
+    var existAccount: Boolean by remember { mutableStateOf(true) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -54,7 +67,7 @@ fun LoginScreen() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp),
+                    .padding(top = 80.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
@@ -102,13 +115,12 @@ fun LoginScreen() {
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                     )
                     OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        placeholder = { Text(text = "tu@email.com", color = Color.LightGray) },
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = { Text(text = "tu@email.com", color = PurpleGrey40) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
-
                     Text(
                         text = "Contraseña",
                         fontSize = 16.sp,
@@ -116,26 +128,40 @@ fun LoginScreen() {
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                     )
                     OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        placeholder = { Text(text = "**********", color = Color.LightGray) },
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = { Text(text = "**********", color = PurpleGrey40) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
-
+                    if (!existAccount) {
+                        Text(
+                            text = "Credenciales incorrectas",
+                            color = Color.Red, //añadir en colores
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                     Text(
                         text = "¿Olvidaste tu contraseña?",
                         color = Blue10,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .padding(vertical = 20.dp)
-                            .clickable { /* Navegar */ }
+                            .clickable { navigateToForgotPassword() }
                     )
-
                     Button(
-                        onClick = { /* Login */ },
+                        onClick = {
+                            auth.signInWithEmailAndPassword(email, password)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        navigateToHome()
+                                    } else {
+                                        existAccount = false
+                                    }
+                                }
+                        },
                         modifier = Modifier
-                            .fillMaxWidth(0.6f) // Centrado y con buen tamaño
+                            .fillMaxWidth(0.6f)
                             .align(Alignment.CenterHorizontally)
                             .height(50.dp),
                         shape = RoundedCornerShape(12.dp),
@@ -143,7 +169,6 @@ fun LoginScreen() {
                     ) {
                         Text("Entrar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -152,7 +177,7 @@ fun LoginScreen() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("¿No tienes cuenta?", color = Color.Gray)
-                        TextButton(onClick = { /* Registro */ }) {
+                        TextButton(onClick = { navigateToSingUp() }) {
                             Text("Regístrate", fontWeight = FontWeight.Bold, color = Blue10)
                         }
                     }

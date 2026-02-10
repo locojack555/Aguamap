@@ -1,10 +1,10 @@
-package cat.copernic.aguamap1.presentation.singup
+package cat.copernic.aguamap1.presentation.forgotpassword
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun SingUpScreen(auth: FirebaseAuth) {
-    Text("Hola registro")
+fun ForgotPasswordScreen(auth: FirebaseAuth) {
+    Text("Hola olvide")
 }

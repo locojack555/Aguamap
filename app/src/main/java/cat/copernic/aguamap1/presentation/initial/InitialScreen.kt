@@ -29,7 +29,7 @@ fun InitialScreen(
     navController: NavController
 ) {
     LaunchedEffect(key1 = true) {
-        delay(1000)
+        delay(2000)
         navController.popBackStack()
         navController.navigate("login")
     }
