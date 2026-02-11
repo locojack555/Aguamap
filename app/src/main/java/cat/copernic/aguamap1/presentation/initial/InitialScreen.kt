@@ -1,37 +1,32 @@
 package cat.copernic.aguamap1.presentation.initial
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.ui.theme.Blanco
-import cat.copernic.aguamap1.ui.theme.Blue10
-import cat.copernic.aguamap1.ui.theme.Blue20
-import kotlinx.coroutines.delay
+import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
+import cat.copernic.aguamap1.ui.theme.AguaMapGradient
 
 @Composable
 fun InitialScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: InitialViewModel = viewModel()
 ) {
-    LaunchedEffect(key1 = true) {
-        delay(2000)
-        navController.popBackStack()
-        navController.navigate("login")
+    //Launchedeffect para que solo se ejecute una vez al abrir la pantalla
+    LaunchedEffect(Unit) {
+        viewModel.destination.collect { route ->
+            navController.popBackStack() // Elimina la pantalla(anterior) de inicio en la pila
+            navController.navigate(route) // Navega a la ruta especificada
+        }
     }
     Splash()
 }
@@ -41,23 +36,16 @@ fun Splash() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.horizontalGradient(listOf(Blue10, Blue20))),
+            .background(AguaMapGradient),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Spacer(modifier = Modifier.weight(1f))
-        Image(
-            painter = painterResource(R.drawable.gota),
-            contentDescription = "Logo",
-            modifier = Modifier.size(220.dp)
+        Spacer(modifier = Modifier.weight(0.8f))
+        AguaMapHeader(
+            logoSize = 220.dp,
+            innerSpacing = 40.dp,
+            showSubtitle = false
         )
-        Spacer(modifier = Modifier.weight(0.25f))
-        Text(
-            text = "AguaMap",
-            fontSize = 50.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Blanco
-        )
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1.2f))
     }
 }
