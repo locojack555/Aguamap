@@ -9,10 +9,9 @@ import cat.copernic.aguamap1.presentation.home.HomeScreen
 import cat.copernic.aguamap1.presentation.initial.InitialScreen
 import cat.copernic.aguamap1.presentation.login.LoginScreen
 import cat.copernic.aguamap1.presentation.singup.SingUpScreen
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun NavigationWrapper(navHostController: NavHostController, auth: FirebaseAuth) {
+fun NavigationWrapper(navHostController: NavHostController) {
 
     NavHost(navController = navHostController, startDestination = "initial") {
         composable("initial") {
@@ -21,19 +20,20 @@ fun NavigationWrapper(navHostController: NavHostController, auth: FirebaseAuth) 
         composable("logIn") {
             LoginScreen(
                 navigateToForgotPassword = { navHostController.navigate("forgotPassword") },
-                navigateToHome = { navHostController.navigate("home") },
                 navigateToSingUp = { navHostController.navigate("singUp") },
-                auth
+                onLoginSuccess = { navHostController.navigate("home") }
             )
         }
         composable("singUp") {
-            SingUpScreen(auth)
+            SingUpScreen(
+                navigateToLogin = { navHostController.navigate("logIn") })
         }
         composable("forgotPassword") {
-            ForgotPasswordScreen(auth)
+            ForgotPasswordScreen(
+                navigateToLogin = { navHostController.navigate("logIn") })
         }
         composable("home") {
-            HomeScreen(auth)
+            HomeScreen()
         }
     }
 }

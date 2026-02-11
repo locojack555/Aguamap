@@ -1,10 +1,124 @@
 package cat.copernic.aguamap1.presentation.forgotpassword
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
+import cat.copernic.aguamap1.presentation.reusable.AguaMapInput
+import cat.copernic.aguamap1.ui.theme.AguaMapGradient
+import cat.copernic.aguamap1.ui.theme.Blanco
+import cat.copernic.aguamap1.ui.theme.Blue10
+import cat.copernic.aguamap1.ui.theme.Negro
+import cat.copernic.aguamap1.ui.theme.Rojo
 
 @Composable
-fun ForgotPasswordScreen(auth: FirebaseAuth) {
-    Text("Hola olvide")
+fun ForgotPasswordScreen(
+    viewModel: ForgotPasswordViewModel = viewModel(),
+    navigateToLogin: () -> Unit = {}
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AguaMapGradient)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            AguaMapHeader()
+            Spacer(modifier = Modifier.height(56.dp))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
+                shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
+                colors = CardDefaults.cardColors(containerColor = Blanco)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp, vertical = 32.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = "Recuperar Contraseña",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Negro
+                    )
+                    Text(
+                        text = "Te enviamos un enlace para recuperar tu contraseña",
+                        textAlign = TextAlign.Justify,
+                        fontSize = 16.sp,
+                        color = Negro,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    )
+                    AguaMapInput(
+                        "Correo electrónico",
+                        "tu@correo.com",
+                        viewModel.email,
+                        onValueChange = { viewModel.onEmailChanged(it) },
+                        isError = viewModel.isError
+                    )
+                    if (viewModel.isSent) {
+                        Text(
+                            text = "Enlace enviado",
+                            color = Blue10,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    if (viewModel.isError) {
+                        Text(
+                            text = "Correo no existe",
+                            color = Rojo,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    Button(
+                        onClick = { viewModel.onResetPasswordClick() },
+                        modifier = Modifier
+                            .padding(top = 24.dp)
+                            .fillMaxWidth(0.6f)
+                            .align(Alignment.CenterHorizontally)
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Blue10)
+                    ) {
+                        Text("Enviar Enlace", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Text(
+                        text = "Volver al inicio de sesión",
+                        color = Blue10,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(vertical = 20.dp)
+                            .clickable { navigateToLogin() }
+                    )
+                }
+            }
+        }
+    }
 }
