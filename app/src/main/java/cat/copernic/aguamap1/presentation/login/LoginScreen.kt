@@ -87,7 +87,6 @@ fun LoginScreen(
                         viewModel.email,
                         onValueChange = {
                             viewModel.onEmailChanged(it)
-                            viewModel.isError
                         },
                         isError = viewModel.isError
                     )
@@ -97,7 +96,6 @@ fun LoginScreen(
                         viewModel.password,
                         onValueChange = {
                             viewModel.onPasswordChanged(it)
-                            viewModel.isError
                         },
                         isPasswordField = true,
                         isError = viewModel.isError
