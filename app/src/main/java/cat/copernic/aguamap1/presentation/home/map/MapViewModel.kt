@@ -35,12 +35,12 @@ class MapViewModel(
         zoomLevel = zoom
     }
 
-    fun addTestFountain(isAdmin: Boolean) {
+    fun addTestFountain(isAdmin: Boolean, lat: Double, lng: Double) {
         viewModelScope.launch {
             val testFountain = Fountain(
                 name = if (isAdmin) "Fuente Admin" else "Fuente Pendiente",
-                latitude = 41.559911,
-                longitude = 2.007675,
+                latitude = lat,
+                longitude = lng,
                 isOperational = true,
                 category = "Bebible",
                 description = "Una fuente añadida desde el botón de prueba",

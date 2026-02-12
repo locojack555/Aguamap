@@ -77,7 +77,16 @@ fun MapScreen(isHome: Boolean) {
                 ) {
                     SmallFloatingActionButton(
                         onClick = {
-                            viewModel.addTestFountain(true)
+                            val locationOverlay =
+                                mapViewRef?.overlays?.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
+                            val currentLoc = locationOverlay?.myLocation
+                            if (currentLoc != null) {
+                                viewModel.addTestFountain(
+                                    isAdmin = true,
+                                    lat = currentLoc.latitude,
+                                    lng = currentLoc.longitude
+                                )
+                            }
                         },
                         containerColor = Blanco
                     ) {
