@@ -17,13 +17,14 @@ fun NavigationGraph(navController: NavHostController) {
     ) {
         //Dibuja la pantalla si esta en la ruta
         composable(BottomNavItem.Map.route) {
-            MapScreen()
+            MapScreen(isHome = true)
         }
         composable(BottomNavItem.Categories.route) {
             // Placeholder para Categorías
         }
         composable(BottomNavItem.Game.route) {
             // Placeholder para Juego
+            //MapScreen(isHome = false)
         }
         composable(BottomNavItem.Ranking.route) {
             // Placeholder para Ranking
