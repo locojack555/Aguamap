@@ -2,12 +2,14 @@ package cat.copernic.aguamap1.presentation.home.map
 
 import android.Manifest
 import android.location.LocationManager
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,10 +24,16 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
+import cat.copernic.aguamap1.domain.usecase.CreateFountainUseCase
+import cat.copernic.aguamap1.domain.usecase.GetFountainsUseCase
+import cat.copernic.aguamap1.presentation.reusable.HomeTopBar
 import cat.copernic.aguamap1.presentation.reusable.PermissionRequestUI
 import cat.copernic.aguamap1.ui.theme.Blanco
+import cat.copernic.aguamap1.ui.theme.Rojo
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -38,39 +46,67 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapScreen(viewModel: MapViewModel = viewModel(), isHome: Boolean) {
+fun MapScreen(isHome: Boolean) {
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
+    val repository = remember { FirebaseFountainRepository() }
+    val getUseCase = remember { GetFountainsUseCase(repository) }
+    val createUseCase = remember { CreateFountainUseCase(repository) }
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+    val viewModel: MapViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                return MapViewModel(getUseCase, createUseCase) as T
+            }
+        }
+    )
     Box(modifier = Modifier.fillMaxSize()) {
         if (locationPermissionState.status.isGranted) {
-            OSMMapContent(viewModel, isHome)
+            OSMMapContent(viewModel, isHome, onMapLoad = { map ->
+                mapViewRef = map
+            })
             if (isHome) {
-                FloatingActionButton(
-                    onClick = {
-                        mapViewRef?.let { map ->
-                            val locationOverlay =
-                                map.overlays.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
-                            locationOverlay?.myLocation?.let { lastFix ->
-                                map.controller.animateTo(lastFix)
-                                map.controller.setZoom(17.0)
-                                viewModel.isFirstLocationUpdate = true
-                                viewModel.onFirstLocationFound(lastFix.latitude, lastFix.longitude)
-                            }
-                        }
-                    },
+                HomeTopBar()
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp),
-                    containerColor = Blanco,
-                    contentColor = Color(0xFF1A73E8)
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.icon_map_blue),
-                        contentDescription = "Ir a mi ubicación",
-                        modifier = Modifier.size(20.dp)
-                    )
+                    SmallFloatingActionButton(
+                        onClick = {
+                            viewModel.addTestFountain(true)
+                        },
+                        containerColor = Blanco
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.add_24px),
+                            contentDescription = "Añadir fuente",
+                            modifier = Modifier.size(24.dp),
+                            tint = Rojo
+                        )
+                    }
+                    SmallFloatingActionButton(
+                        onClick = {
+                            mapViewRef?.let { map ->
+                                val locationOverlay =
+                                    map.overlays.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
+                                locationOverlay?.myLocation?.let { lastFix ->
+                                    map.controller.animateTo(lastFix)
+                                }
+                            }
+                        },
+                        containerColor = Blanco
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.icon_map_blue),
+                            contentDescription = "Ir a mi ubicación",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.Unspecified
+                        )
+                    }
                 }
             }
         } else {
@@ -82,7 +118,7 @@ fun MapScreen(viewModel: MapViewModel = viewModel(), isHome: Boolean) {
 }
 
 @Composable
-fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean) {
+fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean, onMapLoad: (MapView) -> Unit) {
     AndroidView(
         factory = { ctx ->
             MapView(ctx).apply {
@@ -99,6 +135,7 @@ fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean) {
                 } else {
                     //formato de juego
                 }
+                onMapLoad(this)
             }
         },
         modifier = Modifier.fillMaxSize()

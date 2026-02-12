@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.osmdroid.android)
     implementation(libs.accompanist.permissions)
     implementation(libs.play.services.location)
+    implementation(libs.firebase.firestore)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
