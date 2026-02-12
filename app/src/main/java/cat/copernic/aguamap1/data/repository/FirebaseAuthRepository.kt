@@ -2,6 +2,7 @@ package cat.copernic.aguamap1.data.repository
 
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import kotlinx.coroutines.tasks.await
 
 class FirebaseAuthRepository : AuthRepository {
@@ -33,6 +34,8 @@ class FirebaseAuthRepository : AuthRepository {
         return try {
             auth.createUserWithEmailAndPassword(email, password).await()
             Result.success(true)
+        } catch (e: FirebaseAuthUserCollisionException) {
+            Result.failure(Exception("Este correo ya está registrado por otro usuario"))
         } catch (e: Exception) {
             Result.failure(e)
         }

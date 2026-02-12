@@ -43,6 +43,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     //implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
+    implementation(libs.osmdroid.android)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.play.services.location)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

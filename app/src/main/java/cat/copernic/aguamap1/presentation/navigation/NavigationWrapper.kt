@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1
+package cat.copernic.aguamap1.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
