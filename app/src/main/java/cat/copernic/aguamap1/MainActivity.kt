@@ -9,12 +9,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import cat.copernic.aguamap1.presentation.navigation.NavigationWrapper
 import cat.copernic.aguamap1.ui.theme.AguaMap1Theme
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //Carga el mapa una vez para que sea fluido
+        org.osmdroid.config.Configuration.getInstance().load(
+            applicationContext,
+            getSharedPreferences("osmdroid", MODE_PRIVATE)
+        )
         enableEdgeToEdge()
         setContent {
             val navHostController = rememberNavController()

@@ -77,7 +77,12 @@ fun SingUpScreen(
                         "Correo electrónico",
                         "tu@correo.com",
                         viewModel.email,
-                        onValueChange = { viewModel.email = it }
+                        onValueChange = {
+                            viewModel.email = it
+                            viewModel.emailError = null
+                            viewModel.passwordError = null
+                        },
+                        isError = viewModel.emailError != null
                     )
                     AguaMapInput(
                         "Contraseña",
@@ -86,6 +91,7 @@ fun SingUpScreen(
                         onValueChange = {
                             viewModel.password = it
                             viewModel.passwordError = null
+                            viewModel.emailError = null
                         },
                         isError = viewModel.passwordError != null,
                         isPasswordField = true
@@ -93,6 +99,13 @@ fun SingUpScreen(
                     if (viewModel.passwordError != null) {
                         Text(
                             text = viewModel.passwordError!!,
+                            color = Color.Red,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    if (viewModel.emailError != null) {
+                        Text(
+                            text = viewModel.emailError!!,
                             color = Color.Red,
                             modifier = Modifier.padding(top = 8.dp)
                         )
