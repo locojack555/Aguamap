@@ -10,12 +10,13 @@ import kotlinx.coroutines.tasks.await
 class FirebaseFountainRepository : FountainRepository {
     private val db: FirebaseFirestore = Firebase.firestore
 
-    override suspend fun fetchSources(): List<Fountain> {
+    override suspend fun fetchSources(): Result<List<Fountain>> {
         return try {
             val snapshot = db.collection("fountains").get().await()
-            snapshot.toObjects(Fountain::class.java)
+            val list = snapshot.toObjects(Fountain::class.java)
+            Result.success(list)
         } catch (e: Exception) {
-            emptyList()
+            Result.failure(e)
         }
     }
 
