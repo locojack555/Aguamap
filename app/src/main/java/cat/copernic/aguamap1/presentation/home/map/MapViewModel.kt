@@ -58,8 +58,13 @@ class MapViewModel(
 
     fun loadFountains() {
         viewModelScope.launch {
+            uiState = uiState.copy(isLoading = true)
             // Llamamos al caso de uso (gracias a 'invoke')
-            fountains = getFountainsUseCase()
+            getFountainsUseCase().onSuccess { list ->
+                uiState = uiState.copy(fountains = list, isLoading = false)
+            }.onFailure {
+                uiState = uiState.copy(isLoading = false, errorMessage = it.message)
+            }
         }
     }
 

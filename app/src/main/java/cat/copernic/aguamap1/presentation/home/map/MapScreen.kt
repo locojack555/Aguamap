@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -32,6 +33,8 @@ import cat.copernic.aguamap1.domain.usecase.CreateFountainUseCase
 import cat.copernic.aguamap1.domain.usecase.GetFountainsUseCase
 import cat.copernic.aguamap1.presentation.reusable.HomeTopBar
 import cat.copernic.aguamap1.presentation.reusable.PermissionRequestUI
+import cat.copernic.aguamap1.presentation.util.createFountainIcon
+import cat.copernic.aguamap1.presentation.util.getMarkerColor
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Rojo
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -41,6 +44,7 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
@@ -77,7 +81,7 @@ fun MapScreen(isHome: Boolean) {
                 ) {
                     SmallFloatingActionButton(
                         onClick = {
-                            val locationOverlay =
+                            /*val locationOverlay =
                                 mapViewRef?.overlays?.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
                             val currentLoc = locationOverlay?.myLocation
                             if (currentLoc != null) {
@@ -86,7 +90,7 @@ fun MapScreen(isHome: Boolean) {
                                     lat = currentLoc.latitude,
                                     lng = currentLoc.longitude
                                 )
-                            }
+                            }*/
                         },
                         containerColor = Blanco
                     ) {
@@ -128,6 +132,8 @@ fun MapScreen(isHome: Boolean) {
 
 @Composable
 fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean, onMapLoad: (MapView) -> Unit) {
+    val state = viewModel.uiState
+    val context = LocalContext.current
     AndroidView(
         factory = { ctx ->
             MapView(ctx).apply {
@@ -146,6 +152,23 @@ fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean, onMapLoad: (MapView)
                 }
                 onMapLoad(this)
             }
+        },
+        update = { mapView ->
+            mapView.overlays.removeAll { it is Marker }
+
+            state.fountains.forEach { fountain ->
+                val marker = Marker(mapView)
+                marker.position = GeoPoint(fountain.latitude, fountain.longitude)
+                marker.title = fountain.name
+                val colorInt = fountain.getMarkerColor()
+                marker.icon = createFountainIcon(
+                    context = context,
+                    resId = R.drawable.location_on_24px,
+                    tintColor = colorInt
+                )
+                mapView.overlays.add(marker)
+            }
+            mapView.invalidate()
         },
         modifier = Modifier.fillMaxSize()
     )
