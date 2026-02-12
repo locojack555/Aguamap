@@ -83,6 +83,11 @@ fun HeaderSection() {
 
 @Composable
 fun TimeSelectorSection() {
+    // Definimos qué opciones existen
+    val opciones = listOf("Día", "Mes", "Año")
+    // Estado para recordar cuál está seleccionado (por defecto "Mes" como en tu imagen)
+    var seleccionado by remember { mutableStateOf("Mes") }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -91,23 +96,28 @@ fun TimeSelectorSection() {
             .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        // Botón seleccionado (Día)
-        Surface(
-            shape = RoundedCornerShape(50.dp),
-            color = Color.White,
-            modifier = Modifier.weight(1f).height(35.dp),
-            shadowElevation = 2.dp
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("Día", fontWeight = FontWeight.Bold)
+        opciones.forEach { opcion ->
+            val esSeleccionado = seleccionado == opcion
+
+            Surface(
+                onClick = { seleccionado = opcion }, // Ahora detecta el clic
+                shape = RoundedCornerShape(50.dp),
+                // Si es el seleccionado, fondo blanco; si no, transparente
+                color = if (esSeleccionado) Color.White else Color.Transparent,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(35.dp),
+                // Solo sombra si está seleccionado
+                shadowElevation = if (esSeleccionado) 2.dp else 0.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = opcion,
+                        fontWeight = if (esSeleccionado) FontWeight.Bold else FontWeight.Normal,
+                        color = if (esSeleccionado) Color.Black else Color.Gray
+                    )
+                }
             }
-        }
-        // Otros botones
-        Box(modifier = Modifier.weight(1f).height(35.dp), contentAlignment = Alignment.Center) {
-            Text("Mes")
-        }
-        Box(modifier = Modifier.weight(1f).height(35.dp), contentAlignment = Alignment.Center) {
-            Text("Año")
         }
     }
 }
