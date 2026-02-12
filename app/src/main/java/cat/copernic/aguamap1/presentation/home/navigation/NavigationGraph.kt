@@ -6,9 +6,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.presentation.home.map.MapScreen
 import cat.copernic.aguamap1.presentation.navigation.BottomNavItem
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 @Composable
 fun NavigationGraph(navController: NavHostController) {
+    val db = Firebase.firestore
     //Contenedor de navegación
     NavHost(
         navController = navController,
