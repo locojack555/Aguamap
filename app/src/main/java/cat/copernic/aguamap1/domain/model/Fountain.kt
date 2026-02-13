@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.domain.model
 
+import com.google.firebase.firestore.Exclude
 import java.util.Date
 
 data class Fountain(
@@ -18,8 +19,6 @@ data class Fountain(
     val createdBy: String = "",
     val positiveVotes: Int = 0,
     val negativeVotes: Int = 0,
-    val isAdminVerified: Boolean = false,
-    // Este campo no se guarda en Firestore, se calcula en local
-    // al comparar con la ubicación del GPS del usuario.
+    @get:Exclude
     val distanceFromUser: Double? = null
 )
