@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -33,19 +34,19 @@ fun AguaMapHeader(
     ) {
         Image(
             painter = painterResource(R.drawable.gota),
-            contentDescription = "Logo",
+            contentDescription = stringResource(R.string.logo),
             modifier = Modifier.size(logoSize)
         )
         Spacer(modifier = Modifier.size(innerSpacing))
         Text(
-            text = "AguaMap",
+            text = stringResource(R.string.app_name),
             fontSize = 50.sp,
             fontWeight = FontWeight.ExtraBold,
             color = Blanco
         )
         if (showSubtitle) {
             Text(
-                text = "Encuentra fuentes en Terrassa",
+                text = stringResource(R.string.subtitle),
                 fontSize = 20.sp,
                 color = Blanco,
                 modifier = Modifier.padding(top = 8.dp)

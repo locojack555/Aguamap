@@ -1,6 +1,7 @@
 package cat.copernic.aguamap1.presentation.home.map
 
 import android.Manifest
+import android.graphics.Canvas
 import android.location.LocationManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,17 +24,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
-import cat.copernic.aguamap1.domain.usecase.CreateFountainUseCase
-import cat.copernic.aguamap1.domain.usecase.GetFountainsUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.CreateFountainUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
 import cat.copernic.aguamap1.presentation.reusable.HomeTopBar
 import cat.copernic.aguamap1.presentation.reusable.PermissionRequestUI
-import cat.copernic.aguamap1.presentation.util.createFountainIcon
 import cat.copernic.aguamap1.presentation.util.getMarkerColor
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Rojo
@@ -155,17 +158,26 @@ fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean, onMapLoad: (MapView)
         },
         update = { mapView ->
             mapView.overlays.removeAll { it is Marker }
-
             state.fountains.forEach { fountain ->
                 val marker = Marker(mapView)
                 marker.position = GeoPoint(fountain.latitude, fountain.longitude)
                 marker.title = fountain.name
-                val colorInt = fountain.getMarkerColor()
-                marker.icon = createFountainIcon(
-                    context = context,
-                    resId = R.drawable.location_on_24px,
-                    tintColor = colorInt
-                )
+                val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
+                val wrapped = drawable?.let {
+                    val w = DrawableCompat.wrap(it).mutate()
+                    val colorInt = fountain.getMarkerColor()
+                    DrawableCompat.setTint(w, colorInt)
+                    w
+                }
+                val width = 120
+                val height = 120
+                val bitmap = createBitmap(width, height)
+                val canvas = Canvas(bitmap)
+                wrapped?.setBounds(0, 0, width, height)
+                wrapped?.draw(canvas)
+                marker.icon = bitmap.toDrawable(context.resources)
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                //marker.image = null
                 mapView.overlays.add(marker)
             }
             mapView.invalidate()

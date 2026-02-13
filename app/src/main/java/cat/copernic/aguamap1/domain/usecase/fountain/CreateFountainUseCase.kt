@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.domain.usecase
+package cat.copernic.aguamap1.domain.usecase.fountain
 
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.repository.FountainRepository
@@ -8,7 +8,6 @@ class CreateFountainUseCase(private val repository: FountainRepository) {
         val fountainToSave = if (isUserAdmin) {
             fountain.copy(
                 status = "APPROVED",
-                isAdminVerified = true,
                 positiveVotes = 3,
                 createdBy = "ADMINISTRADOR"
             )

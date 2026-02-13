@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.ui.theme.Blanco
@@ -35,11 +36,11 @@ fun HomeTopBar() {
         OutlinedTextField(
             value = "",
             onValueChange = {/*buscar*/ },
-            placeholder = { Text("Buscar fuentes...", color = Negro) },
+            placeholder = { Text(stringResource(R.string.search_fountains), color = Negro) },
             leadingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.search_24px),
-                    contentDescription = "Buscar",
+                    contentDescription = stringResource(R.string.search_fountains),
                     tint = Color.Unspecified
                 )
             },
@@ -48,14 +49,14 @@ fun HomeTopBar() {
                     IconButton(onClick = { /* Filtro */ }) {
                         Icon(
                             painterResource(R.drawable.filter_alt_24px),
-                            contentDescription = "Filtro",
+                            contentDescription = stringResource(R.string.filter),
                             tint = Color.Unspecified
                         )
                     }
                     IconButton(onClick = { /* Lista */ }) {
                         Icon(
                             painterResource(R.drawable.format_list_bulleted_24px),
-                            contentDescription = "Lista",
+                            contentDescription = stringResource(R.string.list),
                             tint = Color.Unspecified
                         )
                     }
@@ -63,7 +64,7 @@ fun HomeTopBar() {
                         BadgedBox(badge = { Badge { Text("1") } }) {
                             Icon(
                                 painterResource(R.drawable.notifications_24px),
-                                contentDescription = "Notificaciones",
+                                contentDescription = stringResource(R.string.notifactions),
                                 tint = Color.Unspecified
                             )
                         }

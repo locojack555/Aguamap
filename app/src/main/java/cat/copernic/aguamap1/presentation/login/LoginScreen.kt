@@ -25,10 +25,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
 import cat.copernic.aguamap1.presentation.reusable.AguaMapInput
 import cat.copernic.aguamap1.ui.theme.AguaMapGradient
@@ -76,14 +78,14 @@ fun LoginScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = "Iniciar Sesión",
+                        text = stringResource(R.string.sing_in),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Negro
                     )
                     AguaMapInput(
-                        "Correo electrónico",
-                        "tu@correo.com",
+                        stringResource(R.string.email),
+                        stringResource(R.string.email_example),
                         viewModel.email,
                         onValueChange = {
                             viewModel.onEmailChanged(it)
@@ -91,8 +93,8 @@ fun LoginScreen(
                         isError = viewModel.isError
                     )
                     AguaMapInput(
-                        "Contraseña",
-                        "**********",
+                        stringResource(R.string.password),
+                        stringResource(R.string.password_example),
                         viewModel.password,
                         onValueChange = {
                             viewModel.onPasswordChanged(it)
@@ -102,13 +104,13 @@ fun LoginScreen(
                     )
                     if (viewModel.isError) {
                         Text(
-                            text = "Credenciales incorrectas",
+                            text = stringResource(R.string.incorrect_sing_in),
                             color = Rojo,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
                     Text(
-                        text = "¿Olvidaste tu contraseña?",
+                        text = stringResource(R.string.text_recovery_password),
                         color = Blue10,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -124,7 +126,11 @@ fun LoginScreen(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Blue10)
                     ) {
-                        Text("Entrar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.login),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Row(
                         modifier = Modifier
@@ -133,9 +139,13 @@ fun LoginScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("¿No tienes cuenta?", color = PurpleGrey40)
+                        Text(stringResource(R.string.text_sing_in), color = PurpleGrey40)
                         TextButton(onClick = { navigateToSingUp() }) {
-                            Text("Regístrate", fontWeight = FontWeight.Bold, color = Blue10)
+                            Text(
+                                stringResource(R.string.text_sing_in_link),
+                                fontWeight = FontWeight.Bold,
+                                color = Blue10
+                            )
                         }
                     }
                 }

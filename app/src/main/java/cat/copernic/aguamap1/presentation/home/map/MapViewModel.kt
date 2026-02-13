@@ -7,8 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.model.Fountain
-import cat.copernic.aguamap1.domain.usecase.CreateFountainUseCase
-import cat.copernic.aguamap1.domain.usecase.GetFountainsUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.CreateFountainUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
 import cat.copernic.aguamap1.ui.map.MapUiState
 import kotlinx.coroutines.launch
 

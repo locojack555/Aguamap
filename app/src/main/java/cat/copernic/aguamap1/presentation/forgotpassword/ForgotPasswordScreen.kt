@@ -21,11 +21,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
 import cat.copernic.aguamap1.presentation.reusable.AguaMapInput
 import cat.copernic.aguamap1.ui.theme.AguaMapGradient
@@ -63,35 +65,35 @@ fun ForgotPasswordScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = "Recuperar Contraseña",
+                        text = stringResource(R.string.recovery_password),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Negro
                     )
                     Text(
-                        text = "Te enviamos un enlace para recuperar tu contraseña",
+                        text = stringResource(R.string.text_forgot_password),
                         textAlign = TextAlign.Justify,
                         fontSize = 16.sp,
                         color = Negro,
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                     )
                     AguaMapInput(
-                        "Correo electrónico",
-                        "tu@correo.com",
+                        stringResource(R.string.email),
+                        stringResource(R.string.email_example),
                         viewModel.email,
                         onValueChange = { viewModel.onEmailChanged(it) },
                         isError = viewModel.isError
                     )
                     if (viewModel.isSent) {
                         Text(
-                            text = "Enlace enviado",
+                            text = stringResource(R.string.link_sent),
                             color = Blue10,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
                     if (viewModel.isError) {
                         Text(
-                            text = "Correo no existe",
+                            text = stringResource(R.string.incorrect_email),
                             color = Rojo,
                             modifier = Modifier.padding(top = 8.dp)
                         )
@@ -106,10 +108,14 @@ fun ForgotPasswordScreen(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Blue10)
                     ) {
-                        Text("Enviar Enlace", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.recovery_password),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Text(
-                        text = "Volver al inicio de sesión",
+                        text = stringResource(R.string.back_home),
                         color = Blue10,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
