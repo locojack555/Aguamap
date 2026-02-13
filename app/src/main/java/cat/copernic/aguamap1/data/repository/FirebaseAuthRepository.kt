@@ -35,7 +35,7 @@ class FirebaseAuthRepository : AuthRepository {
             auth.createUserWithEmailAndPassword(email, password).await()
             Result.success(true)
         } catch (e: FirebaseAuthUserCollisionException) {
-            Result.failure(Exception("Este correo ya está registrado por otro usuario"))
+            Result.failure(Exception("ERROR_DUPLICATED"))
         } catch (e: Exception) {
             Result.failure(e)
         }

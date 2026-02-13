@@ -25,10 +25,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
 import cat.copernic.aguamap1.presentation.reusable.AguaMapInput
 import cat.copernic.aguamap1.ui.theme.AguaMapGradient
@@ -68,14 +70,14 @@ fun SingUpScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = "Registrarse",
+                        text = stringResource(R.string.text_sing_in_link),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Negro
                     )
                     AguaMapInput(
-                        "Correo electrónico",
-                        "tu@correo.com",
+                        stringResource(R.string.email),
+                        stringResource(R.string.email_example),
                         viewModel.email,
                         onValueChange = {
                             viewModel.email = it
@@ -85,8 +87,8 @@ fun SingUpScreen(
                         isError = viewModel.emailError != null
                     )
                     AguaMapInput(
-                        "Contraseña",
-                        "**********",
+                        stringResource(R.string.password),
+                        stringResource(R.string.password_example),
                         viewModel.password,
                         onValueChange = {
                             viewModel.password = it
@@ -96,16 +98,16 @@ fun SingUpScreen(
                         isError = viewModel.passwordError != null,
                         isPasswordField = true
                     )
-                    if (viewModel.passwordError != null) {
+                    viewModel.passwordError?.let { resId ->
                         Text(
-                            text = viewModel.passwordError!!,
+                            text = stringResource(resId),
                             color = Color.Red,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
-                    if (viewModel.emailError != null) {
+                    viewModel.emailError?.let { resId ->
                         Text(
-                            text = viewModel.emailError!!,
+                            text = stringResource(resId),
                             color = Color.Red,
                             modifier = Modifier.padding(top = 8.dp)
                         )
@@ -120,7 +122,11 @@ fun SingUpScreen(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Blue10)
                     ) {
-                        Text("Registrarse", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.text_sing_in_link),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Row(
                         modifier = Modifier
@@ -129,9 +135,13 @@ fun SingUpScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("¿Ya tienes cuenta?", color = Color.Gray)
+                        Text(stringResource(R.string.has_acc), color = Color.Gray)
                         TextButton(onClick = { navigateToLogin() }) {
-                            Text("Inicia sesión", fontWeight = FontWeight.Bold, color = Blue10)
+                            Text(
+                                stringResource(R.string.init),
+                                fontWeight = FontWeight.Bold,
+                                color = Blue10
+                            )
                         }
                     }
                 }
