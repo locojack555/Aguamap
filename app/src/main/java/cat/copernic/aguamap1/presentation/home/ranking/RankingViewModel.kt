@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.ranking
+package cat.copernic.aguamap1.presentation.home.ranking
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,8 @@ class RankingViewModel : ViewModel() {
                 UserRanking(1, "Administrador (Tú)", 125, 15, 25, true),
                 UserRanking(2, "María García", 90, 12, 18),
                 UserRanking(3, "Joan Martínez", 75, 10, 15),
-                UserRanking(4, "Joaquin Perez", 60, 8, 12)
+                UserRanking(4, "Joaquin Perez", 60, 8, 12),
+                UserRanking(5, "Joaquin Perez", 30, 4, 40)
             )
         )
     }

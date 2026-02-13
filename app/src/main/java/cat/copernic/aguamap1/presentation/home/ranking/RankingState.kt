@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.ranking
+package cat.copernic.aguamap1.presentation.home.ranking
 
 data class UserRanking(
     val position: Int,

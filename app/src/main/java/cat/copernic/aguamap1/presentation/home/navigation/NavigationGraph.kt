@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.presentation.home.map.MapScreen
+import cat.copernic.aguamap1.presentation.home.ranking.RankingScreen
 import cat.copernic.aguamap1.presentation.navigation.BottomNavItem
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -30,7 +31,7 @@ fun NavigationGraph(navController: NavHostController) {
             //MapScreen(isHome = false)
         }
         composable(BottomNavItem.Ranking.route) {
-            // Placeholder para Ranking
+            RankingScreen()
         }
         composable(BottomNavItem.Profile.route) {
             // Placeholder para Perfil

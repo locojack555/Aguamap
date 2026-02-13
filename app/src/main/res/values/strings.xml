@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">AguaMap1</string>
+    <string name="app_name">AguaMap</string>
+    <!-- SELECTOR RANKING -->
+    <string name="ranking_day">Día</string>
+    <string name="ranking_month">Mes</string>
+    <string name="ranking_year">Año</string>
+    <string name="ranking_title_day">Clasificación del día</string>
+    <string name="ranking_title_month">Clasificación del mes</string>
+    <string name="ranking_title_year">Clasificación del año</string>
 </resources>

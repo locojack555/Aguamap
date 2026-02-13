@@ -8,13 +8,12 @@ import cat.copernic.aguamap1.presentation.forgotpassword.ForgotPasswordScreen
 import cat.copernic.aguamap1.presentation.home.HomeScreen
 import cat.copernic.aguamap1.presentation.initial.InitialScreen
 import cat.copernic.aguamap1.presentation.login.LoginScreen
-import cat.copernic.aguamap1.presentation.ranking.RankingScreen
 import cat.copernic.aguamap1.presentation.singup.SingUpScreen
 
 @Composable
 fun NavigationWrapper(navHostController: NavHostController) {
 
-    NavHost(navController = navHostController, startDestination = "initial") { //poner inital
+    NavHost(navController = navHostController, startDestination = "initial") {
         composable("initial") {
             InitialScreen(navHostController)
         }
@@ -35,9 +34,6 @@ fun NavigationWrapper(navHostController: NavHostController) {
         }
         composable("home") {
             HomeScreen()
-        }
-        composable("ranking") {
-            RankingScreen()
         }
     }
 }
