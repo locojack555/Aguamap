@@ -36,4 +36,10 @@
     <string name="ubi_on">Activa tu ubicación</string>
     <string name="permiss_on">Conceder Permiso</string>
     <string name="txt_permiss">Para mostrarte las fuentes más cercanas y centrar el mapa, necesitamos permiso para acceder a tu ubicación.</string>
+    <string name="ranking_day">Día</string>
+    <string name="ranking_month">Mes</string>
+    <string name="ranking_year">Año</string>
+    <string name="ranking_title_day">Clasificación del día</string>
+    <string name="ranking_title_month">Clasificación del mes</string>
+    <string name="ranking_title_year">Clasificación del año</string>
 </resources>

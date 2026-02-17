@@ -36,4 +36,10 @@
     <string name="ubi_on">Activate your location</string>
     <string name="permiss_on">Grant Permission</string>
     <string name="txt_permiss">To show you the nearest fountains and center the map, we need permission to access your location.</string>
+    <string name="ranking_day">Day</string>
+    <string name="ranking_month">Month</string>
+    <string name="ranking_year">Year</string>
+    <string name="ranking_title_day">Classification of the day</string>
+    <string name="ranking_title_month">Classification of the month</string>
+    <string name="ranking_title_year">Classification of the year</string>
 </resources>
