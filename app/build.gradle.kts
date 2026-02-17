@@ -6,9 +6,7 @@ plugins {
 
 android {
     namespace = "cat.copernic.aguamap1"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "cat.copernic.aguamap1"
@@ -48,7 +46,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.appcompat)
-
+    implementation(libs.coil.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -58,7 +56,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.foundation)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

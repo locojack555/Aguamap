@@ -134,8 +134,8 @@ fun MapScreen(isHome: Boolean) {
 }
 
 @Composable
-fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean, onMapLoad: (MapView) -> Unit) {
-    val state = viewModel.uiState
+fun OSMMapContent(viewModel: MapViewModel? = null, isHome: Boolean, onMapLoad: (MapView) -> Unit) {
+    val state = viewModel?.uiState
     val context = LocalContext.current
     AndroidView(
         factory = { ctx ->
@@ -148,7 +148,7 @@ fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean, onMapLoad: (MapView)
                 val maxLat = MapView.getTileSystem().maxLatitude
                 val minLat = MapView.getTileSystem().minLatitude
                 setScrollableAreaLimitLatitude(maxLat, minLat, 0)
-                if (isHome) {
+                if (isHome && viewModel != null) {
                     setupHomeMap(viewModel)
                 } else {
                     //formato de juego
@@ -157,30 +157,32 @@ fun OSMMapContent(viewModel: MapViewModel, isHome: Boolean, onMapLoad: (MapView)
             }
         },
         update = { mapView ->
-            mapView.overlays.removeAll { it is Marker }
-            state.fountains.forEach { fountain ->
-                val marker = Marker(mapView)
-                marker.position = GeoPoint(fountain.latitude, fountain.longitude)
-                marker.title = fountain.name
-                val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
-                val wrapped = drawable?.let {
-                    val w = DrawableCompat.wrap(it).mutate()
-                    val colorInt = fountain.getMarkerColor()
-                    DrawableCompat.setTint(w, colorInt)
-                    w
+            if (viewModel != null && state != null) {
+                mapView.overlays.removeAll { it is Marker }
+                state.fountains.forEach { fountain ->
+                    val marker = Marker(mapView)
+                    marker.position = GeoPoint(fountain.latitude, fountain.longitude)
+                    marker.title = fountain.name
+                    val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
+                    val wrapped = drawable?.let {
+                        val w = DrawableCompat.wrap(it).mutate()
+                        val colorInt = fountain.getMarkerColor()
+                        DrawableCompat.setTint(w, colorInt)
+                        w
+                    }
+                    val width = 120
+                    val height = 120
+                    val bitmap = createBitmap(width, height)
+                    val canvas = Canvas(bitmap)
+                    wrapped?.setBounds(0, 0, width, height)
+                    wrapped?.draw(canvas)
+                    marker.icon = bitmap.toDrawable(context.resources)
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    //marker.image = null
+                    mapView.overlays.add(marker)
                 }
-                val width = 120
-                val height = 120
-                val bitmap = createBitmap(width, height)
-                val canvas = Canvas(bitmap)
-                wrapped?.setBounds(0, 0, width, height)
-                wrapped?.draw(canvas)
-                marker.icon = bitmap.toDrawable(context.resources)
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                //marker.image = null
-                mapView.overlays.add(marker)
+                mapView.invalidate()
             }
-            mapView.invalidate()
         },
         modifier = Modifier.fillMaxSize()
     )

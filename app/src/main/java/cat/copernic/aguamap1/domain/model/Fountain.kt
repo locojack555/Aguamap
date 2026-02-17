@@ -11,6 +11,7 @@ data class Fountain(
     val isOperational: Boolean = true,
     val category: String = "",
     val description: String = "",
+    val imageUrl: String = "",
     val dateCreated: Date = Date(),
     val visits: Long = 0,
     val ratingAverage: Double = 0.0,
