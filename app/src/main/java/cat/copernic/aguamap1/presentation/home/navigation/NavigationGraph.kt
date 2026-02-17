@@ -4,16 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import cat.copernic.aguamap1.presentation.game.GameScreen
 import cat.copernic.aguamap1.presentation.home.map.MapScreen
 import cat.copernic.aguamap1.presentation.home.ranking.RankingScreen
 import cat.copernic.aguamap1.presentation.navigation.BottomNavItem
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 
 @Composable
 fun NavigationGraph(navController: NavHostController) {
-    val db = Firebase.firestore
     //Contenedor de navegación
     NavHost(
         navController = navController,
@@ -28,8 +26,9 @@ fun NavigationGraph(navController: NavHostController) {
             // Placeholder para Categorías
         }
         composable(BottomNavItem.Game.route) {
-            // Placeholder para Juego
-            //MapScreen(isHome = false)
+            GameScreen(onBackToHome = {
+                navController.navigate(BottomNavItem.Map.route)
+            })
         }
         composable(BottomNavItem.Ranking.route) {
             RankingScreen()
