@@ -8,6 +8,7 @@ import cat.copernic.aguamap1.presentation.game.GameScreen
 import cat.copernic.aguamap1.presentation.home.map.MapScreen
 import cat.copernic.aguamap1.presentation.navigation.RootScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
+import cat.copernic.aguamap1.presentation.ranking.RankingScreen
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -35,7 +36,7 @@ fun NavigationGraph(
             })
         }
         composable(BottomNavItem.Ranking.route) {
-            // Placeholder para Ranking
+            RankingScreen()
         }
         composable(BottomNavItem.Profile.route) {
             // Placeholder para Perfil
