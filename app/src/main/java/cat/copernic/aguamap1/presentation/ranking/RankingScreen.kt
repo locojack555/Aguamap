@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,7 +37,7 @@ fun RankingScreen(viewModel: RankingViewModel = viewModel()) {
         viewModel.cargarRankingsReales(seleccionadoResId)
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA))) {
+    Column(modifier = Modifier.fillMaxSize().background(color = colorResource(id = R.color.blancoHueso))) {
         HeaderSection()
 
         TimeSelectorSection(
@@ -64,7 +65,7 @@ fun RankingScreen(viewModel: RankingViewModel = viewModel()) {
                 // Indicador de carga para accesibilidad
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
-                    color = Color(0xFF8E24AA)
+                    color = colorResource(id = R.color.magentaOscuro)
                 )
             } else {
                 LazyColumn(
@@ -92,7 +93,7 @@ fun HeaderSection() {
             .height(110.dp)
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF8E24AA), Color(0xFFE91E63))
+                    colors = listOf(colorResource(id = R.color.amatista), colorResource(id = R.color.rosaIntenso))
                 )
             )
             .padding(22.dp),
@@ -125,7 +126,7 @@ fun TimeSelectorSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .background(Color(0xFFF1F1F1), RoundedCornerShape(50.dp))
+            .background(colorResource(id = R.color.blancoHumo), RoundedCornerShape(50.dp))
             .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -156,7 +157,7 @@ fun TimeSelectorSection(
 fun RankingItem(player: UserRanking) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
-        colors = CardDefaults.cardColors(containerColor = if (player.isCurrentUser) Color(0xFFFFFBE6) else Color.White),
+        colors = CardDefaults.cardColors(containerColor = if (player.isCurrentUser) colorResource(id = R.color.cremaSuave) else Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -167,19 +168,19 @@ fun RankingItem(player: UserRanking) {
             // Posición e Icono (Medalla o número)
             Box(modifier = Modifier.width(40.dp), contentAlignment = Alignment.Center) {
                 when (player.position) {
-                    1 -> Icon(painter = painterResource(id = R.drawable.icon_corona), "Oro", tint = Color(0xFFFFC107))
-                    2 -> Icon(painter = painterResource(id = R.drawable.icon_medalla), "Plata", tint = Color(0xFF9E9E9E))
-                    3 -> Icon(painter = painterResource(id = R.drawable.icon_medalla), "Bronce", tint = Color(0xFFCD7F32))
+                    1 -> Icon(painter = painterResource(id = R.drawable.icon_corona), "Oro", tint = colorResource(id = R.color.oro))
+                    2 -> Icon(painter = painterResource(id = R.drawable.icon_medalla), "Plata", tint = colorResource(id = R.color.plata))
+                    3 -> Icon(painter = painterResource(id = R.drawable.icon_medalla), "Bronce", tint = colorResource(id = R.color.bronze))
                     else -> Text("${player.position}", color = Color.Gray, fontWeight = FontWeight.Bold)
                 }
             }
 
             // Avatar
             Box(
-                modifier = Modifier.size(45.dp).clip(CircleShape).background(Color(0xFFE3F2FD)),
+                modifier = Modifier.size(45.dp).clip(CircleShape).background(colorResource(id = R.color.azulHielo)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF1976D2))
+                Icon(Icons.Default.Person, contentDescription = null, tint = colorResource(id = R.color.azulReal))
             }
 
             Spacer(Modifier.width(12.dp))
@@ -189,7 +190,7 @@ fun RankingItem(player: UserRanking) {
                 Text(
                     text = player.name,
                     fontWeight = FontWeight.Bold,
-                    color = if (player.isCurrentUser) Color(0xFF1976D2) else Color.Black
+                    color = if (player.isCurrentUser) colorResource(id = R.color.azulReal) else Color.Black
                 )
                 Text(
                     text = "${player.discovered} descubiertas    ${player.games} partidas",
@@ -201,10 +202,10 @@ fun RankingItem(player: UserRanking) {
             // Puntos con fondo de color
             Surface(
                 color = when(player.position) {
-                    1 -> Color(0xFFFFC107)
-                    2 -> Color(0xFF9E9E9E)
-                    3 -> Color(0xFFCD7F32)
-                    else -> Color(0xFFE0E0E0)
+                    1 -> colorResource(id = R.color.oro)
+                    2 -> colorResource(id = R.color.plata)
+                    3 -> colorResource(id = R.color.bronze)
+                    else -> colorResource(id = R.color.grisHumo)
                 },
                 shape = RoundedCornerShape(8.dp)
             ) {
@@ -224,18 +225,18 @@ fun RankingItem(player: UserRanking) {
 fun TotalPointsFooter(points: Int) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F0FF)),
+        colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.lavandaPalido)),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(painter = painterResource(id = R.drawable.icon_trofeo), contentDescription = null, tint = Color(0xFF9C27B0), modifier = Modifier.size(32.dp))
+            Icon(painter = painterResource(id = R.drawable.icon_trofeo), contentDescription = null, tint = colorResource(id = R.color.purpuraReal), modifier = Modifier.size(32.dp))
             Spacer(Modifier.width(16.dp))
             Column {
                 Text("Tus puntos totales", fontSize = 14.sp, color = Color.Gray)
-                Text("$points", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9C27B0))
+                Text("$points", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = colorResource(id = R.color.purpuraReal))
             }
         }
     }
