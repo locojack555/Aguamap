@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.home.ranking
+package cat.copernic.aguamap1.presentation.ranking
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

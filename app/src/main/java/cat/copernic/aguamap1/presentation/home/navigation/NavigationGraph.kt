@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.presentation.game.GameScreen
 import cat.copernic.aguamap1.presentation.home.map.MapScreen
-import cat.copernic.aguamap1.presentation.home.ranking.RankingScreen
+import cat.copernic.aguamap1.presentation.ranking.RankingScreen
 import cat.copernic.aguamap1.presentation.navigation.BottomNavItem
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 

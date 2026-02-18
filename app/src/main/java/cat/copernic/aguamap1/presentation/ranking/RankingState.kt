@@ -1,4 +1,6 @@
-package cat.copernic.aguamap1.presentation.home.ranking
+package cat.copernic.aguamap1.presentation.ranking
+
+import com.google.firebase.Timestamp
 
 data class UserRanking(
     val position: Int,
@@ -18,6 +20,6 @@ data class GameSession(
     val userId: String = "",
     val userName: String = "",
     val score: Int = 0,
-    val date: com.google.firebase.Timestamp? = null,
+    val date: Timestamp? = null,
     val fountainId: String = ""
 )
