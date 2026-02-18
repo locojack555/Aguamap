@@ -13,3 +13,11 @@ data class RankingState(
     val players: List<UserRanking> = emptyList(),
     val isLoading: Boolean = false
 )
+
+data class GameSession(
+    val userId: String = "",
+    val userName: String = "",
+    val score: Int = 0,
+    val date: com.google.firebase.Timestamp? = null,
+    val fountainId: String = ""
+)

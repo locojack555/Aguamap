@@ -69,12 +69,12 @@ class GameViewModel : ViewModel() {
                     } else false
                 }
 
-                if (hasPlayedToday) {
+                /*if (hasPlayedToday) {
                     _error.value = "Ya has jugado hoy. ¡Vuelve mañana!"
                     _gameState.value = GameState.DailyLimitReached
                     _isLoading.value = false
                     return@launch
-                }
+                }*/
 
                 val fountainsSnapshot = db.collection("fountains").get().await()
                 val fountains = fountainsSnapshot.toObjects(Fountain::class.java)
@@ -135,10 +135,12 @@ class GameViewModel : ViewModel() {
 
     private suspend fun saveSession() {
         val user = auth.currentUser ?: return
+        val userName = user.displayName ?: "Jugador"
+        val currentScore = _score.value
         val session = GameSession(
             userId = user.uid,
-            userName = user.displayName ?: "Jugador",
-            score = _score.value,
+            userName = userName,
+            score = currentScore,
             distance = _distance.value,
             date = Date(),
             fountainId = _currentFountain.value?.id ?: "",
@@ -146,7 +148,35 @@ class GameViewModel : ViewModel() {
         )
         try {
             db.collection("game_sessions").add(session).await()
+
+            // Actualiza el acumulado mensual
+            updateMonthlyStats(user.uid, userName, currentScore)
         } catch (e: Exception) { }
+    }
+
+    private suspend fun updateMonthlyStats(userId: String, userName: String, score: Int) {
+        val calendar = Calendar.getInstance()
+        val month = calendar.get(Calendar.MONTH) + 1 // Enero es 0
+        val year = calendar.get(Calendar.YEAR)
+
+        // El ID único asegura que cada usuario tenga solo UN doc por mes
+        val docId = "${userId}_${month}_${year}"
+        val monthlyRef = db.collection("monthlyRanking").document(docId)
+
+        val data = mapOf(
+            "userId" to userId,
+            "userName" to userName,
+            "totalScore" to com.google.firebase.firestore.FieldValue.increment(score.toLong()),
+            "gamesCount" to com.google.firebase.firestore.FieldValue.increment(1),
+            "totalDiscovered" to com.google.firebase.firestore.FieldValue.increment(1),
+            "month" to month,
+            "year" to year
+        )
+
+        try {
+            //si no existe el doc lo crea, si existe solo suma los valores
+            monthlyRef.set(data, com.google.firebase.firestore.SetOptions.merge()).await()
+        } catch (e: Exception) {}
     }
 
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {

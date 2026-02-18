@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,19 +27,24 @@ import cat.copernic.aguamap1.R
 fun RankingScreen(viewModel: RankingViewModel = viewModel()) {
     val state by viewModel.state.collectAsState()
 
-    // 1. Elevamos el estado aquí para que toda la pantalla lo vea
-    var seleccionadoResId by remember { mutableIntStateOf(R.string.ranking_month) }
+    // 1. Estado del selector
+    var seleccionadoResId by remember { mutableIntStateOf(R.string.ranking_day) }
+
+    // 2. DISPARADOR DE CARGA: Cada vez que 'seleccionadoResId' cambie,
+    // ejecutamos la función del ViewModel automáticamente.
+    LaunchedEffect(seleccionadoResId) {
+        viewModel.cargarRankingsReales(seleccionadoResId)
+    }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA))) {
         HeaderSection()
 
-        // Pasamos el ID seleccionado
         TimeSelectorSection(
             seleccionadoResId = seleccionadoResId,
             onSeleccionChange = { seleccionadoResId = it }
         )
 
-        // El texto de clasificación ahora cambia según el ID seleccionado
+        // Título dinámico
         val titleRes = when (seleccionadoResId) {
             R.string.ranking_day -> R.string.ranking_title_day
             R.string.ranking_month -> R.string.ranking_title_month
@@ -54,16 +58,29 @@ fun RankingScreen(viewModel: RankingViewModel = viewModel()) {
             color = Color.Gray
         )
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            items(state.players) { player ->
-                RankingItem(player)
+        // 3. GESTIÓN DE ESTADOS: Carga vs. Lista
+        Box(modifier = Modifier.weight(1f)) {
+            if (state.isLoading) {
+                // Indicador de carga para accesibilidad
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFF8E24AA)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    items(state.players) { player ->
+                        RankingItem(player)
+                    }
+                }
             }
         }
 
-        TotalPointsFooter(points = 2500)
+        // 4. Puntos totales del usuario actual
+        val puntosMios = state.players.find { it.isCurrentUser }?.points ?: 0
+        TotalPointsFooter(points = puntosMios)
     }
 }
 
@@ -222,10 +239,4 @@ fun TotalPointsFooter(points: Int) {
             }
         }
     }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun RankingPreview() {
-    RankingScreen()
 }
