@@ -1,10 +1,11 @@
 package cat.copernic.aguamap1.domain.usecase.validation
 
 import cat.copernic.aguamap1.R
+import javax.inject.Inject
 
 data class ValidationResult(val success: Boolean, val errorResId: Int? = null)
 
-class ValidatePasswordUseCase {
+class ValidatePasswordUseCase @Inject constructor() {
     operator fun invoke(password: String): ValidationResult {
         return when {
             password.length < 8 ->

@@ -6,12 +6,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.presentation.game.GameScreen
 import cat.copernic.aguamap1.presentation.home.map.MapScreen
-import cat.copernic.aguamap1.presentation.ranking.RankingScreen
-import cat.copernic.aguamap1.presentation.navigation.BottomNavItem
+import cat.copernic.aguamap1.presentation.navigation.RootScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 @Composable
-fun NavigationGraph(navController: NavHostController) {
+fun NavigationGraph(
+    navController: NavHostController,
+    rootNavController: NavHostController
+) {
     //Contenedor de navegación
     NavHost(
         navController = navController,
@@ -31,11 +35,17 @@ fun NavigationGraph(navController: NavHostController) {
             })
         }
         composable(BottomNavItem.Ranking.route) {
-            RankingScreen()
+            // Placeholder para Ranking
         }
         composable(BottomNavItem.Profile.route) {
             // Placeholder para Perfil
-            ProfileScreen()
+            ProfileScreen(
+                navigateToLogin = {
+                    rootNavController.navigate(RootScreen.Login.route) {
+                        popUpTo(RootScreen.Home.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                })
         }
     }
 }

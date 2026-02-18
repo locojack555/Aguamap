@@ -17,7 +17,7 @@ val Negro = Color(0xFF000000)
 val Rojo = Color(0xFFFF0000)
 val Naranja = Color(0xFFFFA500)
 val Verde = Color(0xFF00FF00)
-
+val Gris = Color(0xFF808080)
 val AguaMapGradient = Brush.horizontalGradient(
     colors = listOf(Blue10, Blue20)
 )

@@ -71,7 +71,9 @@ fun AguaMapInput(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Negro,
                 unfocusedTextColor = Negro,
-                cursorColor = Negro
+                cursorColor = Negro,
+                errorTextColor = Negro,
+                errorCursorColor = Negro
             )
         )
     }
