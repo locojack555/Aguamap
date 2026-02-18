@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,14 +30,9 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.scale
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
-import cat.copernic.aguamap1.domain.usecase.fountain.CreateFountainUseCase
-import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
-import cat.copernic.aguamap1.presentation.reusable.HomeTopBar
-import cat.copernic.aguamap1.presentation.reusable.PermissionRequestUI
+import cat.copernic.aguamap1.presentation.home.list.ListScreen
 import cat.copernic.aguamap1.presentation.util.getMarkerColor
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Rojo
@@ -53,77 +49,32 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapScreen(isHome: Boolean) {
+fun MapScreen(
+    viewModel: MapViewModel = hiltViewModel(),
+    isHome: Boolean
+) {
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
-    val repository = remember { FirebaseFountainRepository() }
-    val getUseCase = remember { GetFountainsUseCase(repository) }
-    val createUseCase = remember { CreateFountainUseCase(repository) }
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
-    val viewModel: MapViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return MapViewModel(getUseCase, createUseCase) as T
-            }
-        }
-    )
+    val isMapView by viewModel.isMapView.collectAsState()
     Box(modifier = Modifier.fillMaxSize()) {
         if (locationPermissionState.status.isGranted) {
-            OSMMapContent(viewModel, isHome, onMapLoad = { map ->
-                mapViewRef = map
-            })
+            if (isMapView) {
+                OSMMapContent(viewModel, isHome, onMapLoad = { map -> mapViewRef = map })
+                MapFloatingButtons(
+                    mapViewRef = mapViewRef,
+                    viewModel = viewModel,
+                    modifier = Modifier.align(Alignment.BottomEnd) // La posicionamos aquí
+                )
+            } else {
+                ListScreen(viewModel)
+            }
             if (isHome) {
-                HomeTopBar()
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SmallFloatingActionButton(
-                        onClick = {
-                            /*val locationOverlay =
-                                mapViewRef?.overlays?.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
-                            val currentLoc = locationOverlay?.myLocation
-                            if (currentLoc != null) {
-                                viewModel.addTestFountain(
-                                    isAdmin = true,
-                                    lat = currentLoc.latitude,
-                                    lng = currentLoc.longitude
-                                )
-                            }*/
-                        },
-                        containerColor = Blanco
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.add_24px),
-                            contentDescription = "Añadir fuente",
-                            modifier = Modifier.size(24.dp),
-                            tint = Rojo
-                        )
-                    }
-                    SmallFloatingActionButton(
-                        onClick = {
-                            mapViewRef?.let { map ->
-                                val locationOverlay =
-                                    map.overlays.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
-                                locationOverlay?.myLocation?.let { lastFix ->
-                                    map.controller.animateTo(lastFix)
-                                }
-                            }
-                        },
-                        containerColor = Blanco
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.icon_map_blue),
-                            contentDescription = "Ir a mi ubicación",
-                            modifier = Modifier.size(20.dp),
-                            tint = Color.Unspecified
-                        )
-                    }
-                }
+                HomeTopBar(
+                    isMapView = isMapView,
+                    onToggleView = { viewModel.toggleView() }
+                )
             }
         } else {
             PermissionRequestUI {
@@ -232,4 +183,63 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
             return true
         }
     })
+}
+
+@Composable
+fun MapFloatingButtons(
+    mapViewRef: MapView?,
+    viewModel: MapViewModel,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Botón Añadir Fuente
+        SmallFloatingActionButton(
+            onClick = {
+                val locationOverlay =
+                    mapViewRef?.overlays?.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
+                val currentLoc = locationOverlay?.myLocation
+                if (currentLoc != null) {
+                    viewModel.addTestFountain(
+                        isAdmin = true,
+                        lat = currentLoc.latitude,
+                        lng = currentLoc.longitude
+                    )
+                }
+            },
+            containerColor = Blanco
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.add_24px),
+                contentDescription = "Añadir fuente",
+                modifier = Modifier.size(24.dp),
+                tint = Rojo
+            )
+        }
+
+        // Botón Mi Ubicación
+        SmallFloatingActionButton(
+            onClick = {
+                mapViewRef?.let { map ->
+                    val locationOverlay =
+                        map.overlays.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
+                    locationOverlay?.myLocation?.let { lastFix ->
+                        map.controller.animateTo(lastFix)
+                    }
+                }
+            },
+            containerColor = Blanco
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.icon_map_blue),
+                contentDescription = "Ir a mi ubicación",
+                modifier = Modifier.size(20.dp),
+                tint = Color.Unspecified
+            )
+        }
+    }
 }

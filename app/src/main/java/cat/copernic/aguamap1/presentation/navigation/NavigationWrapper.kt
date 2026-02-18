@@ -13,27 +13,27 @@ import cat.copernic.aguamap1.presentation.singup.SingUpScreen
 @Composable
 fun NavigationWrapper(navHostController: NavHostController) {
 
-    NavHost(navController = navHostController, startDestination = "initial") {
-        composable("initial") {
+    NavHost(navController = navHostController, startDestination = RootScreen.Initial.route) {
+        composable(RootScreen.Initial.route) {
             InitialScreen(navHostController)
         }
-        composable("logIn") {
+        composable(RootScreen.Login.route) {
             LoginScreen(
-                navigateToForgotPassword = { navHostController.navigate("forgotPassword") },
-                navigateToSingUp = { navHostController.navigate("singUp") },
-                onLoginSuccess = { navHostController.navigate("home") }
+                navigateToForgotPassword = { navHostController.navigate(RootScreen.ForgotPassword.route) },
+                navigateToSingUp = { navHostController.navigate(RootScreen.SignUp.route) },
+                onLoginSuccess = { navHostController.navigate(RootScreen.Home.route) }
             )
         }
-        composable("singUp") {
+        composable(RootScreen.SignUp.route) {
             SingUpScreen(
-                navigateToLogin = { navHostController.navigate("logIn") })
+                navigateToLogin = { navHostController.navigate(RootScreen.Login.route) })
         }
-        composable("forgotPassword") {
+        composable(RootScreen.ForgotPassword.route) {
             ForgotPasswordScreen(
-                navigateToLogin = { navHostController.navigate("logIn") })
+                navigateToLogin = { navHostController.navigate(RootScreen.Login.route) })
         }
-        composable("home") {
-            HomeScreen()
+        composable(RootScreen.Home.route) {
+            HomeScreen(rootNavController = navHostController)
         }
     }
 }

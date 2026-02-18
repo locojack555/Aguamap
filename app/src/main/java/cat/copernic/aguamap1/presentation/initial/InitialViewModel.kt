@@ -2,16 +2,18 @@ package cat.copernic.aguamap1.presentation.initial
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.domain.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class InitialViewModel(
+@HiltViewModel
+class InitialViewModel @Inject constructor(
     //Inyectamos el repositorio de autenticación con sus métodos
-    private val repository: AuthRepository = FirebaseAuthRepository()
+    private val repository: AuthRepository
 ) : ViewModel() {
 
     //MutableSharedFlow para emitir la ruta

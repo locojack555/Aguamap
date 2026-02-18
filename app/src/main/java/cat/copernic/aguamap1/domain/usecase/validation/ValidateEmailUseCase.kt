@@ -2,8 +2,9 @@ package cat.copernic.aguamap1.domain.usecase.validation
 
 import android.util.Patterns
 import cat.copernic.aguamap1.R
+import javax.inject.Inject
 
-class ValidateEmailUseCase {
+class ValidateEmailUseCase @Inject constructor() {
     operator fun invoke(email: String): ValidationResult {
         if (email.isBlank()) {
             return ValidationResult(false, R.string.error_email_empty)

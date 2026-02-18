@@ -2,8 +2,9 @@ package cat.copernic.aguamap1.domain.usecase.fountain
 
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.repository.FountainRepository
+import javax.inject.Inject
 
-class CreateFountainUseCase(private val repository: FountainRepository) {
+class CreateFountainUseCase @Inject constructor(private val repository: FountainRepository) {
     suspend operator fun invoke(fountain: Fountain, isUserAdmin: Boolean): Result<Unit> {
         val fountainToSave = if (isUserAdmin) {
             fountain.copy(

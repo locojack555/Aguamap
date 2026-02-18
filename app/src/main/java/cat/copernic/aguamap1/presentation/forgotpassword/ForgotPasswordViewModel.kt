@@ -5,12 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.domain.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ForgotPasswordViewModel(
-    private val repository: AuthRepository = FirebaseAuthRepository()
+@HiltViewModel
+class ForgotPasswordViewModel @Inject constructor(
+    private val repository: AuthRepository
 ) : ViewModel() {
     var email by mutableStateOf("")
         private set

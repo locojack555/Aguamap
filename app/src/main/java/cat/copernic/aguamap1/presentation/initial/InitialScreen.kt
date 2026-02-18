@@ -10,7 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
 import cat.copernic.aguamap1.ui.theme.AguaMapGradient
@@ -18,7 +18,7 @@ import cat.copernic.aguamap1.ui.theme.AguaMapGradient
 @Composable
 fun InitialScreen(
     navController: NavController,
-    viewModel: InitialViewModel = viewModel()
+    viewModel: InitialViewModel = hiltViewModel()
 ) {
     //Launchedeffect para que solo se ejecute una vez al abrir la pantalla
     LaunchedEffect(Unit) {
@@ -43,7 +43,7 @@ fun Splash() {
         AguaMapHeader(
             logoSize = 220.dp,
             innerSpacing = 40.dp,
-            showSubtitle = false
+            isSplash = false
         )
         Spacer(modifier = Modifier.weight(1.2f))
     }

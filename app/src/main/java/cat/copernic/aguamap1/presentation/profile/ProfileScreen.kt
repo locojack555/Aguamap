@@ -1,26 +1,21 @@
 package cat.copernic.aguamap1.presentation.profile
 
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.core.os.LocaleListCompat
+import cat.copernic.aguamap1.presentation.reusable.AguaMapLanguage
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun ProfileScreen() {
-    Button(
-        onClick = {
-            // Obtenemos el idioma actual
-            val currentLanguage = AppCompatDelegate.getApplicationLocales()[0]?.language
-
-            // Alternamos entre español (es) e inglés (en)
-            val newLanguage = if (currentLanguage == "en") "es" else "en"
-
-            // Aplicamos el cambio
-            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(newLanguage)
-            AppCompatDelegate.setApplicationLocales(appLocale)
+fun ProfileScreen(navigateToLogin: () -> Unit = {}) {
+    Column {
+        AguaMapLanguage()
+        Button({
+            FirebaseAuth.getInstance().signOut()
+            navigateToLogin()
+        }) {
+            Text("Cerrar Sesión")
         }
-    ) {
-        Text("Cambiar Idioma")
     }
 }

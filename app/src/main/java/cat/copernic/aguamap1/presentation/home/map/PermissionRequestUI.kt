@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.reusable
+package cat.copernic.aguamap1.presentation.home.map
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

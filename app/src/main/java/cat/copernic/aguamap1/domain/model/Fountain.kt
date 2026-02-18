@@ -8,7 +8,7 @@ data class Fountain(
     val name: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
-    val isOperational: Boolean = true,
+    val operational: Boolean = true,
     val category: String = "",
     val description: String = "",
     val imageUrl: String = "",

@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.reusable
+package cat.copernic.aguamap1.presentation.home.navigation
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -10,11 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import cat.copernic.aguamap1.presentation.navigation.BottomNavItem
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Negro
@@ -42,11 +42,11 @@ fun HomeBottomNavigation(navController: NavHostController) {
                 icon = {
                     Icon(
                         painter = painterResource(id = item.icon),
-                        contentDescription = item.label,
+                        contentDescription = stringResource(item.label),
                         modifier = Modifier.size(24.dp)
                     )
                 },
-                label = { Text(text = item.label, fontSize = 10.sp) },
+                label = { Text(text = stringResource(item.label), fontSize = 10.sp) },
                 selected = currentRoute == item.route,
                 onClick = {
                     if (currentRoute != item.route) {
