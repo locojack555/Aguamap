@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
@@ -36,10 +37,11 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import java.util.Locale
+import kotlin.math.max
 
 @Composable
 fun GameScreen(
-    viewModel: GameViewModel = viewModel(),
+    viewModel: GameViewModel = hiltViewModel(),
     onBackToHome: () -> Unit
 ) {
     val gameState by viewModel.gameState.collectAsState()
@@ -50,6 +52,7 @@ fun GameScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val userGuessPos by viewModel.userGuessPos.collectAsState()
+    val hasLost by viewModel.hasLost.collectAsState() // Nuevo
 
     LaunchedEffect(Unit) {
         viewModel.checkCanPlay(41.3851, 2.1734)
@@ -81,6 +84,7 @@ fun GameScreen(
                         score = score,
                         distance = distance,
                         userGuessPos = userGuessPos?.let { pos -> GeoPoint(pos.first, pos.second) },
+                        hasLost = hasLost, // Pasamos el estado
                         onBackToHome = onBackToHome
                     )
                 }
@@ -319,7 +323,6 @@ fun GameMapView(
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
     val context = LocalContext.current
 
-
     Box(Modifier.fillMaxSize()) {
         OSMMapContent(viewModel = null, isHome = false) { map ->
             mapViewRef = map
@@ -336,14 +339,8 @@ fun GameMapView(
                         val userMarker = Marker(map).apply {
                             position = p
                             title = "Tu apuesta"
-
-                            // 1. Obtenemos el drawable
                             val drawable = ContextCompat.getDrawable(context, R.drawable.icon_pin)
-
-
-                            // 3. Convertimos a Bitmap escalado
                             val bitmap = drawable?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
-
                             icon = BitmapDrawable(context.resources, bitmap)
                             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                         }
@@ -360,38 +357,44 @@ fun GameMapView(
             }
         }
 
-        // Bloque isFinished (cuando se muestran ambos puntos al final)
-        if (isFinished) {
+        // Bloque isFinished - VERSIÓN CORREGIDA
+        if (isFinished && userGuessPos != null) {
             LaunchedEffect(Unit) {
                 mapViewRef?.let { map ->
+                    // Limpiar overlays anteriores
+                    map.overlays.clear()
+
                     val sizeInPx = (35 * context.resources.displayMetrics.density).toInt()
                     val realPoint = GeoPoint(fountain.latitude, fountain.longitude)
-                    val guessPoint = userGuessPos ?: GeoPoint(0.0, 0.0)
+                    val guessPoint = userGuessPos
 
-                    // MARCADOR REAL (Verde/Default)
+                    // 1. MARCADOR REAL (Rojo)
+                    val realDrawable = ContextCompat.getDrawable(context, R.drawable.icon_pin)?.mutate()
+                    realDrawable?.setTint(android.graphics.Color.parseColor("#FF4444"))
+                    val realBitmap = realDrawable?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
+
                     val realMarker = Marker(map).apply {
                         position = realPoint
                         title = "Ubicación Real"
-                        val bitmap = ContextCompat.getDrawable(context, R.drawable.icon_pin)
-                            ?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
-                        icon = BitmapDrawable(context.resources, bitmap)
+                        icon = BitmapDrawable(context.resources, realBitmap)
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                     }
                     map.overlays.add(realMarker)
 
-                    // MARCADOR USUARIO (También Lila aquí para consistencia)
+                    // 2. MARCADOR USUARIO (Verde)
+                    val guessDrawable = ContextCompat.getDrawable(context, R.drawable.icon_pin)?.mutate()
+                    guessDrawable?.setTint(android.graphics.Color.parseColor("#34A853"))
+                    val guessBitmap = guessDrawable?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
+
                     val guessMarker = Marker(map).apply {
                         position = guessPoint
                         title = "Tu apuesta"
-                        val drawable = ContextCompat.getDrawable(context, R.drawable.icon_pin)
-                        drawable?.setTint(android.graphics.Color.parseColor("#34A853"))
-                        val bitmap = drawable?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
-                        icon = BitmapDrawable(context.resources, bitmap)
+                        icon = BitmapDrawable(context.resources, guessBitmap)
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                     }
                     map.overlays.add(guessMarker)
 
-                    // Línea de distancia
+                    // 3. Línea de distancia
                     val line = Polyline().apply {
                         outlinePaint.color = android.graphics.Color.BLUE
                         outlinePaint.strokeWidth = 5f
@@ -399,8 +402,11 @@ fun GameMapView(
                     }
                     map.overlays.add(line)
 
-                    // Etiqueta de distancia
-                    val midPoint = GeoPoint((realPoint.latitude + guessPoint.latitude) / 2, (realPoint.longitude + guessPoint.longitude) / 2)
+                    // 4. Etiqueta de distancia
+                    val midPoint = GeoPoint(
+                        (realPoint.latitude + guessPoint.latitude) / 2,
+                        (realPoint.longitude + guessPoint.longitude) / 2
+                    )
                     val distanceMarker = Marker(map).apply {
                         position = midPoint
                         icon = createDistanceTag(context, "${distance.toInt()}m")
@@ -409,15 +415,52 @@ fun GameMapView(
                     }
                     map.overlays.add(distanceMarker)
 
-                    val box = BoundingBox.fromGeoPoints(listOf(realPoint, guessPoint))
-                    map.zoomToBoundingBox(box, true, 120)
+                    // 5. ZOOM OPTIMIZADO PARA VER AMBOS PUNTOS
+                    try {
+                        // Calcular el bounding box de los dos puntos
+                        val minLat = minOf(realPoint.latitude, guessPoint.latitude)
+                        val maxLat = maxOf(realPoint.latitude, guessPoint.latitude)
+                        val minLon = minOf(realPoint.longitude, guessPoint.longitude)
+                        val maxLon = maxOf(realPoint.longitude, guessPoint.longitude)
+
+                        // Calcular el centro
+                        val centerLat = (minLat + maxLat) / 2
+                        val centerLon = (minLon + maxLon) / 2
+
+                        // Calcular el span (diferencia) en grados
+                        val latSpan = maxLat - minLat
+                        val lonSpan = maxLon - minLon
+
+                        // Determinar el zoom basado en el span más grande
+                        // En OSMDroid, el zoom 18 cubre aproximadamente 0.01 grados
+                        val zoomLevel = when {
+                            max(latSpan, lonSpan) < 0.005 -> 17.0  // Muy cerca (ambos puntos muy juntos)
+                            max(latSpan, lonSpan) < 0.01 -> 16.0  // Cerca
+                            max(latSpan, lonSpan) < 0.02 -> 15.0  // Distancia media
+                            max(latSpan, lonSpan) < 0.05 -> 14.0  // Algo alejado
+                            max(latSpan, lonSpan) < 0.1 -> 13.0   // Alejado
+                            else -> 12.0                           // Muy alejado
+                        }
+
+                        // Aplicar zoom y centrar
+                        map.controller.setZoom(zoomLevel)
+                        map.controller.setCenter(GeoPoint(centerLat, centerLon))
+
+                    } catch (e: Exception) {
+                        // Fallback por si algo falla
+                        map.controller.setZoom(15.0)
+                        map.controller.setCenter(GeoPoint(
+                            (realPoint.latitude + guessPoint.latitude) / 2,
+                            (realPoint.longitude + guessPoint.longitude) / 2
+                        ))
+                    }
+
                     map.invalidate()
                 }
             }
         }
     }
 }
-
 private fun createDistanceTag(context: android.content.Context, text: String): BitmapDrawable {
     val density = context.resources.displayMetrics.density
     val paintText = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
@@ -451,36 +494,146 @@ fun GameResultScreen(
     score: Int,
     distance: Double,
     userGuessPos: GeoPoint?,
+    hasLost: Boolean,
     onBackToHome: () -> Unit
 ) {
+    val context = LocalContext.current // Este sí es válido aquí porque está en un Composable
+
     Column(Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(0.45f)) {
-            GameMapView(fountain = fountain, isFinished = true, userGuessPos = userGuessPos, onMarkerPlaced = { _, _ -> }, distance = distance)
+            if (hasLost) {
+                // Si perdió, mostramos solo la fuente real sin marcador de usuario
+                Box(modifier = Modifier.fillMaxSize()) {
+                    OSMMapContent(viewModel = null, isHome = false) { map ->
+                        map.controller.setZoom(17.0)
+                        map.controller.setCenter(GeoPoint(fountain.latitude, fountain.longitude))
+
+                        val sizeInPx = (35 * context.resources.displayMetrics.density).toInt()
+
+                        // Solo mostramos el marcador de la fuente real
+                        val realMarker = Marker(map).apply {
+                            position = GeoPoint(fountain.latitude, fountain.longitude)
+                            title = "Ubicación Real"
+                            val bitmap = ContextCompat.getDrawable(context, R.drawable.icon_pin)
+                                ?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
+                            icon = BitmapDrawable(context.resources, bitmap)
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        }
+                        map.overlays.add(realMarker)
+                        map.invalidate()
+                    }
+                }
+            } else {
+                // Si ganó, mostramos ambos puntos como antes
+                GameMapView(
+                    fountain = fountain,
+                    isFinished = true,
+                    userGuessPos = userGuessPos,
+                    onMarkerPlaced = { _, _ -> },
+                    distance = distance
+                )
+            }
         }
+
         Card(
             modifier = Modifier.weight(0.55f).fillMaxWidth(),
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             colors = CardDefaults.cardColors(containerColor = Blanco),
             elevation = CardDefaults.cardElevation(16.dp)
         ) {
-            Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("PARTIDA COMPLETADA", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = Color.DarkGray)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("TU PUNTUACIÓN", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
-                    Text("$score Puntos", fontSize = 48.sp, fontWeight = FontWeight.Black, color = Color(0xFF007BFF))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Surface(color = Color(0xFFE3F2FD), shape = RoundedCornerShape(8.dp)) {
-                        Text("Distancia al objetivo: ${String.format(Locale.getDefault(), "%.0f", distance)}m", modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), fontSize = 18.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1976D2))
+                    if (hasLost) {
+                        // Mensaje de pérdida
+                        Icon(
+                            painter = painterResource(R.drawable.error_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = Rojo
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "¡HAS PERDIDO!",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 24.sp,
+                            color = Rojo
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Se te acabó el tiempo sin marcar una ubicación",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Surface(
+                            color = Color(0xFFFFE0E0),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                "No has conseguido puntos",
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Rojo
+                            )
+                        }
+                    } else {
+                        // Mensaje de victoria
+                        Text(
+                            "PARTIDA COMPLETADA",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 20.sp,
+                            color = Color.DarkGray
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "TU PUNTUACIÓN",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray
+                        )
+                        Text(
+                            "$score Puntos",
+                            fontSize = 48.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF007BFF)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Surface(
+                            color = Color(0xFFE3F2FD),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                "Distancia al objetivo: ${String.format(Locale.getDefault(), "%.0f", distance)}m",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF1976D2)
+                            )
+                        }
                     }
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Dirígete a Ranking si desea ver su puntuación", fontWeight = FontWeight.Bold, color = Color.Gray, textAlign = TextAlign.Center, fontSize = 12.sp)
+                    Text(
+                        "Ya has jugado hoy. Vuelve mañana para una nueva partida",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        fontSize = 14.sp
+                    )
                 }
             }
         }
     }
 }
-
 @Composable
 fun LoadingPartida() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
