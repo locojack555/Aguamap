@@ -21,23 +21,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.domain.model.UserRanking
 
 @Composable
-fun RankingScreen(viewModel: RankingViewModel = viewModel()) {
+fun RankingScreen(viewModel: RankingViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
 
-    // 1. Estado del selector
+    // Estado del selector
     var seleccionadoResId by remember { mutableIntStateOf(R.string.ranking_day) }
 
-    // 2. DISPARADOR DE CARGA: Cada vez que 'seleccionadoResId' cambie,
-    // ejecutamos la función del ViewModel automáticamente.
+    // Disparador de carga: Cada vez que 'seleccionadoResId' cambie
     LaunchedEffect(seleccionadoResId) {
-        viewModel.cargarRankingsReales(seleccionadoResId)
+        viewModel.loadRanking(seleccionadoResId)  // Cambiado a loadRanking
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(color = colorResource(id = R.color.blancoHueso))) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = colorResource(id = R.color.blancoHueso))
+    ) {
         HeaderSection()
 
         TimeSelectorSection(
@@ -59,10 +63,9 @@ fun RankingScreen(viewModel: RankingViewModel = viewModel()) {
             color = Color.Gray
         )
 
-        // 3. GESTIÓN DE ESTADOS: Carga vs. Lista
+        // Gestión de estados: Carga vs. Lista
         Box(modifier = Modifier.weight(1f)) {
             if (state.isLoading) {
-                // Indicador de carga para accesibilidad
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = colorResource(id = R.color.magentaOscuro)
@@ -79,7 +82,7 @@ fun RankingScreen(viewModel: RankingViewModel = viewModel()) {
             }
         }
 
-        // 4. Puntos totales del usuario actual
+        // Puntos totales del usuario actual
         val puntosMios = state.players.find { it.isCurrentUser }?.points ?: 0
         TotalPointsFooter(points = puntosMios)
     }
@@ -93,7 +96,10 @@ fun HeaderSection() {
             .height(110.dp)
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(colorResource(id = R.color.amatista), colorResource(id = R.color.rosaIntenso))
+                    colors = listOf(
+                        colorResource(id = R.color.amatista),
+                        colorResource(id = R.color.rosaIntenso)
+                    )
                 )
             )
             .padding(22.dp),
@@ -101,11 +107,25 @@ fun HeaderSection() {
     ) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(painter = painterResource(id = R.drawable.icon_trofeo), contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.icon_trofeo),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
                 Spacer(Modifier.width(8.dp))
-                Text("Ranking", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = stringResource(id = R.string.ranking_title),
+                    color = Color.White,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
-            Text("Mejores jugadores", color = Color.White.copy(alpha = 0.8f), fontSize = 16.sp)
+            Text(
+                text = stringResource(id = R.string.ranking_subtitle),
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 16.sp
+            )
         }
     }
 }
@@ -115,7 +135,6 @@ fun TimeSelectorSection(
     seleccionadoResId: Int,
     onSeleccionChange: (Int) -> Unit
 ) {
-    // Lista de IDs de strings.xml
     val opciones = listOf(
         R.string.ranking_day,
         R.string.ranking_month,
@@ -137,12 +156,13 @@ fun TimeSelectorSection(
                 onClick = { onSeleccionChange(resId) },
                 shape = RoundedCornerShape(50.dp),
                 color = if (esSeleccionado) Color.White else Color.Transparent,
-                modifier = Modifier.weight(1f).height(35.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(35.dp),
                 shadowElevation = if (esSeleccionado) 2.dp else 0.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        // Aquí obtenemos el texto traducido según el ID
                         text = stringResource(id = resId),
                         fontWeight = if (esSeleccionado) FontWeight.Bold else FontWeight.Normal,
                         color = if (esSeleccionado) Color.Black else Color.Gray
@@ -156,8 +176,15 @@ fun TimeSelectorSection(
 @Composable
 fun RankingItem(player: UserRanking) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
-        colors = CardDefaults.cardColors(containerColor = if (player.isCurrentUser) colorResource(id = R.color.cremaSuave) else Color.White),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (player.isCurrentUser)
+                colorResource(id = R.color.cremaSuave)
+            else
+                Color.White
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -166,21 +193,47 @@ fun RankingItem(player: UserRanking) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Posición e Icono (Medalla o número)
-            Box(modifier = Modifier.width(40.dp), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.width(40.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 when (player.position) {
-                    1 -> Icon(painter = painterResource(id = R.drawable.icon_corona), "Oro", tint = colorResource(id = R.color.oro))
-                    2 -> Icon(painter = painterResource(id = R.drawable.icon_medalla), "Plata", tint = colorResource(id = R.color.plata))
-                    3 -> Icon(painter = painterResource(id = R.drawable.icon_medalla), "Bronce", tint = colorResource(id = R.color.bronze))
-                    else -> Text("${player.position}", color = Color.Gray, fontWeight = FontWeight.Bold)
+                    1 -> Icon(
+                        painter = painterResource(id = R.drawable.icon_corona),
+                        contentDescription = stringResource(id = R.string.ranking_gold),
+                        tint = colorResource(id = R.color.oro)
+                    )
+                    2 -> Icon(
+                        painter = painterResource(id = R.drawable.icon_medalla),
+                        contentDescription = stringResource(id = R.string.ranking_silver),
+                        tint = colorResource(id = R.color.plata)
+                    )
+                    3 -> Icon(
+                        painter = painterResource(id = R.drawable.icon_medalla),
+                        contentDescription = stringResource(id = R.string.ranking_bronze),
+                        tint = colorResource(id = R.color.bronze)
+                    )
+                    else -> Text(
+                        text = "${player.position}",
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
             // Avatar
             Box(
-                modifier = Modifier.size(45.dp).clip(CircleShape).background(colorResource(id = R.color.azulHielo)),
+                modifier = Modifier
+                    .size(45.dp)
+                    .clip(CircleShape)
+                    .background(colorResource(id = R.color.azulHielo)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Person, contentDescription = null, tint = colorResource(id = R.color.azulReal))
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    tint = colorResource(id = R.color.azulReal)
+                )
             }
 
             Spacer(Modifier.width(12.dp))
@@ -190,10 +243,17 @@ fun RankingItem(player: UserRanking) {
                 Text(
                     text = player.name,
                     fontWeight = FontWeight.Bold,
-                    color = if (player.isCurrentUser) colorResource(id = R.color.azulReal) else Color.Black
+                    color = if (player.isCurrentUser)
+                        colorResource(id = R.color.azulReal)
+                    else
+                        Color.Black
                 )
                 Text(
-                    text = "${player.discovered} descubiertas    ${player.games} partidas",
+                    text = stringResource(
+                        id = R.string.ranking_stats,
+                        player.discovered,
+                        player.games
+                    ),
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -224,19 +284,37 @@ fun RankingItem(player: UserRanking) {
 @Composable
 fun TotalPointsFooter(points: Int) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.lavandaPalido)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colorResource(id = R.color.lavandaPalido)
+        ),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(painter = painterResource(id = R.drawable.icon_trofeo), contentDescription = null, tint = colorResource(id = R.color.purpuraReal), modifier = Modifier.size(32.dp))
+            Icon(
+                painter = painterResource(id = R.drawable.icon_trofeo),
+                contentDescription = null,
+                tint = colorResource(id = R.color.purpuraReal),
+                modifier = Modifier.size(32.dp)
+            )
             Spacer(Modifier.width(16.dp))
             Column {
-                Text("Tus puntos totales", fontSize = 14.sp, color = Color.Gray)
-                Text("$points", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = colorResource(id = R.color.purpuraReal))
+                Text(
+                    text = stringResource(id = R.string.ranking_total_points),
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "$points",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorResource(id = R.color.purpuraReal)
+                )
             }
         }
     }

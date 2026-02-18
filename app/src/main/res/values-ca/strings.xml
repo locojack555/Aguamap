@@ -46,4 +46,17 @@
     <string name="ubi_on">Activa la teva ubicació</string>
     <string name="permiss_on">Concedir permís</string>
     <string name="txt_permiss">Per mostrar-te les fonts més properes i centrar el mapa, necessitem permís per accedir a la teva ubicació.</string>
+    <string name="ranking_day">Dia</string>
+    <string name="ranking_month">Mes</string>
+    <string name="ranking_year">Any</string>
+    <string name="ranking_title_day">Classificació del dia</string>
+    <string name="ranking_title_month">Classificació del mes</string>
+    <string name="ranking_title_year">Classificació del any</string>
+    <string name="ranking_title">Ranking</string>
+    <string name="ranking_subtitle">Millors jugadors</string>
+    <string name="ranking_stats">%1$d descobertes    %2$d partides</string>
+    <string name="ranking_total_points">Els teus punts totals</string>
+    <string name="ranking_gold">Or</string>
+    <string name="ranking_silver">Plata</string>
+    <string name="ranking_bronze">Bronze</string>
 </resources>

@@ -52,4 +52,11 @@
     <string name="ranking_title_day">Clasificación del día</string>
     <string name="ranking_title_month">Clasificación del mes</string>
     <string name="ranking_title_year">Clasificación del año</string>
+    <string name="ranking_title">Ranking</string>
+    <string name="ranking_subtitle">Mejores jugadores</string>
+    <string name="ranking_stats">%1$d descubiertas    %2$d partidas</string>
+    <string name="ranking_total_points">Tus puntos totales</string>
+    <string name="ranking_gold">Oro</string>
+    <string name="ranking_silver">Plata</string>
+    <string name="ranking_bronze">Bronce</string>
 </resources>
