@@ -2,8 +2,10 @@ package cat.copernic.aguamap1.di
 
 import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
+import cat.copernic.aguamap1.data.repository.FirebaseGameRepository
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.FountainRepository
+import cat.copernic.aguamap1.domain.repository.GameRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -39,5 +41,11 @@ object AppModule {
     @Singleton
     fun provideFountainRepository(db: FirebaseFirestore): FountainRepository {
         return FirebaseFountainRepository(db)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGameRepository(db: FirebaseFirestore): GameRepository {
+        return FirebaseGameRepository(db)
     }
 }

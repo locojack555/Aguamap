@@ -4,20 +4,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.GameSession
+import cat.copernic.aguamap1.domain.usecase.game.*
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.*
-import kotlin.math.*
+import javax.inject.Inject
 
-class GameViewModel : ViewModel() {
-    private val db = FirebaseFirestore.getInstance()
-    private val auth = FirebaseAuth.getInstance()
+@HiltViewModel
+class GameViewModel @Inject constructor(
+    private val getRandomFountainUseCase: GetRandomFountainUseCase,
+    private val hasPlayedTodayUseCase: HasPlayedTodayUseCase,
+    private val calculateScoreUseCase: CalculateScoreUseCase,
+    private val calculateDistanceUseCase: CalculateDistanceUseCase,
+    private val saveGameSessionUseCase: SaveGameSessionUseCase,
+    private val auth: FirebaseAuth
+) : ViewModel() {
 
     private val _gameState = MutableStateFlow<GameState>(GameState.Initial)
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
@@ -43,10 +49,15 @@ class GameViewModel : ViewModel() {
     private val _userGuessPos = MutableStateFlow<Pair<Double, Double>?>(null)
     val userGuessPos: StateFlow<Pair<Double, Double>?> = _userGuessPos.asStateFlow()
 
+    // Nuevo estado para controlar si el usuario ha perdido
+    private val _hasLost = MutableStateFlow(false)
+    val hasLost: StateFlow<Boolean> = _hasLost.asStateFlow()
+
     fun checkCanPlay(userLat: Double, userLng: Double) {
         viewModelScope.launch {
             _isLoading.value = true
             val userId = auth.currentUser?.uid
+
             if (userId == null) {
                 _error.value = "Inicia sesión para jugar"
                 _gameState.value = GameState.Error
@@ -55,36 +66,37 @@ class GameViewModel : ViewModel() {
             }
 
             try {
-                val sessionsSnapshot = db.collection("game_sessions").get().await()
-                val today = Calendar.getInstance()
-
-                val hasPlayedToday = sessionsSnapshot.documents.any { doc ->
-                    val sessionUserId = doc.getString("userId")
-                    val sessionDate = doc.getDate("date")
-
-                    if (sessionUserId == userId && sessionDate != null) {
-                        val cal = Calendar.getInstance().apply { time = sessionDate }
-                        cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                                cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
-                    } else false
+                // Verificar si ya jugó hoy
+                val hasPlayedResult = hasPlayedTodayUseCase(userId)
+                if (hasPlayedResult.isFailure) {
+                    _error.value = "Error al verificar sesiones"
+                    _gameState.value = GameState.Error
+                    _isLoading.value = false
+                    return@launch
                 }
 
-                if (hasPlayedToday) {
+                if (hasPlayedResult.getOrNull() == true) {
                     _error.value = "Ya has jugado hoy. ¡Vuelve mañana!"
                     _gameState.value = GameState.DailyLimitReached
                     _isLoading.value = false
                     return@launch
                 }
 
-                val fountainsSnapshot = db.collection("fountains").get().await()
-                val fountains = fountainsSnapshot.toObjects(Fountain::class.java)
+                // Obtener fuente aleatoria
+                val fountainResult = getRandomFountainUseCase()
+                if (fountainResult.isFailure) {
+                    _error.value = "Error al cargar fuentes"
+                    _gameState.value = GameState.Error
+                    _isLoading.value = false
+                    return@launch
+                }
 
-                if (fountains.isEmpty()) {
+                val fountain = fountainResult.getOrNull()
+                if (fountain == null) {
                     _error.value = "No hay fuentes disponibles"
                     _gameState.value = GameState.Error
                 } else {
-                    // Preparamos la fuente pero vamos a la pantalla de Instrucciones
-                    _currentFountain.value = fountains.random()
+                    _currentFountain.value = fountain
                     _gameState.value = GameState.Instructions
                 }
             } catch (e: Exception) {
@@ -101,6 +113,7 @@ class GameViewModel : ViewModel() {
         _remainingTime.value = 60
         _score.value = 0
         _userGuessPos.value = null
+        _hasLost.value = false
         startTimer()
     }
 
@@ -110,10 +123,37 @@ class GameViewModel : ViewModel() {
                 delay(1000)
                 _remainingTime.value -= 1
             }
-            if (_remainingTime.value == 0 && _gameState.value == GameState.Playing) {
-                finishGame()
+            // Si el tiempo llegó a 0 y sigue en estado Playing, y no ha marcado posición
+            if (_remainingTime.value == 0 &&
+                _gameState.value == GameState.Playing &&
+                _userGuessPos.value == null) {
+                handleLoss()
             }
         }
+    }
+
+    private fun handleLoss() {
+        viewModelScope.launch {
+            _hasLost.value = true
+            _score.value = 0
+            _distance.value = 0.0
+            saveLossSession() // Guardamos la sesión como pérdida
+            _gameState.value = GameState.Finished
+        }
+    }
+
+    private suspend fun saveLossSession() {
+        val user = auth.currentUser ?: return
+        val session = GameSession(
+            userId = user.uid,
+            userName = user.displayName ?: "Jugador",
+            score = 0,
+            distance = 0.0,
+            date = Date(),
+            fountainId = _currentFountain.value?.id ?: "",
+            fountainName = _currentFountain.value?.name ?: ""
+        )
+        saveGameSessionUseCase(session)
     }
 
     fun setUserGuess(lat: Double, lng: Double) {
@@ -122,11 +162,23 @@ class GameViewModel : ViewModel() {
 
     fun finishGame() {
         viewModelScope.launch {
+            // Si no hay guess, tratar como pérdida
+            if (_userGuessPos.value == null) {
+                handleLoss()
+                return@launch
+            }
+
             val fountain = _currentFountain.value ?: return@launch
-            val guess = _userGuessPos.value ?: Pair(0.0, 0.0)
-            val dist = calculateDistance(guess.first, guess.second, fountain.latitude, fountain.longitude)
+            val guess = _userGuessPos.value ?: return@launch
+
+            val dist = calculateDistanceUseCase(
+                guess.first,
+                guess.second,
+                fountain.latitude,
+                fountain.longitude
+            )
             _distance.value = dist
-            _score.value = calculateScore(dist)
+            _score.value = calculateScoreUseCase(dist)
 
             saveSession()
             _gameState.value = GameState.Finished
@@ -144,30 +196,7 @@ class GameViewModel : ViewModel() {
             fountainId = _currentFountain.value?.id ?: "",
             fountainName = _currentFountain.value?.name ?: ""
         )
-        try {
-            db.collection("game_sessions").add(session).await()
-        } catch (e: Exception) { }
-    }
-
-    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val r = 6371e3
-        val phi1 = lat1 * PI / 180
-        val phi2 = lat2 * PI / 180
-        val dPhi = (lat2 - lat1) * PI / 180
-        val dLambda = (lon2 - lon1) * PI / 180
-        val a = sin(dPhi / 2).pow(2) + cos(phi1) * cos(phi2) * sin(dLambda / 2).pow(2)
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return r * c
-    }
-
-    private fun calculateScore(dist: Double): Int {
-        return when {
-            dist < 50 -> 1000
-            dist < 100 -> 800
-            dist < 500 -> 500
-            dist < 1000 -> 200
-            else -> 50
-        }
+        saveGameSessionUseCase(session)
     }
 
     fun retryGame() {
