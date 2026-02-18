@@ -5,14 +5,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.domain.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LoginViewModel(
-    private val repository: AuthRepository = FirebaseAuthRepository() // Se inyecta el repositorio
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val repository: AuthRepository
 ) : ViewModel() {
 
     // Estados de la UI
@@ -22,6 +24,8 @@ class LoginViewModel(
         private set
     var isError by mutableStateOf(false)
         private set
+    var isEmailVerifiedError by mutableStateOf(false)
+        private set
 
     private val _navigateToHome = MutableSharedFlow<Boolean>()
     val navigateToHome = _navigateToHome.asSharedFlow()
@@ -29,11 +33,13 @@ class LoginViewModel(
     fun onEmailChanged(newValue: String) {
         email = newValue
         isError = false
+        isEmailVerifiedError = false
     }
 
     fun onPasswordChanged(newValue: String) {
         password = newValue
         isError = false
+        isEmailVerifiedError = false
     }
 
     fun onLoginClick() {
@@ -47,7 +53,14 @@ class LoginViewModel(
             if (result.isSuccess) {
                 _navigateToHome.emit(true)
             } else {
-                isError = true
+                val exception = result.exceptionOrNull()
+                if (exception?.message == "EMAIL_NOT_VERIFIED") {
+                    isEmailVerifiedError = true
+                    isError = false
+                } else {
+                    isError = true
+                    isEmailVerifiedError = false
+                }
             }
         }
     }

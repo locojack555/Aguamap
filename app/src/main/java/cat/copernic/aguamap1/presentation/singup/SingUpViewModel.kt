@@ -6,14 +6,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.usecase.validation.ValidateEmailUseCase
 import cat.copernic.aguamap1.domain.usecase.validation.ValidatePasswordUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SingUpViewModel(
-    private val repository: AuthRepository = FirebaseAuthRepository(),
+@HiltViewModel
+class SingUpViewModel @Inject constructor(
+    private val repository: AuthRepository,
     private val validateEmail: ValidateEmailUseCase = ValidateEmailUseCase(),
     private val validatePassword: ValidatePasswordUseCase = ValidatePasswordUseCase()
 ) : ViewModel() {
@@ -28,9 +30,12 @@ class SingUpViewModel(
     fun onSingUpClick() {
         val emailResult = validateEmail(email)
         val passwordResult = validatePassword(password)
+        emailError = null
+        passwordError = null
         if (!emailResult.success || !passwordResult.success) {
             emailError = emailResult.errorResId
             passwordError = passwordResult.errorResId
+            return
         }
         viewModelScope.launch {
             val result = repository.signUp(email, password)

@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
 import cat.copernic.aguamap1.presentation.reusable.AguaMapInput
@@ -40,7 +40,7 @@ import cat.copernic.aguamap1.ui.theme.Negro
 
 @Composable
 fun SingUpScreen(
-    viewModel: SingUpViewModel = viewModel(),
+    viewModel: SingUpViewModel = hiltViewModel(),
     navigateToLogin: () -> Unit = {}
 ) {
     LaunchedEffect(viewModel.isSuccess) {
@@ -81,8 +81,6 @@ fun SingUpScreen(
                         viewModel.email,
                         onValueChange = {
                             viewModel.email = it
-                            viewModel.emailError = null
-                            viewModel.passwordError = null
                         },
                         isError = viewModel.emailError != null
                     )
@@ -92,8 +90,6 @@ fun SingUpScreen(
                         viewModel.password,
                         onValueChange = {
                             viewModel.password = it
-                            viewModel.passwordError = null
-                            viewModel.emailError = null
                         },
                         isError = viewModel.passwordError != null,
                         isPasswordField = true

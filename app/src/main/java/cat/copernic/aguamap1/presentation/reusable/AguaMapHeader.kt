@@ -1,6 +1,7 @@
 package cat.copernic.aguamap1.presentation.reusable
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,33 +25,42 @@ fun AguaMapHeader(
     modifier: Modifier = Modifier,
     logoSize: Dp = 160.dp,
     innerSpacing: Dp = 0.dp,
-    showSubtitle: Boolean = true
+    isSplash: Boolean = true
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 80.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(R.drawable.gota),
-            contentDescription = stringResource(R.string.logo),
-            modifier = Modifier.size(logoSize)
-        )
-        Spacer(modifier = Modifier.size(innerSpacing))
-        Text(
-            text = stringResource(R.string.app_name),
-            fontSize = 50.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Blanco
-        )
-        if (showSubtitle) {
-            Text(
-                text = stringResource(R.string.subtitle),
-                fontSize = 20.sp,
-                color = Blanco,
-                modifier = Modifier.padding(top = 8.dp)
+    Box(modifier = modifier.fillMaxWidth()) {
+        if (isSplash) {
+            AguaMapLanguage(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 40.dp, end = 28.dp)
             )
+        }
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(top = 80.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(R.drawable.gota),
+                contentDescription = stringResource(R.string.logo),
+                modifier = Modifier.size(logoSize)
+            )
+            Spacer(modifier = Modifier.size(innerSpacing))
+            Text(
+                text = stringResource(R.string.app_name),
+                fontSize = 50.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Blanco
+            )
+            if (isSplash) {
+                Text(
+                    text = stringResource(R.string.subtitle),
+                    fontSize = 20.sp,
+                    color = Blanco,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
     }
 }

@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
 import cat.copernic.aguamap1.presentation.reusable.AguaMapInput
@@ -43,7 +43,7 @@ import cat.copernic.aguamap1.ui.theme.Rojo
 //@Preview
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel(),
+    viewModel: LoginViewModel = hiltViewModel(),
     navigateToForgotPassword: () -> Unit = {},
     navigateToSingUp: () -> Unit = {},
     onLoginSuccess: () -> Unit = {}
@@ -105,6 +105,13 @@ fun LoginScreen(
                     if (viewModel.isError) {
                         Text(
                             text = stringResource(R.string.incorrect_sing_in),
+                            color = Rojo,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    if (viewModel.isEmailVerifiedError) {
+                        Text(
+                            text = stringResource(R.string.error_email_not_verified),
                             color = Rojo,
                             modifier = Modifier.padding(top = 8.dp)
                         )

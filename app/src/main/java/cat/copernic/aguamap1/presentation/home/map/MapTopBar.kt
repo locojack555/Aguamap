@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.reusable
+package cat.copernic.aguamap1.presentation.home.map
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,12 +19,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Negro
 
 @Composable
-fun HomeTopBar() {
+fun HomeTopBar(
+    isMapView: Boolean,
+    onToggleView: () -> Unit,
+    viewModel: MapViewModel = hiltViewModel()
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -34,8 +39,8 @@ fun HomeTopBar() {
         shadowElevation = 6.dp
     ) {
         OutlinedTextField(
-            value = "",
-            onValueChange = {/*buscar*/ },
+            value = viewModel.searchQuery,
+            onValueChange = { viewModel.onSearchQueryChanged(it) },
             placeholder = { Text(stringResource(R.string.search_fountains), color = Negro) },
             leadingIcon = {
                 Icon(
@@ -53,10 +58,13 @@ fun HomeTopBar() {
                             tint = Color.Unspecified
                         )
                     }
-                    IconButton(onClick = { /* Lista */ }) {
+                    IconButton(onClick = { onToggleView() }) {
                         Icon(
-                            painterResource(R.drawable.format_list_bulleted_24px),
-                            contentDescription = stringResource(R.string.list),
+                            painter = painterResource(
+                                if (isMapView) R.drawable.format_list_bulleted_24px
+                                else R.drawable.map_24px
+                            ),
+                            contentDescription = "Cambiar vista",
                             tint = Color.Unspecified
                         )
                     }

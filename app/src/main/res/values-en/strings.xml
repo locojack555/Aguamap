@@ -5,7 +5,7 @@
     <string name="subtitle">Find fountains in Terrassa</string>
     <string name="error_email_duplicated">This email is already registered by another user.</string>
     <string name="error_email_generic">There was an error creating the user.</string>
-    <string name="error_email_empty">Email cannot be empty.</string>
+    <string name="error_email_empty">Email can\'t be empty.</string>
     <string name="error_email_pattern">Invalid email format.</string>
     <string name="error_password_len">Password must be at least 8 characters long.</string>
     <string name="error_password_number">Password must contain at least one number.</string>
@@ -15,8 +15,18 @@
     <string name="text_recovery_password">Forgot your password?</string>
     <string name="text_forgot_password">We will send you a link to recover your password</string>
     <string name="email">Email</string>
+    <string name="noth_fountains">No sources were found</string>
+    <string name="error_email_not_verified">Email not verified</string>
     <string name="password">Password</string>
     <string name="logo">Logo</string>
+    <string name="map">Map</string>
+    <string name="es">Español</string>
+    <string name="en">English</string>
+    <string name="ca">Català</string>
+    <string name="category">Categories</string>
+    <string name="game">Game</string>
+    <string name="ranking">Ranking</string>
+    <string name="profile">Profile</string>
     <string name="login">Login</string>
     <string name="init">Sign in</string>
     <string name="has_acc">Already have an account?</string>
@@ -24,7 +34,7 @@
     <string name="text_sing_in_link">Sign Up</string>
     <string name="incorrect_sing_in">Invalid credentials</string>
     <string name="password_example">**********</string>
-    <string name="incorrect_email">Email does not exist</string>
+    <string name="incorrect_email">Email doesn\'t exist</string>
     <string name="back_home">Back to login</string>
     <string name="email_example">you@email.com</string>
     <string name="link_sent">Link sent</string>
