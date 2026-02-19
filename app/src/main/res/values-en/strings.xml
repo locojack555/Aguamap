@@ -15,9 +15,15 @@
     <string name="text_recovery_password">Forgot your password?</string>
     <string name="text_forgot_password">We will send you a link to recover your password</string>
     <string name="email">Email</string>
+    <string name="info">Data</string>
+    <string name="complete_name">Full name</string>
+    <string name="welcome">It looks like this is your first time here. Please enter your data:</string>
     <string name="noth_fountains">No sources were found</string>
     <string name="error_email_not_verified">Email not verified</string>
     <string name="password">Password</string>
+    <string name="name">Name</string>
+    <string name="name_example">Your full name</string>
+    <string name="error_field_required">This field can\'t be empty</string>
     <string name="logo">Logo</string>
     <string name="map">Map</string>
     <string name="es">Español</string>

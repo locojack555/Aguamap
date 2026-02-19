@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,7 +20,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,15 +35,13 @@ import cat.copernic.aguamap1.ui.theme.AguaMapGradient
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Negro
+import cat.copernic.aguamap1.ui.theme.Rojo
 
 @Composable
 fun SingUpScreen(
     viewModel: SingUpViewModel = hiltViewModel(),
     navigateToLogin: () -> Unit = {}
 ) {
-    LaunchedEffect(viewModel.isSuccess) {
-        if (viewModel.isSuccess) navigateToLogin()
-    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -59,15 +55,15 @@ fun SingUpScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(),
+                    .weight(1f),
                 shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
                 colors = CardDefaults.cardColors(containerColor = Blanco)
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 24.dp, vertical = 32.dp)
+                        .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = 32.dp)
                 ) {
                     Text(
                         text = stringResource(R.string.text_sing_in_link),
@@ -79,11 +75,10 @@ fun SingUpScreen(
                         stringResource(R.string.email),
                         stringResource(R.string.email_example),
                         viewModel.email,
-                        onValueChange = {
-                            viewModel.email = it
-                        },
+                        onValueChange = { viewModel.email = it },
                         isError = viewModel.emailError != null
                     )
+                    viewModel.emailError?.let { Text(stringResource(it), color = Color.Red) }
                     AguaMapInput(
                         stringResource(R.string.password),
                         stringResource(R.string.password_example),
@@ -94,18 +89,16 @@ fun SingUpScreen(
                         isError = viewModel.passwordError != null,
                         isPasswordField = true
                     )
-                    viewModel.passwordError?.let { resId ->
+                    viewModel.passwordError?.let { Text(stringResource(it), color = Color.Red) }
+                    if (viewModel.isWaitingVerification) {
                         Text(
-                            text = stringResource(resId),
-                            color = Color.Red,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-                    viewModel.emailError?.let { resId ->
-                        Text(
-                            text = stringResource(resId),
-                            color = Color.Red,
-                            modifier = Modifier.padding(top = 8.dp)
+                            text = stringResource(R.string.link_sent),
+                            color = Rojo,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(top = 16.dp)
+                                .align(Alignment.CenterHorizontally)
                         )
                     }
                     Button(

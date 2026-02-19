@@ -1,12 +1,17 @@
 package cat.copernic.aguamap1.data.repository
 
+import cat.copernic.aguamap1.domain.model.UserRole
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth) : AuthRepository {
+class FirebaseAuthRepository @Inject constructor(
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore
+) : AuthRepository {
 
     override fun isUserLoggedIn(): Boolean {
         return auth.currentUser != null
@@ -43,12 +48,48 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
 
     override suspend fun signUp(email: String, password: String): Result<Boolean> {
         return try {
-            auth.createUserWithEmailAndPassword(email, password).await()
-            val user = auth.currentUser
-            user?.sendEmailVerification()?.await()
+            val authResult = auth.createUserWithEmailAndPassword(email, password).await()
+            authResult.user?.sendEmailVerification()?.await()
             Result.success(true)
         } catch (e: FirebaseAuthUserCollisionException) {
             Result.failure(Exception("ERROR_DUPLICATED"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun checkIfUserExists(uid: String): Boolean {
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            document.exists()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override fun getCurrentUserUid(): String? {
+        return auth.currentUser?.uid
+    }
+
+    override suspend fun completeRegistration(name: String): Result<Boolean> {
+        return try {
+            val user = auth.currentUser
+            user?.reload()?.await()
+            if (user != null && user.isEmailVerified) {
+                val userMap = hashMapOf(
+                    "uid" to user.uid,
+                    "nom" to name,
+                    "email" to user.email,
+                    "role" to UserRole.USER
+                )
+                firestore.collection("users")
+                    .document(user.uid)
+                    .set(userMap)
+                    .await()
+                Result.success(true)
+            } else {
+                Result.failure(Exception("EMAIL_NOT_VERIFIED"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -3,6 +3,7 @@ package cat.copernic.aguamap1.presentation.initial
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.repository.AuthRepository
+import cat.copernic.aguamap1.presentation.navigation.RootScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,7 +25,6 @@ class InitialViewModel @Inject constructor(
 
     //Inicializamos la sesión y verificamos si hay una sesión activa
     init {
-        //FirebaseAuth.getInstance().signOut()
         checkSession()
     }
 
@@ -32,8 +32,17 @@ class InitialViewModel @Inject constructor(
     private fun checkSession() {
         viewModelScope.launch {
             delay(1000)
-            val route = if (repository.isUserLoggedIn()) "home" else "logIn"
-            _destination.emit(route)
+            if (repository.isUserLoggedIn()) {
+                val uid = repository.getCurrentUserUid()
+                val exists = if (uid != null) repository.checkIfUserExists(uid) else false
+                if (exists) {
+                    _destination.emit(RootScreen.Home.route)
+                } else {
+                    _destination.emit(RootScreen.Login.route)
+                }
+            } else {
+                _destination.emit(RootScreen.Login.route)
+            }
         }
     }
 }
