@@ -21,6 +21,10 @@
     <string name="welcome">Sembla que és la teva primera vegada aquí. Si us plau, introdueix les teves dades:</string>
     <string name="name_example">El teu nom complet</string>
     <string name="noth_fountains">No s\'han trobat fonts</string>
+    <string name="legend_bebible">Beguda</string>
+    <string name="legend_ornamental">Ornamental</string>
+    <string name="legend_averiada">Avariada</string>
+    <string name="legend_pendiente">Pendent</string>
     <string name="error_email_not_verified">Correu electrònic no verificat</string>
     <string name="password">Contrasenya</string>
     <string name="error_field_required">Aquest camp no pot estar buit</string>

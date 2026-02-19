@@ -19,6 +19,10 @@
     <string name="complete_name">Full name</string>
     <string name="welcome">It looks like this is your first time here. Please enter your data:</string>
     <string name="noth_fountains">No sources were found</string>
+    <string name="legend_bebible">Potable</string>
+    <string name="legend_ornamental">Ornamental</string>
+    <string name="legend_averiada">Out of order</string>
+    <string name="legend_pendiente">Pending</string>
     <string name="error_email_not_verified">Email not verified</string>
     <string name="password">Password</string>
     <string name="name">Name</string>

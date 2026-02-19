@@ -3,14 +3,18 @@ package cat.copernic.aguamap1.presentation.home.map
 import android.Manifest
 import android.graphics.Canvas
 import android.location.LocationManager
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -35,7 +40,11 @@ import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.home.list.ListScreen
 import cat.copernic.aguamap1.presentation.util.getMarkerColor
 import cat.copernic.aguamap1.ui.theme.Blanco
+import cat.copernic.aguamap1.ui.theme.Blue10
+import cat.copernic.aguamap1.ui.theme.Naranja
+import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.Rojo
+import cat.copernic.aguamap1.ui.theme.Verde
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -62,6 +71,11 @@ fun MapScreen(
         if (locationPermissionState.status.isGranted) {
             if (isMapView) {
                 OSMMapContent(viewModel, isHome, onMapLoad = { map -> mapViewRef = map })
+                MapLegend(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(top = 60.dp)
+                )
                 MapFloatingButtons(
                     mapViewRef = mapViewRef,
                     viewModel = viewModel,
@@ -195,12 +209,12 @@ fun MapFloatingButtons(
         modifier = modifier
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Botón Añadir Fuente
-        SmallFloatingActionButton(
+        FloatingActionButton(
             onClick = {
-                val locationOverlay =
+                /*val locationOverlay =
                     mapViewRef?.overlays?.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
                 val currentLoc = locationOverlay?.myLocation
                 if (currentLoc != null) {
@@ -209,9 +223,10 @@ fun MapFloatingButtons(
                         lat = currentLoc.latitude,
                         lng = currentLoc.longitude
                     )
-                }
+                }*/
             },
-            containerColor = Blanco
+            containerColor = Blanco,
+            modifier = Modifier.size(44.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.add_24px),
@@ -220,9 +235,8 @@ fun MapFloatingButtons(
                 tint = Rojo
             )
         }
-
         // Botón Mi Ubicación
-        SmallFloatingActionButton(
+        FloatingActionButton(
             onClick = {
                 mapViewRef?.let { map ->
                     val locationOverlay =
@@ -232,7 +246,8 @@ fun MapFloatingButtons(
                     }
                 }
             },
-            containerColor = Blanco
+            containerColor = Blanco,
+            modifier = Modifier.size(44.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.icon_map_blue),
@@ -241,5 +256,42 @@ fun MapFloatingButtons(
                 tint = Color.Unspecified
             )
         }
+    }
+}
+
+@Composable
+fun MapLegend(modifier: Modifier = Modifier) {
+    androidx.compose.material3.Surface(
+        modifier = modifier.padding(16.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        color = Blanco.copy(alpha = 0.9f),
+        shadowElevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            LegendItem(color = Verde, text = stringResource(R.string.legend_bebible))
+            LegendItem(color = Blue10, text = stringResource(R.string.legend_ornamental))
+            LegendItem(color = Rojo, text = stringResource(R.string.legend_averiada))
+            LegendItem(color = Naranja, text = stringResource(R.string.legend_pendiente))
+        }
+    }
+}
+
+@Composable
+fun LegendItem(color: Color, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Canvas(modifier = Modifier.size(12.dp)) {
+            drawCircle(color = color)
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Negro
+        )
     }
 }
