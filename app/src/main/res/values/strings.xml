@@ -17,9 +17,16 @@
     <string name="text_forgot_password">Te enviamos un enlace para recuperar tu contraseña</string>
     <string name="email">Correo electrónico</string>
     <string name="password">Contraseña</string>
+    <string name="legend_bebible">Bebible</string>
+    <string name="legend_ornamental">Ornamental</string>
+    <string name="legend_averiada">Averiada</string>
+    <string name="legend_pendiente">Pendiente</string>
     <string name="noth_fountains">No se han encontrado fuentes</string>
     <string name="logo">Logo</string>
+    <string name="name">Nombre</string>
+    <string name="name_example">Tu nombre completo</string>
     <string name="map">Mapa</string>
+    <string name="error_field_required">El campo no puede estar vacio</string>
     <string name="es">Español</string>
     <string name="en">English</string>
     <string name="ca">Català</string>
@@ -28,6 +35,9 @@
     <string name="ranking">Ranking</string>
     <string name="profile">Perfil</string>
     <string name="login">Entrar</string>
+    <string name="info">Datos</string>
+    <string name="complete_name">Nombre y apellidos</string>
+    <string name="welcome">Parece que es tu primera vez. Por favor, introduce tus datos:</string>
     <string name="init">Inicia sesión</string>
     <string name="has_acc">¿Ya tienes cuenta?</string>
     <string name="text_sing_in">¿No tienes cuenta?</string>

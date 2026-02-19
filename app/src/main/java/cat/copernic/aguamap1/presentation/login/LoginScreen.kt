@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -25,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,9 +52,51 @@ fun LoginScreen(
 ) {
     //Se ejecuta una vez al abrir esta pantalla
     LaunchedEffect(Unit) {
+        viewModel.resetState()
+        viewModel.checkPendingRegistration()
         viewModel.navigateToHome.collect {
             onLoginSuccess()
         }
+    }
+    if (viewModel.needsName) {
+        AlertDialog(
+            onDismissRequest = { /* Opcional: podrías poner needsName = false */ },
+            title = {
+                Text(
+                    text = stringResource(R.string.info),
+                    fontWeight = FontWeight.Bold,
+                    color = Blanco
+                )
+            },
+            text = {
+                Column {
+                    Text(text = stringResource(R.string.welcome), color = Blanco)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AguaMapInput(
+                        label = stringResource(R.string.complete_name),
+                        placeholder = stringResource(R.string.name_example),
+                        value = viewModel.name,
+                        onValueChange = { viewModel.onNameChanged(it) },
+                        color = Blanco
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.onCompleteRegistration() },
+                    enabled = viewModel.name.trim()
+                        .split(" ").size >= 2,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Negro.copy(alpha = 0.8f),
+                        disabledContainerColor = Negro.copy(alpha = 0.8f)
+                    )
+                ) {
+                    Text(stringResource(R.string.map), color = Blanco)
+                }
+            },
+            containerColor = Color.Transparent,
+            modifier = Modifier.background(AguaMapGradient)
+        )
     }
     Box(
         modifier = Modifier

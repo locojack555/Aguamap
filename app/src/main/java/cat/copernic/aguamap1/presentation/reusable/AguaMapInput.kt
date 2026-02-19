@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,14 +35,15 @@ fun AguaMapInput(
     value: String,
     onValueChange: (String) -> Unit,
     isError: Boolean = false,
-    isPasswordField: Boolean = false
+    isPasswordField: Boolean = false,
+    color: Color = Negro
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     Column {
         Text(
             text = label,
             fontSize = 16.sp,
-            color = Negro,
+            color = color,
             modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
         )
         OutlinedTextField(
@@ -69,11 +71,17 @@ fun AguaMapInput(
             ),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Negro,
-                unfocusedTextColor = Negro,
-                cursorColor = Negro,
-                errorTextColor = Negro,
-                errorCursorColor = Negro
+                focusedTextColor = color,
+                unfocusedTextColor = color,
+                cursorColor = color,
+                errorTextColor = color,
+                errorCursorColor = color,
+                unfocusedBorderColor = color,
+                focusedBorderColor = color,
+                focusedLabelColor = color,
+                unfocusedLabelColor = color,
+                focusedPlaceholderColor = color,
+                unfocusedPlaceholderColor = color
             )
         )
     }

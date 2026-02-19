@@ -21,11 +21,10 @@ class SingUpViewModel @Inject constructor(
 ) : ViewModel() {
 
     var email by mutableStateOf("")
-    var emailError by mutableStateOf<Int?>(null)
     var password by mutableStateOf("")
+    var emailError by mutableStateOf<Int?>(null)
     var passwordError by mutableStateOf<Int?>(null)
-    var isSuccess by mutableStateOf(false)
-
+    var isWaitingVerification by mutableStateOf(false)
 
     fun onSingUpClick() {
         val emailResult = validateEmail(email)
@@ -40,7 +39,9 @@ class SingUpViewModel @Inject constructor(
         viewModelScope.launch {
             val result = repository.signUp(email, password)
             if (result.isSuccess) {
-                isSuccess = true
+                isWaitingVerification = true
+                email = ""
+                password = ""
             } else {
                 emailError =
                     if (result.exceptionOrNull()?.message == "ERROR_DUPLICATED") R.string.error_email_duplicated else R.string.error_email_generic

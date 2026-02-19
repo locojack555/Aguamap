@@ -26,14 +26,28 @@ class LoginViewModel @Inject constructor(
         private set
     var isEmailVerifiedError by mutableStateOf(false)
         private set
-
+    var name by mutableStateOf("")
+    var needsName by mutableStateOf(false)
     private val _navigateToHome = MutableSharedFlow<Boolean>()
     val navigateToHome = _navigateToHome.asSharedFlow()
+
+    fun resetState() {
+        needsName = false
+        name = ""
+        isError = false
+        isEmailVerifiedError = false
+    }
 
     fun onEmailChanged(newValue: String) {
         email = newValue
         isError = false
         isEmailVerifiedError = false
+    }
+
+    fun onNameChanged(newValue: String) {
+        if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+            name = newValue
+        }
     }
 
     fun onPasswordChanged(newValue: String) {
@@ -47,11 +61,10 @@ class LoginViewModel @Inject constructor(
             isError = true
             return
         }
-        //view model scope para lanzar un hilo de ejecución
         viewModelScope.launch {
             val result = repository.login(email, password)
             if (result.isSuccess) {
-                _navigateToHome.emit(true)
+                checkUserAndNavigate()
             } else {
                 val exception = result.exceptionOrNull()
                 if (exception?.message == "EMAIL_NOT_VERIFIED") {
@@ -60,6 +73,45 @@ class LoginViewModel @Inject constructor(
                 } else {
                     isError = true
                     isEmailVerifiedError = false
+                }
+            }
+        }
+    }
+
+    private suspend fun checkUserAndNavigate() {
+        val uid = repository.getCurrentUserUid()
+        if (uid != null) {
+            val exists = repository.checkIfUserExists(uid)
+            if (exists) {
+                _navigateToHome.emit(true)
+            } else {
+                needsName = true
+            }
+        }
+    }
+
+    fun onCompleteRegistration() {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            val result = repository.completeRegistration(name)
+            if (result.isSuccess) {
+                needsName = false
+                _navigateToHome.emit(true)
+            } else {
+                isError = true
+            }
+        }
+    }
+
+    fun checkPendingRegistration() {
+        val uid = repository.getCurrentUserUid()
+        if (uid != null) {
+            viewModelScope.launch {
+                val exists = repository.checkIfUserExists(uid)
+                if (!exists) {
+                    needsName = true
+                } else {
+                    _navigateToHome.emit(true)
                 }
             }
         }
