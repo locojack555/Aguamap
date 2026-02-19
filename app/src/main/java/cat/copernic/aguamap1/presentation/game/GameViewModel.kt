@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.GameSession
 import cat.copernic.aguamap1.domain.usecase.game.*
+import cat.copernic.aguamap1.presentation.music.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -22,7 +23,8 @@ class GameViewModel @Inject constructor(
     private val calculateScoreUseCase: CalculateScoreUseCase,
     private val calculateDistanceUseCase: CalculateDistanceUseCase,
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val soundManager: SoundManager
 ) : ViewModel() {
 
     private val _gameState = MutableStateFlow<GameState>(GameState.Initial)
@@ -109,6 +111,7 @@ class GameViewModel @Inject constructor(
     }
 
     fun onStartGameClicked() {
+        soundManager.startBackgroundMusic()
         _gameState.value = GameState.Playing
         _remainingTime.value = 60
         _score.value = 0
@@ -137,7 +140,11 @@ class GameViewModel @Inject constructor(
             _hasLost.value = true
             _score.value = 0
             _distance.value = 0.0
-            saveLossSession() // Guardamos la sesión como pérdida
+            saveLossSession()
+
+            // Reproducir sonido de pérdida
+            soundManager.playLossSound()
+
             _gameState.value = GameState.Finished
         }
     }
@@ -197,11 +204,30 @@ class GameViewModel @Inject constructor(
             fountainName = _currentFountain.value?.name ?: ""
         )
         saveGameSessionUseCase(session)
+
+        // Reproducir sonido de victoria
+        if (_score.value > 0) {
+            soundManager.playWinSound()
+        }
+    }
+    fun onBackToHomePressed() {
+        viewModelScope.launch {
+            soundManager.stopBackgroundMusic() // Detener música al volver a home
+        }
     }
 
+    override fun onCleared() {
+        soundManager.stopBackgroundMusic() // Cleanup final
+        super.onCleared()
+    }
     fun retryGame() {
         _gameState.value = GameState.Initial
         _error.value = null
+    }
+    fun onExitGame() {
+        viewModelScope.launch {
+            soundManager.stopBackgroundMusic()
+        }
     }
 
     sealed class GameState {
@@ -212,4 +238,6 @@ class GameViewModel @Inject constructor(
         object DailyLimitReached : GameState()
         object Error : GameState()
     }
+
+
 }

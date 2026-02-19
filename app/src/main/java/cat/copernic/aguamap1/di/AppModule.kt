@@ -1,11 +1,13 @@
 package cat.copernic.aguamap1.di
 
+import cat.copernic.aguamap1.data.repository.AndroidSoundRepository
 import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
 import cat.copernic.aguamap1.data.repository.FirebaseGameRepository
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.FountainRepository
 import cat.copernic.aguamap1.domain.repository.GameRepository
+import cat.copernic.aguamap1.domain.repository.SoundRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,17 +18,17 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    // 1. Provee la instancia de FirebaseAuth (que tu repositorio necesita)
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = Firebase.auth
 
-    // 2. Provee la interfaz AuthRepository usando la implementación de Firebase
     @Provides
     @Singleton
     fun provideAuthRepository(auth: FirebaseAuth): AuthRepository {
@@ -47,5 +49,13 @@ object AppModule {
     @Singleton
     fun provideGameRepository(db: FirebaseFirestore): GameRepository {
         return FirebaseGameRepository(db)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSoundRepository(
+        @ApplicationContext context: Context
+    ): SoundRepository {
+        return AndroidSoundRepository(context)
     }
 }

@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetTodaysSessionsUseCase @Inject constructor(
     private val repository: GameRepository
 ) {
-    operator fun invoke(): Flow<Result<List<GameSession>>> {
+      operator fun invoke(): Flow<Result<List<GameSession>>> {
         return repository.getTodaysSessions()
     }
 }
