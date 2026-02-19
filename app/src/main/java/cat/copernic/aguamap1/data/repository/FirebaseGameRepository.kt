@@ -3,6 +3,7 @@ package cat.copernic.aguamap1.data.repository
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.GameSession
 import cat.copernic.aguamap1.domain.repository.GameRepository
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.channels.awaitClose
@@ -48,7 +49,55 @@ class FirebaseGameRepository @Inject constructor(
 
     override suspend fun saveGameSession(session: GameSession): Result<Unit> {
         return try {
+            // Guardar la sesión diaria
             db.collection("game_sessions").add(session).await()
+
+            // Actualizar estadísticas mensuales
+            val monthlyResult = updateMonthlyStats(
+                userId = session.userId,
+                userName = session.userName,
+                score = session.score,
+                discovered = 1
+            )
+
+            // Combinar resultados
+            if (monthlyResult.isSuccess) {
+                Result.success(Unit)
+            } else {
+                Result.failure(monthlyResult.exceptionOrNull() ?: Exception("Error al guardar estadísticas mensuales"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateMonthlyStats(
+        userId: String,
+        userName: String,
+        score: Int,
+        discovered: Int
+    ): Result<Unit> {
+        return try {
+            val calendar = Calendar.getInstance()
+            val month = calendar.get(Calendar.MONTH) + 1 // Enero es 0, por eso +1
+            val year = calendar.get(Calendar.YEAR)
+
+            // El ID único asegura que cada usuario tenga solo UN doc por mes
+            val docId = "${userId}_${month}_${year}"
+            val monthlyRef = db.collection("monthlyRanking").document(docId)
+
+            val data = mapOf(
+                "userId" to userId,
+                "userName" to userName,
+                "totalScore" to FieldValue.increment(score.toLong()),
+                "gamesCount" to FieldValue.increment(1),
+                "totalDiscovered" to FieldValue.increment(discovered.toLong()),
+                "month" to month,
+                "year" to year
+            )
+
+            // Si no existe el doc lo crea, si existe solo suma los valores
+            monthlyRef.set(data, com.google.firebase.firestore.SetOptions.merge()).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

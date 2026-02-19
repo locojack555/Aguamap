@@ -9,4 +9,10 @@ interface GameRepository {
     suspend fun hasPlayedToday(userId: String): Result<Boolean>
     suspend fun saveGameSession(session: GameSession): Result<Unit>
     fun getTodaysSessions(): Flow<Result<List<GameSession>>>
+    suspend fun updateMonthlyStats(
+        userId: String,
+        userName: String,
+        score: Int,
+        discovered: Int
+    ): Result<Unit>
 }
