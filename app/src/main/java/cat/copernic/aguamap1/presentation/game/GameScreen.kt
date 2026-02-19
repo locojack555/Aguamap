@@ -52,7 +52,31 @@ fun GameScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val userGuessPos by viewModel.userGuessPos.collectAsState()
-    val hasLost by viewModel.hasLost.collectAsState() // Nuevo
+    val hasLost by viewModel.hasLost.collectAsState()
+
+    // Controlar música cuando cambia el estado
+    LaunchedEffect(gameState) {
+        when (gameState) {
+            GameViewModel.GameState.Playing -> {
+                // La música ya se inició en onStartGameClicked
+            }
+            GameViewModel.GameState.Finished,
+            GameViewModel.GameState.DailyLimitReached,
+            GameViewModel.GameState.Error -> {
+                // Mantenemos la música para estos estados
+            }
+            else -> {
+                // En otros estados (Initial, Instructions) no hay música
+            }
+        }
+    }
+
+    // Cleanup al salir de la pantalla
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.onBackToHomePressed() // Detener música al salir
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.checkCanPlay(41.3851, 2.1734)
@@ -84,8 +108,11 @@ fun GameScreen(
                         score = score,
                         distance = distance,
                         userGuessPos = userGuessPos?.let { pos -> GeoPoint(pos.first, pos.second) },
-                        hasLost = hasLost, // Pasamos el estado
-                        onBackToHome = onBackToHome
+                        hasLost = hasLost,
+                        onBackToHome = {
+                            viewModel.onBackToHomePressed()
+                            onBackToHome()
+                        }
                     )
                 }
             }
@@ -93,13 +120,19 @@ fun GameScreen(
             GameViewModel.GameState.DailyLimitReached -> ErrorScreen(
                 message = error ?: "Ya has jugado hoy. Vuelve mañana.",
                 onRetry = null,
-                onBack = onBackToHome
+                onBack = {
+                    viewModel.onBackToHomePressed()
+                    onBackToHome()
+                }
             )
 
             else -> ErrorScreen(
                 message = error ?: "Ocurrió un error inesperado",
                 onRetry = { viewModel.retryGame() },
-                onBack = onBackToHome
+                onBack = {
+                    viewModel.onBackToHomePressed()
+                    onBackToHome()
+                }
             )
         }
 
@@ -110,7 +143,6 @@ fun GameScreen(
         }
     }
 }
-
 @Composable
 fun GameInstructionsScreen(onStart: () -> Unit) {
     // Eliminamos el scrollState y el verticalScroll para forzar adaptabilidad
