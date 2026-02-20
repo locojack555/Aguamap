@@ -5,6 +5,10 @@ import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
 import cat.copernic.aguamap1.data.repository.FirebaseGameRepository
 import cat.copernic.aguamap1.data.repository.FirebaseRankingRepository
+// Nuevos imports para categorías
+import cat.copernic.aguamap1.data.repository.FirebaseCategoryRepository
+import cat.copernic.aguamap1.domain.repository.CategoryRepository
+
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.FountainRepository
 import cat.copernic.aguamap1.domain.repository.GameRepository
@@ -46,6 +50,13 @@ object AppModule {
     @Singleton
     fun provideFountainRepository(db: FirebaseFirestore): FountainRepository {
         return FirebaseFountainRepository(db)
+    }
+
+    // --- NUEVO PROVEEDOR ---
+    @Provides
+    @Singleton
+    fun provideCategoryRepository(db: FirebaseFirestore): CategoryRepository {
+        return FirebaseCategoryRepository(db)
     }
 
     @Provides
