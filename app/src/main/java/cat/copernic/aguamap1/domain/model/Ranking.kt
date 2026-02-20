@@ -8,7 +8,3 @@ data class UserRanking(
     val games: Int = 0,
     val isCurrentUser: Boolean = false
 )
-
-enum class RankingPeriod {
-    DAY, MONTH, YEAR
-}

@@ -15,4 +15,10 @@ interface GameRepository {
         score: Int,
         discovered: Int
     ): Result<Unit>
+    suspend fun updateHistoricStats(
+        userId: String,
+        userName: String,
+        score: Int,
+        discovered: Int
+    ): Result<Unit>
 }

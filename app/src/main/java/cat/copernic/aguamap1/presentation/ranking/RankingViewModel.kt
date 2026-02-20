@@ -3,7 +3,6 @@ package cat.copernic.aguamap1.presentation.ranking
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.model.RankingPeriod
-import cat.copernic.aguamap1.domain.model.UserRanking
 import cat.copernic.aguamap1.domain.usecase.ranking.GetRankingByPeriodUseCase
 import cat.copernic.aguamap1.R
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -5,6 +5,7 @@ import cat.copernic.aguamap1.domain.model.GameSession
 import cat.copernic.aguamap1.domain.repository.GameRepository
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -60,11 +61,22 @@ class FirebaseGameRepository @Inject constructor(
                 discovered = 1
             )
 
-            // Combinar resultados
-            if (monthlyResult.isSuccess) {
+            // Actualizar histórico
+            val historicResult = updateHistoricStats(
+                userId = session.userId,
+                userName = session.userName,
+                score = session.score,
+                discovered = 1
+            )
+
+            if (monthlyResult.isSuccess && historicResult.isSuccess) {
                 Result.success(Unit)
             } else {
-                Result.failure(monthlyResult.exceptionOrNull() ?: Exception("Error al guardar estadísticas mensuales"))
+                Result.failure(
+                    monthlyResult.exceptionOrNull()
+                        ?: historicResult.exceptionOrNull()
+                        ?: Exception("Error actualizando estadísticas")
+                )
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -97,8 +109,36 @@ class FirebaseGameRepository @Inject constructor(
             )
 
             // Si no existe el doc lo crea, si existe solo suma los valores
-            monthlyRef.set(data, com.google.firebase.firestore.SetOptions.merge()).await()
+            monthlyRef.set(data, SetOptions.merge()).await()
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateHistoricStats(
+        userId: String,
+        userName: String,
+        score: Int,
+        discovered: Int
+    ): Result<Unit> {
+        return try {
+
+            val docId = userId
+            val historicRef = db.collection("historicRanking").document(docId)
+
+            val data = mapOf(
+                "userId" to userId,
+                "userName" to userName,
+                "totalScore" to FieldValue.increment(score.toLong()),
+                "gamesCount" to FieldValue.increment(1),
+                "totalDiscovered" to FieldValue.increment(discovered.toLong())
+            )
+
+            historicRef.set(data, SetOptions.merge()).await()
+
+            Result.success(Unit)
+
         } catch (e: Exception) {
             Result.failure(e)
         }

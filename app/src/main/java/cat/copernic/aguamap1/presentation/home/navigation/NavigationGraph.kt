@@ -64,6 +64,7 @@ fun NavigationGraph(
             // Placeholder para Perfil
             ProfileScreen(
                 navigateToLogin = {
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
                     soundManager.stopAllSounds()
                     rootNavController.navigate(RootScreen.Login.route) {
                         popUpTo(RootScreen.Home.route) { inclusive = true }

@@ -4,7 +4,6 @@ import cat.copernic.aguamap1.domain.model.GameSession
 import cat.copernic.aguamap1.domain.model.RankingPeriod
 import cat.copernic.aguamap1.domain.model.UserRanking
 import cat.copernic.aguamap1.domain.repository.RankingRepository
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -128,6 +127,32 @@ class FirebaseRankingRepository @Inject constructor(
             RankingPeriod.DAY -> getDailyRanking()
             RankingPeriod.MONTH -> getMonthlyRanking()
             RankingPeriod.YEAR -> getYearlyRanking()
+        }
+    }
+
+    override suspend fun getCurrentUserHistoricRanking(): UserRanking? {
+        return try {
+
+            val userId = getCurrentUserId() ?: return null
+
+            val doc = db.collection("historicRanking")
+                .document(userId)
+                .get()
+                .await()
+
+            if (!doc.exists()) return null
+
+            UserRanking(
+                position = 0, // aquí no sabemos la posición global
+                name = doc.getString("userName") ?: "Jugador",
+                points = doc.getLong("totalScore")?.toInt() ?: 0,
+                discovered = doc.getLong("totalDiscovered")?.toInt() ?: 0,
+                games = doc.getLong("gamesCount")?.toInt() ?: 0,
+                isCurrentUser = true
+            )
+
+        } catch (e: Exception) {
+            null
         }
     }
 
