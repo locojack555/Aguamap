@@ -11,10 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,7 +25,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.presentation.home.map.OSMMapContent
@@ -31,7 +32,6 @@ import cat.copernic.aguamap1.ui.theme.AguaMapGradient
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Rojo
 import coil.compose.AsyncImage
-import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -54,27 +54,19 @@ fun GameScreen(
     val userGuessPos by viewModel.userGuessPos.collectAsState()
     val hasLost by viewModel.hasLost.collectAsState()
 
-    // Controlar música cuando cambia el estado
     LaunchedEffect(gameState) {
         when (gameState) {
-            GameViewModel.GameState.Playing -> {
-                // La música ya se inició en onStartGameClicked
-            }
+            GameViewModel.GameState.Playing -> {}
             GameViewModel.GameState.Finished,
             GameViewModel.GameState.DailyLimitReached,
-            GameViewModel.GameState.Error -> {
-                // Mantenemos la música para estos estados
-            }
-            else -> {
-                // En otros estados (Initial, Instructions) no hay música
-            }
+            GameViewModel.GameState.Error -> {}
+            else -> {}
         }
     }
 
-    // Cleanup al salir de la pantalla
     DisposableEffect(Unit) {
         onDispose {
-            viewModel.onBackToHomePressed() // Detener música al salir
+            viewModel.onBackToHomePressed()
         }
     }
 
@@ -118,7 +110,7 @@ fun GameScreen(
             }
 
             GameViewModel.GameState.DailyLimitReached -> ErrorScreen(
-                message = error ?: "Ya has jugado hoy. Vuelve mañana.",
+                message = error ?: stringResource(R.string.game_error_daily_limit),
                 onRetry = null,
                 onBack = {
                     viewModel.onBackToHomePressed()
@@ -127,7 +119,7 @@ fun GameScreen(
             )
 
             else -> ErrorScreen(
-                message = error ?: "Ocurrió un error inesperado",
+                message = error ?: stringResource(R.string.game_error_unexpected),
                 onRetry = { viewModel.retryGame() },
                 onBack = {
                     viewModel.onBackToHomePressed()
@@ -143,23 +135,22 @@ fun GameScreen(
         }
     }
 }
+
 @Composable
 fun GameInstructionsScreen(onStart: () -> Unit) {
-    // Eliminamos el scrollState y el verticalScroll para forzar adaptabilidad
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Blanco)
     ) {
-        // 1. CABECERA (Se mantiene fija arriba)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.25f) // Ocupa el 25% de la pantalla
+                .weight(0.16f)
                 .background(AguaMapGradient)
-                .padding(24.dp)
+                .padding(18.dp)
         ) {
-            Column(Modifier.align(Alignment.BottomStart)) {
+            Column(Modifier.align(Alignment.CenterStart)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painter = painterResource(R.drawable.map_24px),
@@ -168,26 +159,37 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
                         modifier = Modifier.size(36.dp)
                     )
                     Spacer(Modifier.width(12.dp))
-                    Text("AguaQuest", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Blanco)
+                    Text(stringResource(R.string.game_instructions_title_app), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Blanco)
                 }
-                Text("¿Dónde está esta fuente?", color = Blanco.copy(alpha = 0.9f), fontSize = 18.sp)
+                Text(stringResource(R.string.game_instructions_subtitle), color = Blanco.copy(alpha = 0.9f), fontSize = 18.sp)
             }
         }
 
-        // 2. CONTENIDO CENTRAL (Flexible)
         Column(
             modifier = Modifier
-                .weight(0.65f) // Ocupa el 65% y gestiona el espacio interno
+                .weight(0.65f)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // Centra el contenido verticalmente
+            verticalArrangement = Arrangement.Center
         ) {
             Surface(
-                modifier = Modifier.size(100.dp), // Reducido un poco para ganar espacio
-                shape = CircleShape,
-                color = Color(0xFFE130AD)
+                modifier = Modifier.size(100.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = Color.Transparent
             ) {
-                Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF0A4D68),
+                                    Color(0xFF75C9C8)
+                                )
+                            )
+                        )
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_trophy),
                         contentDescription = null,
@@ -199,10 +201,10 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            Text("¡Juega y aprende!", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF2D3142))
+            Text(stringResource(R.string.game_instructions_play_learn_title), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF2D3142))
 
             Text(
-                "Adivina dónde se encuentra la fuente en el mapa y gana puntos",
+                stringResource(R.string.game_instructions_play_learn_description),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 40.dp, vertical = 8.dp),
                 color = Color.Gray,
@@ -217,34 +219,46 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("• 1 fuente por día", fontSize = 14.sp, color = Color(0xFF4A4A4A))
-                    Text("• Más cerca = Más puntos", fontSize = 14.sp, color = Color(0xFF4A4A4A))
-                    Text("• Máximo 1000 puntos", fontSize = 14.sp, color = Color(0xFF4A4A4A))
+                    Text(stringResource(R.string.game_instructions_rule_one), fontSize = 14.sp, color = Color(0xFF4A4A4A))
+                    Text(stringResource(R.string.game_instructions_rule_two), fontSize = 14.sp, color = Color(0xFF4A4A4A))
+                    Text(stringResource(R.string.game_instructions_rule_three), fontSize = 14.sp, color = Color(0xFF4A4A4A))
                 }
             }
         }
 
-        // 3. BOTÓN INFERIOR (Fijo abajo)
-        Box(
+        Button(
+            onClick = onStart,
             modifier = Modifier
-                .weight(0.10f) // Ocupa el 10% restante
                 .fillMaxWidth()
-                .padding(horizontal = 32.dp, vertical = 8.dp),
-            contentAlignment = Alignment.Center
+                .height(56.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent
+            )
         ) {
-            Button(
-                onClick = onStart,
+            Text(
+                stringResource(R.string.game_instructions_start_button),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Blanco,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE130AD))
-            ) {
-                Text("Empezar Juego", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Blanco)
-            }
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF0A4D68),
+                                Color(0xFF75C9C8)
+                            )
+                        ),
+                        shape = RoundedCornerShape(5.dp)
+                    )
+                    .wrapContentSize(Alignment.Center)
+            )
         }
+        Spacer(modifier = Modifier.weight(0.05f))
     }
 }
+
 @Composable
 fun GamePlayScreen(
     fountain: Fountain,
@@ -255,10 +269,8 @@ fun GamePlayScreen(
     var hasPlacedPin by remember { mutableStateOf(false) }
     var isImageExpanded by remember { mutableStateOf(false) }
 
-    // El Box permite que los elementos floten unos sobre otros
     Box(Modifier.fillMaxSize()) {
 
-        // 1. MAPA AL FONDO
         GameMapView(
             fountain = fountain,
             isFinished = false,
@@ -268,7 +280,6 @@ fun GamePlayScreen(
             }
         )
 
-        // 2. HEADER SUPERIOR
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -288,42 +299,23 @@ fun GamePlayScreen(
                     fontWeight = FontWeight.Bold,
                     color = if (remainingTime < 10) Rojo else Color.Black
                 )
-                Text("AGUAQUEST", color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                Text(stringResource(R.string.game_instructions_title_app), color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
                 Icon(painterResource(R.drawable.timer_24px), null, tint = Color.Black, modifier = Modifier.size(24.dp))
             }
         }
 
-        // 3. FOTO FLOTANTE
-       /* Card(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 110.dp, end = 16.dp)
-                .size(if (isImageExpanded) 280.dp else 120.dp)
-                .clickable { isImageExpanded = !isImageExpanded },
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(8.dp)
-        ) {
-            AsyncImage(
-                model = if (fountain.imageUrl.isEmpty()) R.drawable.placeholder_fountain else fountain.imageUrl,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        }*/
-
-        // 4. BOTÓN O AYUDA (Abajo)
         if (hasPlacedPin) {
             Button(
                 onClick = onFinish,
                 modifier = Modifier
-                    .align(Alignment.BottomCenter) // YA NO SALE EN ROJO
+                    .align(Alignment.BottomCenter)
                     .padding(bottom = 40.dp)
                     .fillMaxWidth(0.8f)
                     .height(60.dp),
                 shape = RoundedCornerShape(30.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34A853))
             ) {
-                Text("¡CONFIRMAR UBICACIÓN!", color = Blanco, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(stringResource(R.string.game_play_confirm_button), color = Blanco, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
         } else {
             Surface(
@@ -334,14 +326,14 @@ fun GamePlayScreen(
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Text(
-                    "Toca el mapa para marcar",
+                    stringResource(R.string.game_play_hint_text),
                     color = Blanco,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                     fontSize = 14.sp
                 )
             }
         }
-    } // Cierre correcto del Box principal
+    }
 }
 
 @Composable
@@ -389,18 +381,15 @@ fun GameMapView(
             }
         }
 
-        // Bloque isFinished - VERSIÓN CORREGIDA
         if (isFinished && userGuessPos != null) {
             LaunchedEffect(Unit) {
                 mapViewRef?.let { map ->
-                    // Limpiar overlays anteriores
                     map.overlays.clear()
 
                     val sizeInPx = (35 * context.resources.displayMetrics.density).toInt()
                     val realPoint = GeoPoint(fountain.latitude, fountain.longitude)
                     val guessPoint = userGuessPos
 
-                    // 1. MARCADOR REAL (Rojo)
                     val realDrawable = ContextCompat.getDrawable(context, R.drawable.icon_pin)?.mutate()
                     realDrawable?.setTint(android.graphics.Color.parseColor("#FF4444"))
                     val realBitmap = realDrawable?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
@@ -413,7 +402,6 @@ fun GameMapView(
                     }
                     map.overlays.add(realMarker)
 
-                    // 2. MARCADOR USUARIO (Verde)
                     val guessDrawable = ContextCompat.getDrawable(context, R.drawable.icon_pin)?.mutate()
                     guessDrawable?.setTint(android.graphics.Color.parseColor("#34A853"))
                     val guessBitmap = guessDrawable?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
@@ -426,7 +414,6 @@ fun GameMapView(
                     }
                     map.overlays.add(guessMarker)
 
-                    // 3. Línea de distancia
                     val line = Polyline().apply {
                         outlinePaint.color = android.graphics.Color.BLUE
                         outlinePaint.strokeWidth = 5f
@@ -434,7 +421,6 @@ fun GameMapView(
                     }
                     map.overlays.add(line)
 
-                    // 4. Etiqueta de distancia
                     val midPoint = GeoPoint(
                         (realPoint.latitude + guessPoint.latitude) / 2,
                         (realPoint.longitude + guessPoint.longitude) / 2
@@ -447,39 +433,31 @@ fun GameMapView(
                     }
                     map.overlays.add(distanceMarker)
 
-                    // 5. ZOOM OPTIMIZADO PARA VER AMBOS PUNTOS
                     try {
-                        // Calcular el bounding box de los dos puntos
                         val minLat = minOf(realPoint.latitude, guessPoint.latitude)
                         val maxLat = maxOf(realPoint.latitude, guessPoint.latitude)
                         val minLon = minOf(realPoint.longitude, guessPoint.longitude)
                         val maxLon = maxOf(realPoint.longitude, guessPoint.longitude)
 
-                        // Calcular el centro
                         val centerLat = (minLat + maxLat) / 2
                         val centerLon = (minLon + maxLon) / 2
 
-                        // Calcular el span (diferencia) en grados
                         val latSpan = maxLat - minLat
                         val lonSpan = maxLon - minLon
 
-                        // Determinar el zoom basado en el span más grande
-                        // En OSMDroid, el zoom 18 cubre aproximadamente 0.01 grados
                         val zoomLevel = when {
-                            max(latSpan, lonSpan) < 0.005 -> 17.0  // Muy cerca (ambos puntos muy juntos)
-                            max(latSpan, lonSpan) < 0.01 -> 16.0  // Cerca
-                            max(latSpan, lonSpan) < 0.02 -> 15.0  // Distancia media
-                            max(latSpan, lonSpan) < 0.05 -> 14.0  // Algo alejado
-                            max(latSpan, lonSpan) < 0.1 -> 13.0   // Alejado
-                            else -> 12.0                           // Muy alejado
+                            max(latSpan, lonSpan) < 0.005 -> 17.0
+                            max(latSpan, lonSpan) < 0.01 -> 16.0
+                            max(latSpan, lonSpan) < 0.02 -> 15.0
+                            max(latSpan, lonSpan) < 0.05 -> 14.0
+                            max(latSpan, lonSpan) < 0.1 -> 13.0
+                            else -> 12.0
                         }
 
-                        // Aplicar zoom y centrar
                         map.controller.setZoom(zoomLevel)
                         map.controller.setCenter(GeoPoint(centerLat, centerLon))
 
                     } catch (e: Exception) {
-                        // Fallback por si algo falla
                         map.controller.setZoom(15.0)
                         map.controller.setCenter(GeoPoint(
                             (realPoint.latitude + guessPoint.latitude) / 2,
@@ -493,6 +471,7 @@ fun GameMapView(
         }
     }
 }
+
 private fun createDistanceTag(context: android.content.Context, text: String): BitmapDrawable {
     val density = context.resources.displayMetrics.density
     val paintText = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
@@ -529,12 +508,11 @@ fun GameResultScreen(
     hasLost: Boolean,
     onBackToHome: () -> Unit
 ) {
-    val context = LocalContext.current // Este sí es válido aquí porque está en un Composable
+    val context = LocalContext.current
 
     Column(Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(0.45f)) {
             if (hasLost) {
-                // Si perdió, mostramos solo la fuente real sin marcador de usuario
                 Box(modifier = Modifier.fillMaxSize()) {
                     OSMMapContent(viewModel = null, isHome = false) { map ->
                         map.controller.setZoom(17.0)
@@ -542,7 +520,6 @@ fun GameResultScreen(
 
                         val sizeInPx = (35 * context.resources.displayMetrics.density).toInt()
 
-                        // Solo mostramos el marcador de la fuente real
                         val realMarker = Marker(map).apply {
                             position = GeoPoint(fountain.latitude, fountain.longitude)
                             title = "Ubicación Real"
@@ -556,7 +533,6 @@ fun GameResultScreen(
                     }
                 }
             } else {
-                // Si ganó, mostramos ambos puntos como antes
                 GameMapView(
                     fountain = fountain,
                     isFinished = true,
@@ -582,7 +558,6 @@ fun GameResultScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     if (hasLost) {
-                        // Mensaje de pérdida
                         Icon(
                             painter = painterResource(R.drawable.error_24px),
                             contentDescription = null,
@@ -591,14 +566,14 @@ fun GameResultScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "¡HAS PERDIDO!",
+                            stringResource(R.string.game_result_lost_title),
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 24.sp,
                             color = Rojo
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Se te acabó el tiempo sin marcar una ubicación",
+                            stringResource(R.string.game_result_lost_message),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Gray,
@@ -610,7 +585,7 @@ fun GameResultScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                "No has conseguido puntos",
+                                stringResource(R.string.game_result_lost_points),
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
@@ -618,22 +593,21 @@ fun GameResultScreen(
                             )
                         }
                     } else {
-                        // Mensaje de victoria
                         Text(
-                            "PARTIDA COMPLETADA",
+                            stringResource(R.string.game_result_won_title),
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 20.sp,
                             color = Color.DarkGray
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "TU PUNTUACIÓN",
+                            stringResource(R.string.game_result_your_score),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Gray
                         )
                         Text(
-                            "$score Puntos",
+                            "$score ${stringResource(R.string.game_result_points)}",
                             fontSize = 48.sp,
                             fontWeight = FontWeight.Black,
                             color = Color(0xFF007BFF)
@@ -644,7 +618,7 @@ fun GameResultScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                "Distancia al objetivo: ${String.format(Locale.getDefault(), "%.0f", distance)}m",
+                                stringResource(R.string.game_result_distance, distance),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
@@ -655,7 +629,7 @@ fun GameResultScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Ya has jugado hoy. Vuelve mañana para una nueva partida",
+                        stringResource(R.string.game_result_daily_message),
                         fontWeight = FontWeight.Bold,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
@@ -666,13 +640,14 @@ fun GameResultScreen(
         }
     }
 }
+
 @Composable
 fun LoadingPartida() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator(color = Color(0xFF007BFF))
             Spacer(Modifier.height(16.dp))
-            Text("PREPARANDO PARTIDA...", fontWeight = FontWeight.Bold, color = Color.Gray)
+            Text(stringResource(R.string.game_loading_message), fontWeight = FontWeight.Bold, color = Color.Gray)
         }
     }
 }
@@ -684,7 +659,11 @@ fun ErrorScreen(message: String, onRetry: (() -> Unit)?, onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         Text(message, textAlign = TextAlign.Center, fontSize = 18.sp)
         Spacer(Modifier.height(24.dp))
-        onRetry?.let { Button(onClick = it, Modifier.fillMaxWidth().height(50.dp)) { Text("REINTENTAR") } }
+        onRetry?.let {
+            Button(onClick = it, Modifier.fillMaxWidth().height(50.dp)) {
+                Text(stringResource(R.string.game_error_retry_button))
+            }
+        }
         Spacer(Modifier.height(8.dp))
     }
 }

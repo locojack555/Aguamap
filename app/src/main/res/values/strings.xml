@@ -69,4 +69,43 @@
     <string name="ranking_gold">Oro</string>
     <string name="ranking_silver">Plata</string>
     <string name="ranking_bronze">Bronce</string>
+
+    <!-- Pantalla GameScreen (Errores y Estados) -->
+    <string name="game_error_daily_limit">Ya has jugado hoy. Vuelve mañana.</string>
+    <string name="game_error_unexpected">Ocurrió un error inesperado</string>
+    <string name="game_error_login_required">Inicia sesión para jugar</string>
+    <string name="game_error_checking_session">Error al verificar sesiones</string>
+    <string name="game_error_loading_fountains">Error al cargar fuentes</string>
+    <string name="game_error_no_fountains">No hay fuentes disponibles</string>
+    <string name="game_error_generic">Error: %1$s</string>
+
+    <!-- Pantalla GameInstructionsScreen -->
+    <string name="game_instructions_title_app">AguaQuest</string>
+    <string name="game_instructions_subtitle">¿Dónde está esta fuente?</string>
+    <string name="game_instructions_play_learn_title">¡Juega y aprende!</string>
+    <string name="game_instructions_play_learn_description">Adivina dónde se encuentra la fuente en el mapa y gana puntos</string>
+    <string name="game_instructions_rule_one">• 1 fuente por día</string>
+    <string name="game_instructions_rule_two">• Más cerca = Más puntos</string>
+    <string name="game_instructions_rule_three">• Máximo 1000 puntos</string>
+    <string name="game_instructions_start_button">Empezar Juego</string>
+
+    <!-- Pantalla GamePlayScreen -->
+    <string name="game_play_confirm_button">¡CONFIRMAR UBICACIÓN!</string>
+    <string name="game_play_hint_text">Toca el mapa para marcar</string>
+
+    <!-- Pantalla GameResultScreen -->
+    <string name="game_result_lost_title">¡HAS PERDIDO!</string>
+    <string name="game_result_lost_message">Se te acabó el tiempo sin marcar una ubicación</string>
+    <string name="game_result_lost_points">No has conseguido puntos</string>
+    <string name="game_result_won_title">PARTIDA COMPLETADA</string>
+    <string name="game_result_your_score">TU PUNTUACIÓN</string>
+    <string name="game_result_distance">Distancia al objetivo: %1$.0fm</string>
+    <string name="game_result_daily_message">Ya has jugado hoy. Vuelve mañana para una nueva partida</string>
+    <string name="game_result_points">Puntos</string>
+
+    <!-- Pantalla LoadingPartida -->
+    <string name="game_loading_message">PREPARANDO PARTIDA...</string>
+
+    <!-- Pantalla ErrorScreen -->
+    <string name="game_error_retry_button">REINTENTAR</string>
 </resources>

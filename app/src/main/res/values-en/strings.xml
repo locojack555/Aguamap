@@ -69,4 +69,42 @@
     <string name="ranking_gold">Gold</string>
     <string name="ranking_silver">Silver</string>
     <string name="ranking_bronze">Bronze</string>
+    <!-- Pantalla GameScreen (Errors and States) -->
+    <string name="game_error_daily_limit">You have already played today. Come back tomorrow.</string>
+    <string name="game_error_unexpected">An unexpected error occurred</string>
+    <string name="game_error_login_required">Log in to play</string>
+    <string name="game_error_checking_session">Error checking sessions</string>
+    <string name="game_error_loading_fountains">Error loading fountains</string>
+    <string name="game_error_no_fountains">No fountains available</string>
+    <string name="game_error_generic">Error: %1$s</string>
+
+    <!-- Pantalla GameInstructionsScreen -->
+    <string name="game_instructions_title_app">AguaQuest</string>
+    <string name="game_instructions_subtitle">Where is this fountain?</string>
+    <string name="game_instructions_play_learn_title">Play and learn!</string>
+    <string name="game_instructions_play_learn_description">Guess where the fountain is on the map and earn points</string>
+    <string name="game_instructions_rule_one">• 1 fountain per day</string>
+    <string name="game_instructions_rule_two">• Closer = More points</string>
+    <string name="game_instructions_rule_three">• Maximum 1000 points</string>
+    <string name="game_instructions_start_button">Start Game</string>
+
+    <!-- Pantalla GamePlayScreen -->
+    <string name="game_play_confirm_button">CONFIRM LOCATION!</string>
+    <string name="game_play_hint_text">Tap the map to mark</string>
+
+    <!-- Pantalla GameResultScreen -->
+    <string name="game_result_lost_title">YOU LOST!</string>
+    <string name="game_result_lost_message">You ran out of time without marking a location</string>
+    <string name="game_result_lost_points">You didn\'t get any points</string>
+    <string name="game_result_won_title">GAME COMPLETE</string>
+    <string name="game_result_your_score">YOUR SCORE</string>
+    <string name="game_result_distance">Distance to target: %1$.0fm</string>
+    <string name="game_result_daily_message">You have already played today. Come back tomorrow for a new game</string>
+    <string name="game_result_points">Points</string>
+
+    <!-- Pantalla LoadingPartida -->
+    <string name="game_loading_message">PREPARING GAME...</string>
+
+    <!-- Pantalla ErrorScreen -->
+    <string name="game_error_retry_button">RETRY</string>
 </resources>
