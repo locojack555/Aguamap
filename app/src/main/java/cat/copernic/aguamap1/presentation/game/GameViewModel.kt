@@ -1,7 +1,10 @@
+// presentation/game/GameViewModel.kt
 package cat.copernic.aguamap1.presentation.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.R  // 👈 IMPORTANTE: importar R
+import cat.copernic.aguamap1.domain.error.ErrorResourceProvider  // 👈 IMPORTAR EL PROVIDER DESDE DOMAIN.ERROR
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.GameSession
 import cat.copernic.aguamap1.domain.usecase.game.*
@@ -24,7 +27,8 @@ class GameViewModel @Inject constructor(
     private val calculateDistanceUseCase: CalculateDistanceUseCase,
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
     private val auth: FirebaseAuth,
-    private val soundManager: SoundManager
+    private val soundManager: SoundManager,
+    private val errorResourceProvider: ErrorResourceProvider  // 👈 AÑADIMOS EL PROVIDER DE ERRORES
 ) : ViewModel() {
 
     private val _gameState = MutableStateFlow<GameState>(GameState.Initial)
@@ -51,7 +55,6 @@ class GameViewModel @Inject constructor(
     private val _userGuessPos = MutableStateFlow<Pair<Double, Double>?>(null)
     val userGuessPos: StateFlow<Pair<Double, Double>?> = _userGuessPos.asStateFlow()
 
-    // Nuevo estado para controlar si el usuario ha perdido
     private val _hasLost = MutableStateFlow(false)
     val hasLost: StateFlow<Boolean> = _hasLost.asStateFlow()
 
@@ -61,33 +64,32 @@ class GameViewModel @Inject constructor(
             val userId = auth.currentUser?.uid
 
             if (userId == null) {
-                _error.value = "Inicia sesión para jugar"
+                // 👇 AHORA USAMOS EL PROVIDER DE ERRORES
+                _error.value = errorResourceProvider.getString(R.string.game_error_login_required)
                 _gameState.value = GameState.Error
                 _isLoading.value = false
                 return@launch
             }
 
             try {
-                // Verificar si ya jugó hoy
                 val hasPlayedResult = hasPlayedTodayUseCase(userId)
                 if (hasPlayedResult.isFailure) {
-                    _error.value = "Error al verificar sesiones"
+                    _error.value = errorResourceProvider.getString(R.string.game_error_checking_session)
                     _gameState.value = GameState.Error
                     _isLoading.value = false
                     return@launch
                 }
 
                 if (hasPlayedResult.getOrNull() == true) {
-                    _error.value = "Ya has jugado hoy. ¡Vuelve mañana!"
+                    _error.value = errorResourceProvider.getString(R.string.game_error_daily_limit)
                     _gameState.value = GameState.DailyLimitReached
                     _isLoading.value = false
                     return@launch
                 }
 
-                // Obtener fuente aleatoria
                 val fountainResult = getRandomFountainUseCase()
                 if (fountainResult.isFailure) {
-                    _error.value = "Error al cargar fuentes"
+                    _error.value = errorResourceProvider.getString(R.string.game_error_loading_fountains)
                     _gameState.value = GameState.Error
                     _isLoading.value = false
                     return@launch
@@ -95,14 +97,15 @@ class GameViewModel @Inject constructor(
 
                 val fountain = fountainResult.getOrNull()
                 if (fountain == null) {
-                    _error.value = "No hay fuentes disponibles"
+                    _error.value = errorResourceProvider.getString(R.string.game_error_no_fountains)
                     _gameState.value = GameState.Error
                 } else {
                     _currentFountain.value = fountain
                     _gameState.value = GameState.Instructions
                 }
             } catch (e: Exception) {
-                _error.value = "Error: ${e.message}"
+                // 👇 PARA EL CASO GENÉRICO CON FORMATO
+                _error.value = errorResourceProvider.getString(R.string.game_error_generic, e.message ?: "")
                 _gameState.value = GameState.Error
             } finally {
                 _isLoading.value = false
@@ -126,11 +129,12 @@ class GameViewModel @Inject constructor(
                 delay(1000)
                 _remainingTime.value -= 1
             }
-            // Si el tiempo llegó a 0 y sigue en estado Playing, y no ha marcado posición
-            if (_remainingTime.value == 0 &&
-                _gameState.value == GameState.Playing &&
-                _userGuessPos.value == null) {
-                handleLoss()
+            if (_remainingTime.value == 0 && _gameState.value == GameState.Playing) {
+                if (_userGuessPos.value == null) {
+                    handleLoss()
+                } else {
+                    finishGame()
+                }
             }
         }
     }
@@ -141,10 +145,7 @@ class GameViewModel @Inject constructor(
             _score.value = 0
             _distance.value = 0.0
             saveLossSession()
-
-            // Reproducir sonido de pérdida
             soundManager.playLossSound()
-
             _gameState.value = GameState.Finished
         }
     }
@@ -169,7 +170,6 @@ class GameViewModel @Inject constructor(
 
     fun finishGame() {
         viewModelScope.launch {
-            // Si no hay guess, tratar como pérdida
             if (_userGuessPos.value == null) {
                 handleLoss()
                 return@launch
@@ -205,25 +205,27 @@ class GameViewModel @Inject constructor(
         )
         saveGameSessionUseCase(session)
 
-        // Reproducir sonido de victoria
         if (_score.value > 0) {
             soundManager.playWinSound()
         }
     }
+
     fun onBackToHomePressed() {
         viewModelScope.launch {
-            soundManager.stopBackgroundMusic() // Detener música al volver a home
+            soundManager.stopBackgroundMusic()
         }
     }
 
     override fun onCleared() {
-        soundManager.stopBackgroundMusic() // Cleanup final
+        soundManager.stopBackgroundMusic()
         super.onCleared()
     }
+
     fun retryGame() {
         _gameState.value = GameState.Initial
         _error.value = null
     }
+
     fun onExitGame() {
         viewModelScope.launch {
             soundManager.stopBackgroundMusic()
@@ -238,6 +240,4 @@ class GameViewModel @Inject constructor(
         object DailyLimitReached : GameState()
         object Error : GameState()
     }
-
-
 }

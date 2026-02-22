@@ -25,6 +25,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import android.content.Context
+import cat.copernic.aguamap1.data.error.ErrorResourceProviderImpl
+import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Module
@@ -80,5 +82,13 @@ object AppModule {
         @ApplicationContext context: Context
     ): SoundRepository {
         return AndroidSoundRepository(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideErrorResourceProvider(
+        @ApplicationContext context: Context
+    ): ErrorResourceProvider {
+        return ErrorResourceProviderImpl(context)
     }
 }
