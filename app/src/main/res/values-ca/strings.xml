@@ -2,7 +2,23 @@
     <string name="app_name">AguaMap</string>
     <string name="pass_on">Mostrar</string>
     <string name="pass_off">Ocultar</string>
+    <string name="all_categories">Totes</string>
+    <string name="filter_title">Opcions de Filtre</string>
+    <string name="only_operational">Operatives</string>
+    <string name="max_distance">Distància màxima</string>
+    <string name="sort_by">Ordena per</string>
+    <string name="sort_distance">Distància</string>
+    <string name="sort_rating">Valoració</string>
+    <string name="sort_date">Recents</string>
+    <string name="min_rating">Valoració mínima</string>
+    <string name="filter_by_category">Filtrar per categoria</string>
     <string name="subtitle">Troba fonts a Terrassa</string>
+    <string name="clear_filters">Netejar</string>
+    <string name="add_fountain_title">Suggerir nova font</string>
+    <string name="fountain_name">Nom de la font</string>
+    <string name="fountain_description">Descripció o detalls</string>
+    <string name="send_proposal">Enviar proposta</string>
+    <string name="category_label">Categoria</string>
     <string name="error_email_duplicated">Aquest correu ja està registrat per un altre usuari.</string>
     <string name="error_email_generic">Hi ha hagut un error en crear l\'usuari.</string>
     <string name="error_email_empty">El correu no pot estar buit.</string>
@@ -69,4 +85,43 @@
     <string name="ranking_gold">Or</string>
     <string name="ranking_silver">Plata</string>
     <string name="ranking_bronze">Bronze</string>
+
+    <!-- Pantalla GameScreen (Errores i Estats) -->
+    <string name="game_error_daily_limit">Ja has jugat avui. Torna demà.</string>
+    <string name="game_error_unexpected">S\'ha produït un error inesperat</string>
+    <string name="game_error_login_required">Inicia sessió per jugar</string>
+    <string name="game_error_checking_session">Error en verificar sessions</string>
+    <string name="game_error_loading_fountains">Error en carregar fonts</string>
+    <string name="game_error_no_fountains">No hi ha fonts disponibles</string>
+    <string name="game_error_generic">Error: %1$s</string>
+
+    <!-- Pantalla GameInstructionsScreen -->
+    <string name="game_instructions_title_app">AguaQuest</string>
+    <string name="game_instructions_subtitle">On és aquesta font?</string>
+    <string name="game_instructions_play_learn_title">Juga i aprèn!</string>
+    <string name="game_instructions_play_learn_description">Endevina on es troba la font al mapa i guanya punts</string>
+    <string name="game_instructions_rule_one">• 1 font per dia</string>
+    <string name="game_instructions_rule_two">• Més a prop = Més punts</string>
+    <string name="game_instructions_rule_three">• Màxim 1000 punts</string>
+    <string name="game_instructions_start_button">Començar Joc</string>
+
+    <!-- Pantalla GamePlayScreen -->
+    <string name="game_play_confirm_button">CONFIRMA UBICACIÓ!</string>
+    <string name="game_play_hint_text">Toca el mapa per marcar</string>
+
+    <!-- Pantalla GameResultScreen -->
+    <string name="game_result_lost_title">HAS PERDUT!</string>
+    <string name="game_result_lost_message">Se\'t va acabar el temps sense marcar una ubicació</string>
+    <string name="game_result_lost_points">No has aconseguit punts</string>
+    <string name="game_result_won_title">PARTIDA COMPLETADA</string>
+    <string name="game_result_your_score">LA TEVA PUNTUACIÓ</string>
+    <string name="game_result_distance">Distància a l\'objectiu: %1$.0fm</string>
+    <string name="game_result_daily_message">Ja has jugat avui. Torna demà per a una nova partida</string>
+    <string name="game_result_points">Punts</string>
+
+    <!-- Pantalla LoadingPartida -->
+    <string name="game_loading_message">PREPARANT PARTIDA...</string>
+
+    <!-- Pantalla ErrorScreen -->
+    <string name="game_error_retry_button">REINTENTAR</string>
 </resources>

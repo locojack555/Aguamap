@@ -5,6 +5,10 @@ import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
 import cat.copernic.aguamap1.data.repository.FirebaseGameRepository
 import cat.copernic.aguamap1.data.repository.FirebaseRankingRepository
+// Nuevos imports para categorías
+import cat.copernic.aguamap1.data.repository.FirebaseCategoryRepository
+import cat.copernic.aguamap1.domain.repository.CategoryRepository
+
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.FountainRepository
 import cat.copernic.aguamap1.domain.repository.GameRepository
@@ -21,6 +25,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import android.content.Context
+import cat.copernic.aguamap1.data.error.ErrorResourceProviderImpl
+import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Module
@@ -48,6 +54,13 @@ object AppModule {
         return FirebaseFountainRepository(db)
     }
 
+    // --- NUEVO PROVEEDOR ---
+    @Provides
+    @Singleton
+    fun provideCategoryRepository(db: FirebaseFirestore): CategoryRepository {
+        return FirebaseCategoryRepository(db)
+    }
+
     @Provides
     @Singleton
     fun provideRankingRepository(
@@ -70,5 +83,13 @@ object AppModule {
         @ApplicationContext context: Context
     ): SoundRepository {
         return AndroidSoundRepository(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideErrorResourceProvider(
+        @ApplicationContext context: Context
+    ): ErrorResourceProvider {
+        return ErrorResourceProviderImpl(context)
     }
 }

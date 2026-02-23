@@ -71,6 +71,16 @@ class FirebaseAuthRepository @Inject constructor(
         return auth.currentUser?.uid
     }
 
+    override suspend fun getUserRole(uid: String): UserRole {
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            val roleString = document.getString("role") ?: "USER"
+            UserRole.valueOf(roleString)
+        } catch (e: Exception) {
+            UserRole.USER
+        }
+    }
+
     override suspend fun completeRegistration(name: String): Result<Boolean> {
         return try {
             val user = auth.currentUser
@@ -92,6 +102,19 @@ class FirebaseAuthRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override suspend fun getCurrentUserName(): String? {
+        // Reutilizamos tu función existente para obtener el UID
+        val uid = getCurrentUserUid() ?: return null
+
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            // Extraemos el campo "nom" que guardaste en completeRegistration
+            document.getString("nom")
+        } catch (e: Exception) {
+            null
         }
     }
 }

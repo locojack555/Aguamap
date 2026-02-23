@@ -13,6 +13,7 @@ import cat.copernic.aguamap1.presentation.music.SoundManager
 import cat.copernic.aguamap1.presentation.navigation.RootScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.ranking.RankingScreen
+import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -44,7 +45,8 @@ fun NavigationGraph(
             MapScreen(isHome = true)
         }
         composable(BottomNavItem.Categories.route) {
-            // Placeholder para Categorías
+            // ¡Aquí llamamos a tu pantalla!
+            CategoriesScreen()
         }
         composable(BottomNavItem.Game.route) {
             GameScreen(
