@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -37,6 +39,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.scale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.presentation.home.list.ListScreen
 import cat.copernic.aguamap1.presentation.util.getMarkerColor
 import cat.copernic.aguamap1.ui.theme.Blanco
@@ -60,13 +63,17 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 @Composable
 fun MapScreen(
     viewModel: MapViewModel = hiltViewModel(),
+    addViewModel: AddFountainViewModel = hiltViewModel(),
     isHome: Boolean
 ) {
-    val locationPermissionState = rememberPermissionState(
-        Manifest.permission.ACCESS_FINE_LOCATION
-    )
+    val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
     val isMapView by viewModel.isMapView.collectAsState()
+
+    // Estados para el diálogo separado
+    var showCommentDialog by remember { mutableStateOf(false) }
+    var editingComment by remember { mutableStateOf<Comment?>(null) }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (locationPermissionState.status.isGranted) {
             if (isMapView) {
@@ -74,26 +81,77 @@ fun MapScreen(
                 MapLegend(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(top = 60.dp)
-                )
-                MapFloatingButtons(
-                    mapViewRef = mapViewRef,
-                    viewModel = viewModel,
-                    modifier = Modifier.align(Alignment.BottomEnd) // La posicionamos aquí
+                    //.padding(bottom = 12.dp)
                 )
             } else {
                 ListScreen(viewModel)
             }
+
+            MapFloatingButtons(
+                mapViewRef = mapViewRef,
+                viewModel = viewModel,
+                addViewModel = addViewModel,
+                isMapView = isMapView,
+                modifier = Modifier.align(Alignment.BottomEnd)
+            )
+
             if (isHome) {
-                HomeTopBar(
-                    isMapView = isMapView,
-                    onToggleView = { viewModel.toggleView() }
-                )
+                HomeTopBar(isMapView = isMapView, onToggleView = { viewModel.toggleView() })
             }
         } else {
-            PermissionRequestUI {
-                locationPermissionState.launchPermissionRequest()
-            }
+            PermissionRequestUI { locationPermissionState.launchPermissionRequest() }
+        }
+
+        // --- LÓGICA DE AÑADIR FUENTE ---
+        if (addViewModel.showAddFountainSheet && addViewModel.selectedLocationForNewFountain != null) {
+            AddFountainScreen(
+                onDismiss = { addViewModel.closeAddFountain() },
+                latitude = addViewModel.selectedLocationForNewFountain!!.latitude,
+                longitude = addViewModel.selectedLocationForNewFountain!!.longitude,
+                viewModel = addViewModel,
+                onFountainCreated = { viewModel.loadFountains() }
+            )
+        }
+
+        // --- PANTALLA DE DETALLES (CON TODA LA LÓGICA ADMIN/USER) ---
+        viewModel.selectedFountain?.let { fountain ->
+            DetailFountainScreen(
+                fountain = fountain,
+                isAdmin = viewModel.isAdmin,
+                currentUserId = viewModel.currentUserId,
+                onBack = { viewModel.clearSelection() },
+                onDelete = { viewModel.deleteSelectedFountain() },
+                onEdit = { viewModel.updateFountainData(mapOf("name" to fountain.name)) }, // Ejemplo
+                onConfirm = { viewModel.confirmFountain() },
+                onReportAveria = { viewModel.reportBroken() },
+                onReportNoExiste = { viewModel.reportNonExistent() },
+                onAddComment = {
+                    editingComment = null
+                    showCommentDialog = true
+                },
+                onCensorComment = { commentId -> viewModel.censorComment(commentId) },
+                onDeleteComment = { commentId -> viewModel.deleteComment(commentId) },
+                onEditComment = { comment ->
+                    editingComment = comment
+                    showCommentDialog = true
+                }
+            )
+        }
+
+        // --- DIÁLOGO DE COMENTARIO (EXTERNO) ---
+        if (showCommentDialog) {
+            // Nota: He adaptado la llamada para que el diálogo externo funcione con "añadir" y "editar"
+            AddCommentDialog(
+                onDismiss = { showCommentDialog = false },
+                onConfirm = { rating, text ->
+                    if (editingComment == null) {
+                        viewModel.addCommentToSelectedFountain(rating, text)
+                    } else {
+                        viewModel.editMyComment(editingComment!!.id, rating, text)
+                    }
+                    showCommentDialog = false
+                }
+            )
         }
     }
 }
@@ -108,16 +166,8 @@ fun OSMMapContent(viewModel: MapViewModel? = null, isHome: Boolean, onMapLoad: (
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
                 minZoomLevel = 3.0
-                isVerticalMapRepetitionEnabled = false
                 zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
-                val maxLat = MapView.getTileSystem().maxLatitude
-                val minLat = MapView.getTileSystem().minLatitude
-                setScrollableAreaLimitLatitude(maxLat, minLat, 0)
-                if (isHome && viewModel != null) {
-                    setupHomeMap(viewModel)
-                } else {
-                    //formato de juego
-                }
+                if (isHome && viewModel != null) setupHomeMap(viewModel)
                 onMapLoad(this)
             }
         },
@@ -128,22 +178,23 @@ fun OSMMapContent(viewModel: MapViewModel? = null, isHome: Boolean, onMapLoad: (
                     val marker = Marker(mapView)
                     marker.position = GeoPoint(fountain.latitude, fountain.longitude)
                     marker.title = fountain.name
+
                     val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
                     val wrapped = drawable?.let {
                         val w = DrawableCompat.wrap(it).mutate()
-                        val colorInt = fountain.getMarkerColor()
-                        DrawableCompat.setTint(w, colorInt)
+                        DrawableCompat.setTint(w, fountain.getMarkerColor())
                         w
                     }
-                    val width = 120
-                    val height = 120
-                    val bitmap = createBitmap(width, height)
-                    val canvas = Canvas(bitmap)
-                    wrapped?.setBounds(0, 0, width, height)
-                    wrapped?.draw(canvas)
+                    val bitmap = createBitmap(120, 120)
+                    wrapped?.setBounds(0, 0, 120, 120)
+                    wrapped?.draw(Canvas(bitmap))
+
                     marker.icon = bitmap.toDrawable(context.resources)
                     marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    //marker.image = null
+                    marker.setOnMarkerClickListener { _, _ ->
+                        viewModel.selectFountain(fountain)
+                        true
+                    }
                     mapView.overlays.add(marker)
                 }
                 mapView.invalidate()
@@ -153,26 +204,28 @@ fun OSMMapContent(viewModel: MapViewModel? = null, isHome: Boolean, onMapLoad: (
     )
 }
 
-// Función de extensión para configurar el mapa si estamos en HomeMap
 fun MapView.setupHomeMap(viewModel: MapViewModel) {
     val ctx = context
     val sizeInPx = (28 * ctx.resources.displayMetrics.density).toInt()
     val customIcon = ContextCompat.getDrawable(ctx, R.drawable.icon_map_g)
         ?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
+
     val provider = GpsMyLocationProvider(ctx).apply {
         addLocationSource(LocationManager.GPS_PROVIDER)
     }
+
     val locationOverlay = MyLocationNewOverlay(provider, this).apply {
         enableMyLocation()
         isDrawAccuracyEnabled = false
         customIcon?.let {
             setPersonIcon(it)
             setDirectionIcon(it)
-            setPersonAnchor(0.5f, 0.5f)
         }
     }
+
     controller.setZoom(viewModel.zoomLevel)
     controller.setCenter(GeoPoint(viewModel.latitude, viewModel.longitude))
+
     locationOverlay.runOnFirstFix {
         if (viewModel.isFirstLocationUpdate) {
             val myLoc = locationOverlay.myLocation
@@ -186,6 +239,7 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
         }
     }
     overlays.add(locationOverlay)
+
     addMapListener(object : org.osmdroid.events.MapListener {
         override fun onScroll(event: org.osmdroid.events.ScrollEvent?): Boolean {
             viewModel.onMapMoved(mapCenter.latitude, mapCenter.longitude, zoomLevelDouble)
@@ -203,67 +257,59 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
 fun MapFloatingButtons(
     mapViewRef: MapView?,
     viewModel: MapViewModel,
+    addViewModel: AddFountainViewModel,
+    isMapView: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .padding(16.dp),
+        modifier = modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Botón Añadir Fuente
         FloatingActionButton(
             onClick = {
-                /*val locationOverlay =
+                val locationOverlay =
                     mapViewRef?.overlays?.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
-                val currentLoc = locationOverlay?.myLocation
-                if (currentLoc != null) {
-                    viewModel.addTestFountain(
-                        isAdmin = true,
-                        lat = currentLoc.latitude,
-                        lng = currentLoc.longitude
-                    )
-                }*/
-            },
-            containerColor = Blanco,
-            modifier = Modifier.size(44.dp)
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.add_24px),
-                contentDescription = "Añadir fuente",
-                modifier = Modifier.size(24.dp),
-                tint = Rojo
-            )
-        }
-        // Botón Mi Ubicación
-        FloatingActionButton(
-            onClick = {
-                mapViewRef?.let { map ->
-                    val locationOverlay =
-                        map.overlays.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
-                    locationOverlay?.myLocation?.let { lastFix ->
-                        map.controller.animateTo(lastFix)
-                    }
+                locationOverlay?.myLocation?.let {
+                    addViewModel.openAddFountain(it.latitude, it.longitude)
                 }
             },
             containerColor = Blanco,
             modifier = Modifier.size(44.dp)
         ) {
             Icon(
-                painter = painterResource(R.drawable.icon_map_blue),
-                contentDescription = "Ir a mi ubicación",
-                modifier = Modifier.size(20.dp),
-                tint = Color.Unspecified
+                painter = painterResource(R.drawable.add_24px),
+                contentDescription = null,
+                tint = Rojo
             )
+        }
+
+        if (isMapView) {
+            FloatingActionButton(
+                onClick = {
+                    val locationOverlay =
+                        mapViewRef?.overlays?.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
+                    locationOverlay?.myLocation?.let { mapViewRef?.controller?.animateTo(it) }
+                },
+                containerColor = Blanco,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.icon_map_blue),
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = Color.Unspecified
+                )
+            }
         }
     }
 }
 
 @Composable
 fun MapLegend(modifier: Modifier = Modifier) {
-    androidx.compose.material3.Surface(
+    Surface(
         modifier = modifier.padding(16.dp),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(8.dp),
         color = Blanco.copy(alpha = 0.9f),
         shadowElevation = 4.dp
     ) {
@@ -271,10 +317,10 @@ fun MapLegend(modifier: Modifier = Modifier) {
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            LegendItem(color = Verde, text = stringResource(R.string.legend_bebible))
-            LegendItem(color = Blue10, text = stringResource(R.string.legend_ornamental))
-            LegendItem(color = Rojo, text = stringResource(R.string.legend_averiada))
-            LegendItem(color = Naranja, text = stringResource(R.string.legend_pendiente))
+            LegendItem(Verde, stringResource(R.string.legend_bebible))
+            LegendItem(Blue10, stringResource(R.string.legend_ornamental))
+            LegendItem(Rojo, stringResource(R.string.legend_averiada))
+            LegendItem(Naranja, stringResource(R.string.legend_pendiente))
         }
     }
 }
@@ -285,13 +331,7 @@ fun LegendItem(color: Color, text: String) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Canvas(modifier = Modifier.size(12.dp)) {
-            drawCircle(color = color)
-        }
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Negro
-        )
+        Canvas(modifier = Modifier.size(12.dp)) { drawCircle(color) }
+        Text(text = text, style = MaterialTheme.typography.bodyMedium, color = Negro)
     }
 }

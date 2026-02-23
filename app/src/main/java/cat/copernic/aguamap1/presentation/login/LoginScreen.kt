@@ -61,6 +61,7 @@ fun LoginScreen(
     if (viewModel.needsName) {
         AlertDialog(
             onDismissRequest = { /* Opcional: podrías poner needsName = false */ },
+            shape = RoundedCornerShape(28.dp),
             title = {
                 Text(
                     text = stringResource(R.string.info),

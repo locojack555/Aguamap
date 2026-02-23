@@ -3,14 +3,45 @@ package cat.copernic.aguamap1.presentation.categories
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,7 +75,9 @@ fun CategoriesScreen(
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var showDetailDialog by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize().background(BgGray50)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(BgGray50)) {
         Surface(color = Color.White, shadowElevation = 2.dp) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -52,11 +85,22 @@ fun CategoriesScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Categorías", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextGray800)
+                    Text(
+                        text = "Categorías",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextGray800
+                    )
                     if (isAdmin) {
                         IconButton(
                             onClick = { /* Acción añadir pendiente */ },
-                            modifier = Modifier.border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)).size(40.dp)
+                            modifier = Modifier
+                                .border(
+                                    1.dp,
+                                    Color.LightGray,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .size(40.dp)
                         ) {
                             Icon(Icons.Default.Add, contentDescription = "Añadir Categoría")
                         }
@@ -68,7 +112,9 @@ fun CategoriesScreen(
                     onValueChange = { viewModel.updateSearchQuery(it) },
                     placeholder = { Text("Buscar...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedContainerColor = BgGray50, focusedContainerColor = BgGray50,
@@ -79,7 +125,9 @@ fun CategoriesScreen(
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -119,34 +167,71 @@ fun CategoriesScreen(
 
 @Composable
 fun CategoryItem(category: Category, count: Int, onClick: () -> Unit) {
-    val categoryColor = try { Color(android.graphics.Color.parseColor(category.color)) } catch (e: Exception) { Color.Blue }
+    val categoryColor = try {
+        Color(android.graphics.Color.parseColor(category.color))
+    } catch (e: Exception) {
+        Color.Blue
+    }
 
     Card(
-        modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
-            contentDescription = "Categoría ${category.name}, contiene $count fuentes. ${category.description}"
-            role = Role.Button
-        }.clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {
+                contentDescription =
+                    "Categoría ${category.name}, contiene $count fuentes. ${category.description}"
+                role = Role.Button
+            }
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)).background(categoryColor.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(categoryColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(text = category.icon, fontSize = 28.sp)
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = category.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    Text(
+                        text = category.name,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Surface(color = BgGray50, shape = RoundedCornerShape(16.dp), modifier = Modifier.border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))) {
-                        Text(text = count.toString(), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+                    Surface(
+                        color = BgGray50,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
+                    ) {
+                        Text(
+                            text = count.toString(),
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = "$count fuentes", fontSize = 14.sp, color = Color.Gray)
             }
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color.LightGray)
+            Icon(
+                Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color.LightGray
+            )
         }
     }
 }
@@ -161,7 +246,9 @@ fun CategoryDetailDialog(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(16.dp), color = Color.White) {
-            Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
+            Column(modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = category.icon, fontSize = 28.sp)
                     Spacer(modifier = Modifier.width(8.dp))
@@ -170,17 +257,37 @@ fun CategoryDetailDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (category.description.isNotEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().background(Color(0xFFEFF6FF), RoundedCornerShape(8.dp)).padding(12.dp)) {
-                        Text(text = category.description, color = Color(0xFF374151), fontSize = 14.sp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFEFF6FF), RoundedCornerShape(8.dp))
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = category.description,
+                            color = Color(0xFF374151),
+                            fontSize = 14.sp
+                        )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(text = "${fountains.size} fuentes", fontSize = 14.sp, color = Color.Gray)
                     if (isAdmin) {
-                        Button(onClick = onDelete, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))) {
-                            Icon(Icons.Default.Delete, contentDescription = "Borrar", modifier = Modifier.size(16.dp))
+                        Button(
+                            onClick = onDelete,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Borrar",
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Borrar")
                         }
@@ -199,7 +306,9 @@ fun CategoryDetailDialog(
                                 text = "No hay fuentes en esta categoría",
                                 color = Color.Gray,
                                 fontSize = 14.sp,
-                                modifier = Modifier.padding(vertical = 16.dp).fillMaxWidth()
+                                modifier = Modifier
+                                    .padding(vertical = 16.dp)
+                                    .fillMaxWidth()
                             )
                         }
                     } else {
@@ -212,22 +321,57 @@ fun CategoryDetailDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(text = fountain.name.ifEmpty { "Fuente sin nombre" }, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                                    Text(
+                                        text = fountain.name.ifEmpty { "Fuente sin nombre" },
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp
+                                    )
 
                                     if (fountain.description.isNotEmpty()) {
-                                        Text(text = fountain.description, color = Color.Gray, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(
+                                            text = fountain.description,
+                                            color = Color.Gray,
+                                            fontSize = 12.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
                                     }
 
                                     // Insignias usando los datos reales de tu modelo
-                                    Row(modifier = Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        if (fountain.status == "PENDING") {
-                                            Surface(color = Color(0xFFFEF3C7), shape = RoundedCornerShape(4.dp)) {
-                                                Text("Pendiente", fontSize = 10.sp, color = Color(0xFFB45309), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    Row(
+                                        modifier = Modifier.padding(top = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        if (fountain.status.name == "PENDING") {
+                                            Surface(
+                                                color = Color(0xFFFEF3C7),
+                                                shape = RoundedCornerShape(4.dp)
+                                            ) {
+                                                Text(
+                                                    "Pendiente",
+                                                    fontSize = 10.sp,
+                                                    color = Color(0xFFB45309),
+                                                    modifier = Modifier.padding(
+                                                        horizontal = 6.dp,
+                                                        vertical = 2.dp
+                                                    )
+                                                )
                                             }
                                         }
                                         if (!fountain.operational) {
-                                            Surface(color = Color(0xFFFEE2E2), shape = RoundedCornerShape(4.dp)) {
-                                                Text("Averiada", fontSize = 10.sp, color = Color(0xFFB91C1C), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            Surface(
+                                                color = Color(0xFFFEE2E2),
+                                                shape = RoundedCornerShape(4.dp)
+                                            ) {
+                                                Text(
+                                                    "Averiada",
+                                                    fontSize = 10.sp,
+                                                    color = Color(0xFFB91C1C),
+                                                    modifier = Modifier.padding(
+                                                        horizontal = 6.dp,
+                                                        vertical = 2.dp
+                                                    )
+                                                )
                                             }
                                         }
                                     }
@@ -236,8 +380,18 @@ fun CategoryDetailDialog(
                                 // Muestra el rating si tiene votos
                                 if (fountain.totalRatings > 0) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFBBF24), modifier = Modifier.size(14.dp))
-                                        Text(text = String.format("%.1f", fountain.ratingAverage), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 2.dp))
+                                        Icon(
+                                            Icons.Default.Star,
+                                            contentDescription = null,
+                                            tint = Color(0xFFFBBF24),
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Text(
+                                            text = String.format("%.1f", fountain.ratingAverage),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(start = 2.dp)
+                                        )
                                     }
                                 }
                             }
