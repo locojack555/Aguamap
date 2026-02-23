@@ -9,17 +9,19 @@ data class Fountain(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val operational: Boolean = true,
-    val category: String = "",
+    val category: Category = Category(),
+    val votedBy: List<String> = emptyList(),
     val description: String = "",
     val imageUrl: String = "",
     val dateCreated: Date = Date(),
-    val visits: Long = 0,
     val ratingAverage: Double = 0.0,
     val totalRatings: Int = 0,
-    val status: String = "PENDING",
+    val status: StateFountain = StateFountain.PENDING,
     val createdBy: String = "",
     val positiveVotes: Int = 0,
     val negativeVotes: Int = 0,
+    @get:Exclude
+    val comments: List<Comment> = emptyList(),
     @get:Exclude
     val distanceFromUser: Double? = null
 )

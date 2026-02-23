@@ -1,5 +1,7 @@
 package cat.copernic.aguamap1.domain.repository
 
+import cat.copernic.aguamap1.domain.model.UserRole
+
 interface AuthRepository {
     fun isUserLoggedIn(): Boolean
     fun getCurrentUserUid(): String?
@@ -8,4 +10,6 @@ interface AuthRepository {
     suspend fun signUp(email: String, password: String): Result<Boolean>
     suspend fun checkIfUserExists(uid: String): Boolean
     suspend fun completeRegistration(name: String): Result<Boolean>
+    suspend fun getUserRole(uid: String): UserRole
+    suspend fun getCurrentUserName(): String?
 }

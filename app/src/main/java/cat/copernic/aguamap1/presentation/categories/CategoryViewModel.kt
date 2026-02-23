@@ -32,13 +32,13 @@ class CategoryViewModel @Inject constructor(
         if (query.isBlank()) list else list.filter { it.name.contains(query, ignoreCase = true) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = fountainRepository.fetchSources()
-        .map { result: Result<List<Fountain>> ->
-            val listaFuentes = result.getOrNull() ?: emptyList()
-            // Normalizamos el texto (minúsculas y sin espacios) para que coincida siempre
-            listaFuentes.groupBy { fuente: Fountain -> fuente.category.lowercase().trim() }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> =
+        fountainRepository.fetchSources()
+            .map { result: Result<List<Fountain>> ->
+                val listaFuentes = result.getOrNull() ?: emptyList()
+                listaFuentes.groupBy { fuente: Fountain -> fuente.category.id }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
