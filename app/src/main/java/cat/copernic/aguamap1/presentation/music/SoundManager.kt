@@ -10,8 +10,6 @@ class SoundManager @Inject constructor(
     private val stopBackgroundMusicUseCase: StopBackgroundMusicUseCase,
     private val playWinSoundUseCase: PlayWinSoundUseCase,
     private val playLossSoundUseCase: PlayLossSoundUseCase,
-    private val pauseBackgroundMusicUseCase: PauseBackgroundMusicUseCase,
-    private val resumeBackgroundMusicUseCase: ResumeBackgroundMusicUseCase,
     private val stopAllSoundsUseCase: StopAllSoundsUseCase
 ) {
 
@@ -31,9 +29,6 @@ class SoundManager @Inject constructor(
         playLossSoundUseCase()
     }
 
-    fun pauseMusic() = pauseBackgroundMusicUseCase()
-
-    fun resumeMusic() = resumeBackgroundMusicUseCase()
 
     fun cleanup() {
         stopBackgroundMusic()

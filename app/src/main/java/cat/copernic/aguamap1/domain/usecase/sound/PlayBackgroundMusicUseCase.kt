@@ -28,18 +28,6 @@ class PlayLossSoundUseCase @Inject constructor(
     operator fun invoke() = repository.playSound(SoundType.GAME_LOSS)
 }
 
-class PauseBackgroundMusicUseCase @Inject constructor(
-    private val repository: SoundRepository
-) {
-    operator fun invoke() = repository.pauseBackgroundMusic()
-}
-
-class ResumeBackgroundMusicUseCase @Inject constructor(
-    private val repository: SoundRepository
-) {
-    operator fun invoke() = repository.resumeBackgroundMusic()
-}
-
 class StopAllSoundsUseCase @Inject constructor(
     private val repository: SoundRepository
 ) {
