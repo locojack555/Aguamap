@@ -51,10 +51,11 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRankingRepository(
+        authRepository: AuthRepository,
         db: FirebaseFirestore,
         auth: FirebaseAuth
     ): RankingRepository {
-        return FirebaseRankingRepository(db, auth)
+        return FirebaseRankingRepository(authRepository, db, auth)
     }
 
     @Provides

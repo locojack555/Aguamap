@@ -3,6 +3,7 @@ package cat.copernic.aguamap1.data.repository
 import cat.copernic.aguamap1.domain.model.GameSession
 import cat.copernic.aguamap1.domain.model.RankingPeriod
 import cat.copernic.aguamap1.domain.model.UserRanking
+import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.RankingRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,6 +16,7 @@ import javax.inject.Singleton
 
 @Singleton
 class FirebaseRankingRepository @Inject constructor(
+    private val authRepository: AuthRepository,
     private val db: FirebaseFirestore,
     private val auth: FirebaseAuth
 ) : RankingRepository {
@@ -33,7 +35,7 @@ class FirebaseRankingRepository @Inject constructor(
             .get()
             .await()
 
-        val idUsuarioActual = getCurrentUserId()
+        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         return snapshot.documents
             .mapNotNull { doc ->
@@ -77,7 +79,7 @@ class FirebaseRankingRepository @Inject constructor(
             .get()
             .await()
 
-        val idUsuarioActual = getCurrentUserId()
+        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         return snapshot.documents.mapIndexed { index, doc ->
             UserRanking(
@@ -94,7 +96,7 @@ class FirebaseRankingRepository @Inject constructor(
     override suspend fun getYearlyRanking(): List<UserRanking> {
         val calendar = Calendar.getInstance()
         val añoActual = calendar.get(Calendar.YEAR)
-        val idUsuarioActual = getCurrentUserId()
+        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         val snapshot = db.collection("monthlyRanking")
             .whereEqualTo("year", añoActual)
@@ -133,7 +135,7 @@ class FirebaseRankingRepository @Inject constructor(
     override suspend fun getCurrentUserHistoricRanking(): UserRanking? {
         return try {
 
-            val userId = getCurrentUserId() ?: return null
+            val userId = authRepository.getCurrentUserUid() ?: return null
 
             val doc = db.collection("historicRanking")
                 .document(userId)
@@ -143,7 +145,7 @@ class FirebaseRankingRepository @Inject constructor(
             if (!doc.exists()) return null
 
             UserRanking(
-                position = 0, // aquí no sabemos la posición global
+                position = 0, 
                 name = doc.getString("userName") ?: "Jugador",
                 points = doc.getLong("totalScore")?.toInt() ?: 0,
                 discovered = doc.getLong("totalDiscovered")?.toInt() ?: 0,
@@ -155,6 +157,4 @@ class FirebaseRankingRepository @Inject constructor(
             null
         }
     }
-
-    override fun getCurrentUserId(): String? = auth.currentUser?.uid
 }
