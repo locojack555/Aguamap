@@ -63,6 +63,7 @@ class FirebaseAuthRepository @Inject constructor(
             val document = firestore.collection("users").document(uid).get().await()
             document.exists()
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }
@@ -113,6 +114,19 @@ class FirebaseAuthRepository @Inject constructor(
             val document = firestore.collection("users").document(uid).get().await()
             // Extraemos el campo "nom" que guardaste en completeRegistration
             document.getString("nom")
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getCurrentUserEmail(): String? {
+        // Reutilizamos tu función existente para obtener el UID
+        val uid = getCurrentUserUid() ?: return null
+
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            // Extraemos el campo "nom" que guardaste en completeRegistration
+            document.getString("email")
         } catch (e: Exception) {
             null
         }

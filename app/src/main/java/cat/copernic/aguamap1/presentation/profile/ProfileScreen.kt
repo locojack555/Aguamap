@@ -2,6 +2,7 @@ package cat.copernic.aguamap1.presentation.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,22 +14,27 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.UserRanking
 
 @Composable
 fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel(),navigateToLogin: () -> Unit = {}) {
     val estadoScroll = rememberScrollState()
-    val stats = viewModel.userStats
+    val profileState by viewModel.profileState.collectAsState()
+    val isAdmin = profileState.userRole.equals("ADMIN", ignoreCase = true)
 
     Column(
         modifier = Modifier
@@ -36,32 +42,24 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel(),navigateToLogin:
             .background(Color(0xFFF1F3F4))
             .verticalScroll(estadoScroll)
     ) {
-        CabeceraPerfil(stats)
+        CabeceraPerfil(profileState, isAdmin)
 
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
 
             // SECCIÓN CUENTA
             SeccionPerfil(titulo = "Cuenta") {
-                ElementoOpcionPerfil(icono = Icons.Default.Edit, etiqueta = "Editar perfil")
+                ElementoOpcionPerfil(icono = Icons.Default.Edit, etiqueta = "Editar perfil", onClick = navigateToEditProfile)
                 DivisorPerfil()
                 ElementoOpcionPerfil(icono = Icons.Default.Settings, etiqueta = "Configuración")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // SECCIÓN MI CONTENIDO
-            SeccionPerfil(titulo = "Mi contenido") {
-                ElementoOpcionPerfil(icono = Icons.Default.LocationOn, etiqueta = "Mis Fuentes", indicador = "0")
-                DivisorPerfil()
-                ElementoOpcionPerfil(icono = Icons.Default.StarBorder, etiqueta = "Mis Valoraciones", indicador = "1")
-                DivisorPerfil()
-                ElementoOpcionPerfil(icono = Icons.Outlined.EmojiEvents, etiqueta = "Historial de Juegos")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             // SECCIÓN ADMIN
-            SeccionPanelAdmin()
+            if (isAdmin) {
+                SeccionPanelAdmin()
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -74,7 +72,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel(),navigateToLogin:
 }
 
 @Composable
-fun CabeceraPerfil(stats: UserRanking?) {
+fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -106,29 +104,68 @@ fun CabeceraPerfil(stats: UserRanking?) {
 
                 Column(horizontalAlignment = Alignment.Start) {
                     Text(
-                        text = "Administrador",
+                        text = profileState.userName,
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
 
-                    Surface(
-                        color = Color(0xFFFFC107),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    if (isAdmin) {
+                        // Badge de ADMIN (amarillo)
+                        Surface(
+                            color = Color(0xFFFFC107),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.padding(vertical = 4.dp)
                         ) {
-                            Icon(Icons.Default.Shield, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Admin", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Shield,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    profileState.userRole,
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    } else {
+                        // Badge de USUARIO (azul)
+                        Surface(
+                            color = colorResource(id = R.color.azulReal),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    profileState.userRole,
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
 
                     Text(
-                        text = "admin@admin.com",
+                        text = profileState.userEmail,
                         color = Color.White.copy(alpha = 0.9f),
                         fontSize = 15.sp
                     )
@@ -141,10 +178,18 @@ fun CabeceraPerfil(stats: UserRanking?) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                TarjetaEstadistica("0", "fuentes", Icons.Default.LocationOn)
-                TarjetaEstadistica("1", "Valoraciones", Icons.Default.StarOutline)
                 TarjetaEstadistica(
-                    valor = stats?.points?.toString() ?: "0",
+                    valor = profileState.fountainsCount.toString(),
+                    etiqueta = "fuentes",
+                    icono = Icons.Default.LocationOn
+                )
+                TarjetaEstadistica(
+                    valor = profileState.ratingsCount.toString(),
+                    etiqueta = "Valoraciones",
+                    icono = Icons.Default.StarOutline
+                )
+                TarjetaEstadistica(
+                    valor = profileState.points.toString(),
                     etiqueta = "Puntos",
                     icono = Icons.Outlined.EmojiEvents
                 )
@@ -247,9 +292,12 @@ fun SeccionPerfil(titulo: String, contenido: @Composable ColumnScope.() -> Unit)
 }
 
 @Composable
-fun ElementoOpcionPerfil(icono: ImageVector, etiqueta: String, indicador: String? = null) {
+fun ElementoOpcionPerfil(icono: ImageVector, etiqueta: String, indicador: String? = null, onClick: () -> Unit = {}) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .clickable { onClick() },  // ← AÑADE clickable AQUÍ
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(icono, contentDescription = null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))

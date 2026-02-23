@@ -2,6 +2,7 @@ package cat.copernic.aguamap1.domain.repository
 
 import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.domain.model.UserStats
 import kotlinx.coroutines.flow.Flow
 
 interface FountainRepository {
@@ -55,4 +56,26 @@ interface FountainRepository {
      * Elimina un comentario permanentemente.
      */
     suspend fun deleteComment(fountainId: String, commentId: String): Result<Unit>
+
+    /**
+     *
+     */
+    suspend fun updateUserFountainsCount(userId: String, userName: String, increment: Int): Result<Unit>
+
+    /**
+     *
+     */
+    suspend fun updateUserCommentsCount(userId: String, userName: String, increment: Int): Result<Unit>
+
+    /**
+     *
+     */
+    suspend fun getUserFountainsCount(userId: String): Int
+
+    /**
+     *
+     */
+    suspend fun getUserCommentsCount(userId: String): Int
+
+    fun observeUserStats(userId: String): Flow<UserStats?>
 }

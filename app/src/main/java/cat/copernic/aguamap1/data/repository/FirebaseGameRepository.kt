@@ -30,7 +30,7 @@ class FirebaseGameRepository @Inject constructor(
 
     override suspend fun hasPlayedToday(userId: String): Result<Boolean> {
         return try {
-            val snapshot = db.collection("game_sessions")
+            val snapshot = db.collection("gameSessions")
                 .whereEqualTo("userId", userId)
                 .get()
                 .await()
@@ -51,7 +51,7 @@ class FirebaseGameRepository @Inject constructor(
     override suspend fun saveGameSession(session: GameSession): Result<Unit> {
         return try {
             // Guardar la sesión diaria
-            db.collection("game_sessions").add(session).await()
+            db.collection("gameSessions").add(session).await()
 
             // Actualizar estadísticas mensuales
             val monthlyResult = updateMonthlyStats(
@@ -159,7 +159,7 @@ class FirebaseGameRepository @Inject constructor(
             set(Calendar.MILLISECOND, 999)
         }.time
 
-        val subscription = db.collection("game_sessions")
+        val subscription = db.collection("gameSessions")
             .whereGreaterThanOrEqualTo("date", today)
             .whereLessThanOrEqualTo("date", tomorrow)
             .orderBy("score", com.google.firebase.firestore.Query.Direction.DESCENDING)

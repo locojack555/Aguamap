@@ -12,4 +12,5 @@ interface AuthRepository {
     suspend fun completeRegistration(name: String): Result<Boolean>
     suspend fun getUserRole(uid: String): UserRole
     suspend fun getCurrentUserName(): String?
+    suspend fun getCurrentUserEmail(): String?
 }

@@ -8,6 +8,9 @@ import cat.copernic.aguamap1.domain.repository.RankingRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 import java.util.Date
@@ -17,8 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class FirebaseRankingRepository @Inject constructor(
     private val authRepository: AuthRepository,
-    private val db: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val db: FirebaseFirestore
 ) : RankingRepository {
 
     override suspend fun getDailyRanking(): List<UserRanking> {
@@ -30,7 +32,7 @@ class FirebaseRankingRepository @Inject constructor(
         }
         val inicioHoy = calendar.time
 
-        val snapshot = db.collection("game_sessions")
+        val snapshot = db.collection("gameSessions")
             .whereGreaterThanOrEqualTo("date", inicioHoy)
             .get()
             .await()
@@ -132,10 +134,9 @@ class FirebaseRankingRepository @Inject constructor(
         }
     }
 
-    override suspend fun getCurrentUserHistoricRanking(): UserRanking? {
+    override suspend fun getCurrentUserHistoricRanking(userId: String): UserRanking? {
         return try {
 
-            val userId = authRepository.getCurrentUserUid() ?: return null
 
             val doc = db.collection("historicRanking")
                 .document(userId)
@@ -145,16 +146,43 @@ class FirebaseRankingRepository @Inject constructor(
             if (!doc.exists()) return null
 
             UserRanking(
-                position = 0, 
+                position = 0,
                 name = doc.getString("userName") ?: "Jugador",
                 points = doc.getLong("totalScore")?.toInt() ?: 0,
                 discovered = doc.getLong("totalDiscovered")?.toInt() ?: 0,
                 games = doc.getLong("gamesCount")?.toInt() ?: 0,
-                isCurrentUser = true
+                isCurrentUser  = userId == userId
             )
 
         } catch (e: Exception) {
             null
         }
+    }
+
+    override fun observeUserHistoricRanking(userId: String): Flow<UserRanking?> = callbackFlow {
+        val docRef = db.collection("historicRanking").document(userId)
+
+        val subscription = docRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                val ranking = UserRanking(
+                    position = 0,
+                    name = snapshot.getString("userName") ?: "Jugador",
+                    points = snapshot.getLong("totalScore")?.toInt() ?: 0,
+                    discovered = snapshot.getLong("totalDiscovered")?.toInt() ?: 0,
+                    games = snapshot.getLong("gamesCount")?.toInt() ?: 0,
+                    isCurrentUser = true
+                )
+                trySend(ranking)
+            } else {
+                trySend(null)
+            }
+        }
+
+        awaitClose { subscription.remove() }
     }
 }
