@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainScreen
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
-import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.DetailFountainScreen
 import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
+import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainScreen
 import cat.copernic.aguamap1.presentation.maps.components.MapFloatingButtons
 import cat.copernic.aguamap1.presentation.maps.components.MapLegend
 import cat.copernic.aguamap1.presentation.maps.components.MapTopBar
@@ -26,6 +26,7 @@ import cat.copernic.aguamap1.presentation.util.PermissionRequestUI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import org.osmdroid.views.MapView
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -62,7 +63,7 @@ fun MapScreen(
             // Capa Superior: Detalle de Fuente (ACTUALIZADO)
             selectedFountain != null -> {
                 DetailFountainScreen(
-                    fountain = selectedFountain!!,
+                    fountain = selectedFountain,
                     viewModel = detailFountainViewModel,
                     commentsViewModel = commentsViewModel,
                     onBack = { detailFountainViewModel.clearSelection() },
@@ -119,7 +120,16 @@ fun MapScreen(
 
             else -> {
                 PermissionRequestUI {
-                    locationPermissionState.launchPermissionRequest()
+                    // Si ya se denegó antes y Android dice que no debemos mostrar el diálogo nativo,
+                    // significa que el usuario marcó "No volver a preguntar" o denegó varias veces.
+                    // En ese caso, lo enviamos a Ajustes.
+                    if (locationPermissionState.status.shouldShowRationale) {
+                        locationPermissionState.launchPermissionRequest()
+                    } else {
+                        locationPermissionState.launchPermissionRequest()
+                        // Nota: Si launch no hace nada, es que está bloqueado.
+                        // Podrías añadir un Intent a los ajustes aquí.
+                    }
                 }
             }
         }

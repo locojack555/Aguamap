@@ -33,6 +33,7 @@ import cat.copernic.aguamap1.ui.theme.Blanco
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import org.osmdroid.util.GeoPoint
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -70,9 +71,12 @@ fun GameScreen(
             val locationManager =
                 context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             try {
-                val provider = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                    ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                provider?.let {
+                // Intentamos obtener la última ubicación conocida de forma rápida
+                val lastLocation =
+                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                        ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+
+                lastLocation?.let {
                     currentUserLat = it.latitude
                     currentUserLng = it.longitude
                     isLocationReady = true
@@ -83,14 +87,8 @@ fun GameScreen(
         }
     }
 
-    // Solicitar permiso de ubicación si no está concedido
-    LaunchedEffect(Unit) {
-        if (!locationPermissionState.status.isGranted) {
-            locationPermissionState.launchPermissionRequest()
-        }
-    }
-
-    // Iniciar el juego solo cuando tengamos ubicación
+    // 2. INICIAR JUEGO: Solo cuando el permiso es concedido Y la ubicación está lista
+    // Evitamos que se ejecute checkCanPlay si no hay coordenadas, evitando errores de "partida gastada"
     LaunchedEffect(isLocationReady) {
         if (isLocationReady && gameState == GameViewModel.GameState.Initial) {
             viewModel.checkCanPlay(currentUserLat, currentUserLng)
@@ -108,81 +106,101 @@ fun GameScreen(
             .fillMaxSize()
             .background(Blanco)
     ) {
-        when (gameState) {
-            GameViewModel.GameState.Initial -> {
-                if (!locationPermissionState.status.isGranted) {
-                    PermissionRequestUI {
-                        locationPermissionState.launchPermissionRequest()
-                    }
-                } else if (!isLocationReady) {
-                    LoadingPartida()
-                } else {
-                    LoadingPartida()
-                }
+        if (!locationPermissionState.status.isGranted) {
+            PermissionRequestUI {
+                locationPermissionState.launchPermissionRequest()
             }
-
-            GameViewModel.GameState.Instructions -> {
-                GameInstructionsScreen(onStart = { viewModel.onStartGameClicked() })
-            }
-
-            GameViewModel.GameState.Playing -> {
-                currentFountain?.let {
-                    GamePlayScreen(
-                        fountain = it,
-                        remainingTime = remainingTime,
-                        userLocation = if (isLocationReady) GeoPoint(
-                            currentUserLat,
-                            currentUserLng
-                        ) else null,
-                        onGuess = { lat, lng -> viewModel.setUserGuess(lat, lng) },
-                        onFinish = { viewModel.finishGame() }
-                    )
-                }
-            }
-
-            GameViewModel.GameState.Finished -> {
-                currentFountain?.let {
-                    GameResultScreen(
-                        fountain = it,
-                        score = score,
-                        distance = distance,
-                        userGuessPos = userGuessPos?.let { pos -> GeoPoint(pos.first, pos.second) },
-                        hasLost = hasLost,
-                        onBackToHome = {
-                            viewModel.onBackToHomePressed()
-                            onBackToHome()
+        } else {
+            when (gameState) {
+                GameViewModel.GameState.Initial -> {
+                    if (!locationPermissionState.status.isGranted) {
+                        PermissionRequestUI {
+                            // Si ya se denegó antes y Android dice que no debemos mostrar el diálogo nativo,
+                            // significa que el usuario marcó "No volver a preguntar" o denegó varias veces.
+                            // En ese caso, lo enviamos a Ajustes.
+                            if (locationPermissionState.status.shouldShowRationale) {
+                                locationPermissionState.launchPermissionRequest()
+                            } else {
+                                locationPermissionState.launchPermissionRequest()
+                                // Nota: Si launch no hace nada, es que está bloqueado.
+                                // Podrías añadir un Intent a los ajustes aquí.
+                            }
                         }
-                    )
+                    } else if (!isLocationReady) {
+                        LoadingPartida()
+                    } else {
+                        LoadingPartida()
+                    }
                 }
+
+                GameViewModel.GameState.Instructions -> {
+                    GameInstructionsScreen(onStart = { viewModel.onStartGameClicked() })
+                }
+
+                GameViewModel.GameState.Playing -> {
+                    currentFountain?.let {
+                        GamePlayScreen(
+                            fountain = it,
+                            remainingTime = remainingTime,
+                            userLocation = if (isLocationReady) GeoPoint(
+                                currentUserLat,
+                                currentUserLng
+                            ) else null,
+                            onGuess = { lat, lng -> viewModel.setUserGuess(lat, lng) },
+                            onFinish = { viewModel.finishGame() }
+                        )
+                    }
+                }
+
+                GameViewModel.GameState.Finished -> {
+                    currentFountain?.let {
+                        GameResultScreen(
+                            fountain = it,
+                            score = score,
+                            distance = distance,
+                            userGuessPos = userGuessPos?.let { pos ->
+                                GeoPoint(
+                                    pos.first,
+                                    pos.second
+                                )
+                            },
+                            hasLost = hasLost,
+                            onBackToHome = {
+                                viewModel.onBackToHomePressed()
+                                onBackToHome()
+                            }
+                        )
+                    }
+                }
+
+                GameViewModel.GameState.DailyLimitReached -> ErrorScreen(
+                    message = error ?: stringResource(R.string.game_error_daily_limit),
+                    onRetry = null,
+                    onBack = {
+                        viewModel.onBackToHomePressed()
+                        onBackToHome()
+                    }
+                )
+
+                else -> ErrorScreen(
+                    message = error ?: stringResource(R.string.game_error_unexpected),
+                    onRetry = { viewModel.retryGame() },
+                    onBack = {
+                        viewModel.onBackToHomePressed()
+                        onBackToHome()
+                    }
+                )
             }
 
-            GameViewModel.GameState.DailyLimitReached -> ErrorScreen(
-                message = error ?: stringResource(R.string.game_error_daily_limit),
-                onRetry = null,
-                onBack = {
-                    viewModel.onBackToHomePressed()
-                    onBackToHome()
+            if (isLoading) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.4f)),
+                    Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Blanco)
                 }
-            )
-
-            else -> ErrorScreen(
-                message = error ?: stringResource(R.string.game_error_unexpected),
-                onRetry = { viewModel.retryGame() },
-                onBack = {
-                    viewModel.onBackToHomePressed()
-                    onBackToHome()
-                }
-            )
-        }
-
-        if (isLoading) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f)),
-                Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Blanco)
             }
         }
     }
