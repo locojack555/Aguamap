@@ -183,4 +183,21 @@
     <string name="fountain_status_ok">La font té aigua</string>
     <string name="fountain_status_error">La font està avariada</string>
     <string name="edit_comment">Editar comentari</string>
+
+    <!-- Textos para AddFountainScreen -->
+    <string name="add_fountain_photo_label">Foto de la font</string>
+    <string name="add_fountain_select_photo">Pujar o fer foto</string>
+    <string name="add_fountain_remove_image">Treure imatge</string>
+    <string name="add_fountain_preview">Vista prèvia</string>
+    <string name="add_fountain_upload_progress">Pujant imatge: %1$d%%</string>
+    <string name="add_fountain_uploading">Pujant...</string>
+    <string name="add_fountain_error">Error: %1$s</string>
+    <string name="add_fountain_upload_error">Error en pujar la imatge: %1$s</string>
+
+    <!-- Textos para ImagePickerHelper -->
+    <string name="image_picker_title">Seleccionar foto</string>
+    <string name="image_picker_gallery">Galeria</string>
+    <string name="image_picker_camera">Càmera</string>
+    <string name="image_picker_gallery_description">Galeria</string>
+    <string name="image_picker_camera_description">Càmera</string>
 </resources>

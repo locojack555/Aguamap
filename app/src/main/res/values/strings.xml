@@ -184,4 +184,21 @@
     <string name="fountain_status_ok">La fuente tiene agua</string>
     <string name="fountain_status_error">La fuente está averiada</string>
     <string name="edit_comment">Editar comentario</string>
+
+    <!-- Textos para AddFountainScreen -->
+    <string name="add_fountain_photo_label">Foto de la fuente</string>
+    <string name="add_fountain_select_photo">Subir o hacer foto</string>
+    <string name="add_fountain_remove_image">Quitar imagen</string>
+    <string name="add_fountain_preview">Vista previa</string>
+    <string name="add_fountain_upload_progress">Subiendo imagen: %1$d%%</string>
+    <string name="add_fountain_uploading">Subiendo...</string>
+    <string name="add_fountain_error">Error: %1$s</string>
+    <string name="add_fountain_upload_error">Error al subir imagen: %1$s</string>
+
+    <!-- Textos para ImagePickerHelper -->
+    <string name="image_picker_title">Seleccionar foto</string>
+    <string name="image_picker_gallery">Galería</string>
+    <string name="image_picker_camera">Cámara</string>
+    <string name="image_picker_gallery_description">Galería</string>
+    <string name="image_picker_camera_description">Cámara</string>
 </resources>
