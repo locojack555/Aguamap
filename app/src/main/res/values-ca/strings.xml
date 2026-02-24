@@ -86,7 +86,6 @@
     <string name="ranking_silver">Plata</string>
     <string name="ranking_bronze">Bronze</string>
 
-    <!-- Pantalla GameScreen (Errores i Estats) -->
     <string name="game_error_daily_limit">Ja has jugat avui. Torna demà.</string>
     <string name="game_error_unexpected">S\'ha produït un error inesperat</string>
     <string name="game_error_login_required">Inicia sessió per jugar</string>
@@ -95,7 +94,6 @@
     <string name="game_error_no_fountains">No hi ha fonts disponibles</string>
     <string name="game_error_generic">Error: %1$s</string>
 
-    <!-- Pantalla GameInstructionsScreen -->
     <string name="game_instructions_title_app">AguaQuest</string>
     <string name="game_instructions_subtitle">On és aquesta font?</string>
     <string name="game_instructions_play_learn_title">Juga i aprèn!</string>
@@ -105,11 +103,9 @@
     <string name="game_instructions_rule_three">• Màxim 1000 punts</string>
     <string name="game_instructions_start_button">Començar Joc</string>
 
-    <!-- Pantalla GamePlayScreen -->
     <string name="game_play_confirm_button">CONFIRMA UBICACIÓ!</string>
     <string name="game_play_hint_text">Toca el mapa per marcar</string>
 
-    <!-- Pantalla GameResultScreen -->
     <string name="game_result_lost_title">HAS PERDUT!</string>
     <string name="game_result_lost_message">Se\'t va acabar el temps sense marcar una ubicació</string>
     <string name="game_result_lost_points">No has aconseguit punts</string>
@@ -119,10 +115,8 @@
     <string name="game_result_daily_message">Ja has jugat avui. Torna demà per a una nova partida</string>
     <string name="game_result_points">Punts</string>
 
-    <!-- Pantalla LoadingPartida -->
     <string name="game_loading_message">PREPARANT PARTIDA...</string>
 
-    <!-- Pantalla ErrorScreen -->
     <string name="game_error_retry_button">REINTENTAR</string>
     <string name="back">Enrere</string>
     <string name="delete">Esborrar</string>
@@ -174,4 +168,16 @@
     <string name="fountain_status_ok">La font té aigua</string>
     <string name="fountain_status_error">La font està avariada</string>
     <string name="edit_comment">Editar comentari</string>
+
+    <string name="categories_title">Categories</string>
+    <string name="search_placeholder">Cercar (* o ? permesos)...</string>
+    <string name="best_rated">Més ben valorades</string>
+    <string name="worst_rated">Pitjor valorades</string>
+    <string name="new_category">Nova Categoria</string>
+    <string name="delete_category">Esborrar Categoria</string>
+    <string name="expand_info">Ampliar informació</string>
+    <string name="fountains">fonts</string>
+    <string name="bebible">Beguda</string>
+    <string name="ornamental">Ornamental</string>
+    <string name="historica">Històrica</string>
 </resources>
