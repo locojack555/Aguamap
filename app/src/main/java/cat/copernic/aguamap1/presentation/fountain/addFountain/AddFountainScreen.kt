@@ -1,18 +1,24 @@
 package cat.copernic.aguamap1.presentation.fountain.addFountain
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -21,9 +27,11 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -32,6 +40,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,11 +50,14 @@ import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
+import cat.copernic.aguamap1.ui.theme.GrisClaro
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.NegroMinimal
 import cat.copernic.aguamap1.ui.theme.NegroSuave
 import cat.copernic.aguamap1.ui.theme.Rojo
 import cat.copernic.aguamap1.ui.theme.Verde
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -54,10 +68,20 @@ fun AddFountainScreen(
     viewModel: AddFountainViewModel,
     onFountainCreated: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    // Launcher para seleccionar imagen
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        viewModel.updateSelectedImage(uri)
+    }
+
     BackHandler {
         viewModel.closeAddFountain()
         onDismiss()
     }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Blanco
@@ -68,7 +92,7 @@ fun AddFountainScreen(
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Cabecera (Botón X)
+            // Cabecera
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,6 +130,73 @@ fun AddFountainScreen(
                         fontSize = 14.sp,
                         color = NegroSuave
                     )
+                }
+
+                // NUEVO: Sección de imagen
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Foto de la fuente",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Negro
+                    )
+
+                    // Vista previa de la imagen seleccionada
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f)
+                            .background(NegroMinimal, RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (viewModel.selectedImageUri != null) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(viewModel.selectedImageUri)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Vista previa",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+
+                            // Botón para cambiar/quitar imagen
+                            IconButton(
+                                onClick = { viewModel.clearSelectedImage() },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                                    .background(Blanco, RoundedCornerShape(50))
+                            ) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Quitar imagen",
+                                    tint = Rojo
+                                )
+                            }
+                        } else {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.pin_lleno), // Asegúrate de tener este drawable
+                                    contentDescription = null,
+                                    tint = GrisClaro,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Button(
+                                    onClick = { imagePickerLauncher.launch("image/*") },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Blue10
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text("Seleccionar foto", color = Blanco)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Input Nombre
@@ -215,6 +306,36 @@ fun AddFountainScreen(
                     }
                 }
 
+                // NUEVO: Indicador de progreso de subida
+                if (viewModel.isUploading) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        LinearProgressIndicator(
+                            progress = viewModel.uploadProgress / 100f,
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Blue10
+                        )
+                        Text(
+                            text = "Subiendo imagen: ${viewModel.uploadProgress}%",
+                            fontSize = 12.sp,
+                            color = NegroSuave
+                        )
+                    }
+                }
+
+                // NUEVO: Mensaje de error
+                if (viewModel.errorMessage != null) {
+                    Text(
+                        text = viewModel.errorMessage!!,
+                        color = Rojo,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Botón Enviar
@@ -228,14 +349,28 @@ fun AddFountainScreen(
                         containerColor = Blue10,
                         disabledContainerColor = NegroMinimal
                     ),
-                    enabled = viewModel.isFormValid
+                    enabled = viewModel.isFormValid && !viewModel.isUploading
                 ) {
-                    Text(
-                        text = stringResource(R.string.send_proposal),
-                        color = Blanco,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
+                    if (viewModel.isUploading) {
+                        CircularProgressIndicator(
+                            color = Blanco,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Subiendo...",
+                            color = Blanco,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.send_proposal),
+                            color = Blanco,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
             }
         }
