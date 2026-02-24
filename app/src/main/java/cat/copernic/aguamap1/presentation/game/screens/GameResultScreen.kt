@@ -1,9 +1,21 @@
 package cat.copernic.aguamap1.presentation.game.screens
 
 import android.graphics.drawable.BitmapDrawable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +33,7 @@ import androidx.core.graphics.scale
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.presentation.game.components.GameMapView
-import cat.copernic.aguamap1.presentation.home.map.OSMMapContent
+import cat.copernic.aguamap1.presentation.maps.components.OSMMapContent
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.BlancoClaro
 import cat.copernic.aguamap1.ui.theme.Blue10
@@ -75,7 +87,9 @@ fun GameResultScreen(
         }
 
         Card(
-            modifier = Modifier.weight(0.55f).fillMaxWidth(),
+            modifier = Modifier
+                .weight(0.55f)
+                .fillMaxWidth(),
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             colors = CardDefaults.cardColors(containerColor = Blanco),
             elevation = CardDefaults.cardElevation(16.dp)

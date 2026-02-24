@@ -3,7 +3,12 @@ package cat.copernic.aguamap1.presentation.game.components
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -11,7 +16,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
-import cat.copernic.aguamap1.presentation.home.map.OSMMapContent
+import cat.copernic.aguamap1.presentation.maps.components.OSMMapContent
 import cat.copernic.aguamap1.presentation.util.MapUtils.createDistanceTag
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -66,6 +71,7 @@ fun GameMapView(
                         map.invalidate()
                         return true
                     }
+
                     override fun longPressHelper(p: GeoPoint): Boolean = false
                 }
                 val mapEventsOverlay = org.osmdroid.views.overlay.MapEventsOverlay(eventsReceiver)
@@ -84,7 +90,8 @@ fun GameMapView(
                     val guessPoint = userGuessPos
 
                     // Marcador de ubicación real (rojo)
-                    val realDrawable = ContextCompat.getDrawable(context, R.drawable.icon_pin)?.mutate()
+                    val realDrawable =
+                        ContextCompat.getDrawable(context, R.drawable.icon_pin)?.mutate()
                     realDrawable?.setTint(android.graphics.Color.parseColor("#FF4444"))
                     val realBitmap = realDrawable?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
 
@@ -97,7 +104,8 @@ fun GameMapView(
                     map.overlays.add(realMarker)
 
                     // Marcador de apuesta del usuario (verde)
-                    val guessDrawable = ContextCompat.getDrawable(context, R.drawable.icon_pin)?.mutate()
+                    val guessDrawable =
+                        ContextCompat.getDrawable(context, R.drawable.icon_pin)?.mutate()
                     guessDrawable?.setTint(android.graphics.Color.parseColor("#34A853"))
                     val guessBitmap = guessDrawable?.toBitmap()?.scale(sizeInPx, sizeInPx, false)
 
@@ -157,10 +165,12 @@ fun GameMapView(
 
                     } catch (e: Exception) {
                         map.controller.setZoom(15.0)
-                        map.controller.setCenter(GeoPoint(
-                            (realPoint.latitude + guessPoint.latitude) / 2,
-                            (realPoint.longitude + guessPoint.longitude) / 2
-                        ))
+                        map.controller.setCenter(
+                            GeoPoint(
+                                (realPoint.latitude + guessPoint.latitude) / 2,
+                                (realPoint.longitude + guessPoint.longitude) / 2
+                            )
+                        )
                     }
 
                     map.invalidate()

@@ -7,7 +7,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,12 +23,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.presentation.game.components.LoadingPartida
-import cat.copernic.aguamap1.presentation.home.map.PermissionRequestUI
 import cat.copernic.aguamap1.presentation.game.components.ErrorScreen
+import cat.copernic.aguamap1.presentation.game.components.LoadingPartida
 import cat.copernic.aguamap1.presentation.game.screens.GameInstructionsScreen
 import cat.copernic.aguamap1.presentation.game.screens.GamePlayScreen
 import cat.copernic.aguamap1.presentation.game.screens.GameResultScreen
+import cat.copernic.aguamap1.presentation.util.PermissionRequestUI
 import cat.copernic.aguamap1.ui.theme.Blanco
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -59,7 +67,8 @@ fun GameScreen(
     // Efecto para obtener la ubicación cuando se concede el permiso
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (locationPermissionState.status.isGranted) {
-            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val locationManager =
+                context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             try {
                 val provider = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                     ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
@@ -94,7 +103,11 @@ fun GameScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Blanco)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Blanco)
+    ) {
         when (gameState) {
             GameViewModel.GameState.Initial -> {
                 if (!locationPermissionState.status.isGranted) {
@@ -117,7 +130,10 @@ fun GameScreen(
                     GamePlayScreen(
                         fountain = it,
                         remainingTime = remainingTime,
-                        userLocation = if (isLocationReady) GeoPoint(currentUserLat, currentUserLng) else null,
+                        userLocation = if (isLocationReady) GeoPoint(
+                            currentUserLat,
+                            currentUserLng
+                        ) else null,
                         onGuess = { lat, lng -> viewModel.setUserGuess(lat, lng) },
                         onFinish = { viewModel.finishGame() }
                     )
@@ -160,7 +176,12 @@ fun GameScreen(
         }
 
         if (isLoading) {
-            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)), Alignment.Center) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                Alignment.Center
+            ) {
                 CircularProgressIndicator(color = Blanco)
             }
         }
