@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.domain.model.Report
 import cat.copernic.aguamap1.domain.model.StateFountain
 import cat.copernic.aguamap1.domain.model.UserRole
 import cat.copernic.aguamap1.domain.repository.AuthRepository
@@ -13,6 +14,7 @@ import cat.copernic.aguamap1.domain.usecase.auth.GetUserRoleUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.DeleteFountainUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.ProcessFountainVoteUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.UpdateFountainUseCase
+import cat.copernic.aguamap1.domain.usecase.report.SendReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -26,7 +28,8 @@ class DetailFountainViewModel @Inject constructor(
     private val getUserRoleUseCase: GetUserRoleUseCase,
     private val deleteFountainUseCase: DeleteFountainUseCase,
     private val updateFountainUseCase: UpdateFountainUseCase,
-    private val processFountainVoteUseCase: ProcessFountainVoteUseCase
+    private val processFountainVoteUseCase: ProcessFountainVoteUseCase,
+    private val sendReportUseCase: SendReportUseCase
 ) : ViewModel() {
 
     var isAdmin by mutableStateOf(false)
@@ -81,7 +84,6 @@ class DetailFountainViewModel @Inject constructor(
         val userId = currentUserId ?: return
         val fountain = selectedFountain ?: return
 
-        // 1. Bloqueo si ya alcanzó el máximo o ya votó
         if (fountain.positiveVotes >= 3 || fountain.votedByPositive.contains(userId)) {
             errorMessage = "No puedes votar más en esta fuente"
             return
@@ -90,11 +92,8 @@ class DetailFountainViewModel @Inject constructor(
         viewModelScope.launch {
             processFountainVoteUseCase.addPositiveVote(fountain, userId)
                 .onSuccess {
-                    // --- ACTUALIZACIÓN DE ESTADO LOCAL ---
                     val updatedVotes = fountain.positiveVotes + 1
                     val updatedVoters = fountain.votedByPositive + userId
-
-                    // Si llega a 3, el estado pasa a ACCEPTED automáticamente
                     val newStatus =
                         if (updatedVotes >= 3) StateFountain.ACCEPTED else fountain.status
 
@@ -114,7 +113,7 @@ class DetailFountainViewModel @Inject constructor(
         val fountain = selectedFountain ?: return
 
         if (fountain.votedByNegative.contains(userId)) {
-            errorMessage = "Ya has participado en esta validación"
+            errorMessage = "Ya has reportado que esta fuente no existe"
             return
         }
 
@@ -122,18 +121,40 @@ class DetailFountainViewModel @Inject constructor(
             processFountainVoteUseCase.addNegativeVote(fountain, userId)
                 .onSuccess {
                     val updatedVotes = fountain.negativeVotes + 1
-                    // Si llega a 3 reportes negativos, la fuente se elimina (según tu UseCase)
+                    val updatedVotersNegative = fountain.votedByNegative + userId
+
                     if (updatedVotes >= 3) {
                         clearSelection()
                     } else {
                         selectedFountain = fountain.copy(
                             negativeVotes = updatedVotes,
-                            votedByNegative = fountain.votedByNegative + userId
+                            votedByNegative = updatedVotersNegative
                         )
                     }
                     onSuccess()
                 }
                 .onFailure { errorMessage = it.message ?: "Error al reportar" }
+        }
+    }
+
+    // --- NUEVA FUNCIÓN: CONFIRMAR QUE SÍ EXISTE (RESTAR VOTO NEGATIVO) ---
+    fun confirmExistence(onSuccess: () -> Unit) {
+        val userId = currentUserId ?: return
+        val fountain = selectedFountain ?: return
+
+        viewModelScope.launch {
+            processFountainVoteUseCase.confirmExistence(fountain, userId)
+                .onSuccess {
+                    val updatedVotes = (fountain.negativeVotes - 1).coerceAtLeast(0)
+                    val updatedVotersNegative = fountain.votedByNegative.filter { it != userId }
+
+                    selectedFountain = fountain.copy(
+                        negativeVotes = updatedVotes,
+                        votedByNegative = updatedVotersNegative
+                    )
+                    onSuccess()
+                }
+                .onFailure { errorMessage = it.message ?: "Error al confirmar existencia" }
         }
     }
 
@@ -150,7 +171,25 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
-    // --- FORMATEADORES PARA LA UI ---
+    fun reportOtherIssue(description: String, onSuccess: () -> Unit) {
+        val userId = currentUserId ?: return
+        val fountain = selectedFountain ?: return
+
+        viewModelScope.launch {
+            val report = Report(
+                fountainId = fountain.id,
+                fountainName = fountain.name,
+                userId = userId,
+                description = description
+            )
+
+            sendReportUseCase(report)
+                .onSuccess { onSuccess() }
+                .onFailure { errorMessage = "Error al enviar el reporte: ${it.message}" }
+        }
+    }
+
+    // --- FORMATEADORES ---
     fun getFormattedDate(date: Date): String =
         SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(date)
 

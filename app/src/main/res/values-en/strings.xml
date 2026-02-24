@@ -13,6 +13,15 @@
     <string name="error_password_uppercase">Password must contain at least one uppercase letter.</string>
     <string name="recovery_password">Recover password</string>
     <string name="text_recovery_password">Forgot your password?</string>
+    <string name="report_confirm_existence">The fountain DOES exist!</string>
+    <string name="voted_label">Voted</string>
+    <string name="report_confirm_existence_hint">Click here if the fountain exists and the report is an error.</string>
+    <string name="report_already_voted_not_exists">You have already reported it doesn\'t exist</string>
+    <string name="report_other_reason">Other reason (Wrong name, etc.)</string>
+    <string name="report_other_title">Report another issue</string>
+    <string name="report_other_hint">Briefly explain what is happening (e.g., Wrong name):</string>
+    <string name="report_other_placeholder">Write here...</string>
+    <string name="report_other_send">Send report</string>
     <string name="text_forgot_password">We will send you a link to recover your password</string>
     <string name="email">Email</string>
     <string name="info">Data</string>

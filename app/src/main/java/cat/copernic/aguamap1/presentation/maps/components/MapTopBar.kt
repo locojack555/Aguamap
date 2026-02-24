@@ -104,7 +104,7 @@ fun MapTopBar(
                         state = viewModel.filterState,
                         categories = viewModel.categories,
                         onFilterChanged = { viewModel.updateFilters(it) },
-                        showSortOptions = !isMapView
+                        showSortOptions = !isMapView // Modo Lista = True
                     )
                     IconButton(onClick = { onToggleView() }) {
                         Icon(
@@ -172,9 +172,7 @@ fun FilterDropDown(
                 ) {
                     Text(
                         text = stringResource(R.string.clear_filters),
-                        color = Blanco,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
+                        color = Blanco, fontWeight = FontWeight.Bold, fontSize = 12.sp,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                     )
                 }
@@ -189,6 +187,7 @@ fun FilterDropDown(
                     .padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // COLUMNA IZQUIERDA
                 Column(modifier = Modifier.weight(1f)) {
                     FilterSectionTitle(stringResource(R.string.filter_by_category), Blanco)
                     categories.forEach { category ->
@@ -201,8 +200,19 @@ fun FilterDropDown(
                             onClick = { onFilterChanged(state.copy(selectedCategory = if (state.selectedCategory?.id == category.id) null else category)) }
                         )
                     }
+                    // SI ES MODO LISTA, OPERATIVAS AQUÍ
+                    if (showSortOptions) {
+                        OperationalSwitch(state.onlyOperational) {
+                            onFilterChanged(
+                                state.copy(
+                                    onlyOperational = it
+                                )
+                            )
+                        }
+                    }
                 }
 
+                // COLUMNA DERECHA
                 Column(modifier = Modifier.weight(1f)) {
                     FilterSectionTitle(stringResource(R.string.min_rating), Blanco)
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -247,18 +257,20 @@ fun FilterDropDown(
                                 )
                             }
                         }
-                    }
-                    OperationalSwitch(state.onlyOperational) {
-                        onFilterChanged(
-                            state.copy(
-                                onlyOperational = it
+                    } else {
+                        // SI ES MODO MAPA, OPERATIVAS AQUÍ
+                        OperationalSwitch(state.onlyOperational) {
+                            onFilterChanged(
+                                state.copy(
+                                    onlyOperational = it
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
 
-            // Distance Slider
+            // Slider Distancia
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(thickness = 0.5.dp, color = Blanco.copy(alpha = 0.3f))
             Row(
@@ -288,7 +300,7 @@ fun FilterDropDown(
                 colors = SliderDefaults.colors(
                     activeTrackColor = Blanco,
                     inactiveTrackColor = Blanco.copy(alpha = 0.3f),
-                    thumbColor = Blanco
+                    thumbColor = Color.Transparent
                 )
             )
         }

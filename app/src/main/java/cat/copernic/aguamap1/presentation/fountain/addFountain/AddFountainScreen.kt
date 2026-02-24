@@ -59,8 +59,8 @@ fun AddFountainScreen(
         onDismiss()
     }
     Surface(
-        modifier = Modifier.fillMaxSize(), // Ocupa todo el cristal del teléfono
-        color = Blanco // Fondo blanco sólido que tapa el mapa
+        modifier = Modifier.fillMaxSize(),
+        color = Blanco
     ) {
         Column(
             modifier = Modifier
