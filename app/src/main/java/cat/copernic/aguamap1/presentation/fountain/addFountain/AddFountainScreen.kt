@@ -1,8 +1,6 @@
 package cat.copernic.aguamap1.presentation.fountain.addFountain
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +36,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -48,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.presentation.util.rememberImagePickerHelper
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.GrisClaro
@@ -70,11 +70,14 @@ fun AddFountainScreen(
 ) {
     val context = LocalContext.current
 
-    // Launcher para seleccionar imagen
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
+    // Usar el helper para imágenes (galería + cámara)
+    val imagePickerHelper = rememberImagePickerHelper { uri ->
         viewModel.updateSelectedImage(uri)
+    }
+
+    // Sincronizar URI con ViewModel
+    LaunchedEffect(imagePickerHelper.selectedImageUri) {
+        viewModel.updateSelectedImage(imagePickerHelper.selectedImageUri)
     }
 
     BackHandler {
@@ -92,7 +95,7 @@ fun AddFountainScreen(
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Cabecera
+            // Cabecera con botón de cerrar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -132,16 +135,15 @@ fun AddFountainScreen(
                     )
                 }
 
-                // NUEVO: Sección de imagen
+                // --- SECCIÓN DE IMAGEN CON SOPORTE PARA GALERÍA Y CÁMARA ---
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Foto de la fuente",
+                        text = stringResource(R.string.add_fountain_photo_label),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = Negro
                     )
 
-                    // Vista previa de la imagen seleccionada
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -150,19 +152,20 @@ fun AddFountainScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         if (viewModel.selectedImageUri != null) {
+                            // Mostrar la imagen seleccionada
                             AsyncImage(
                                 model = ImageRequest.Builder(context)
                                     .data(viewModel.selectedImageUri)
                                     .crossfade(true)
                                     .build(),
-                                contentDescription = "Vista previa",
+                                contentDescription = stringResource(R.string.add_fountain_preview),
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
 
-                            // Botón para cambiar/quitar imagen
+                            // Botón para quitar imagen
                             IconButton(
-                                onClick = { viewModel.clearSelectedImage() },
+                                onClick = { imagePickerHelper.clearSelection() },
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
                                     .padding(8.dp)
@@ -170,29 +173,52 @@ fun AddFountainScreen(
                             ) {
                                 Icon(
                                     Icons.Default.Close,
-                                    contentDescription = "Quitar imagen",
+                                    contentDescription = stringResource(R.string.add_fountain_remove_image),
                                     tint = Rojo
                                 )
                             }
+
+                            // Indicador de subida si está subiendo
+                            if (viewModel.isUploading) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Negro.copy(alpha = 0.5f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        CircularProgressIndicator(color = Blanco)
+                                        Text(
+                                            text = stringResource(R.string.add_fountain_upload_progress, viewModel.uploadProgress),
+                                            color = Blanco,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
                         } else {
+                            // Botón para seleccionar imagen (abre diálogo con opciones)
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
-                                    painter = painterResource(R.drawable.pin_lleno), // Asegúrate de tener este drawable
+                                    painter = painterResource(R.drawable.pin_lleno),
                                     contentDescription = null,
                                     tint = GrisClaro,
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Button(
-                                    onClick = { imagePickerLauncher.launch("image/*") },
+                                    onClick = { imagePickerHelper.showPickerOptions() },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Blue10
                                     ),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Text("Seleccionar foto", color = Blanco)
+                                    Text(stringResource(R.string.add_fountain_select_photo), color = Blanco)
                                 }
                             }
                         }
@@ -306,7 +332,7 @@ fun AddFountainScreen(
                     }
                 }
 
-                // NUEVO: Indicador de progreso de subida
+                // Barra de progreso
                 if (viewModel.isUploading) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -319,17 +345,17 @@ fun AddFountainScreen(
                             color = Blue10
                         )
                         Text(
-                            text = "Subiendo imagen: ${viewModel.uploadProgress}%",
+                            text = stringResource(R.string.add_fountain_upload_progress, viewModel.uploadProgress),
                             fontSize = 12.sp,
                             color = NegroSuave
                         )
                     }
                 }
 
-                // NUEVO: Mensaje de error
+                // Mensaje de error
                 if (viewModel.errorMessage != null) {
                     Text(
-                        text = viewModel.errorMessage!!,
+                        text = stringResource(R.string.add_fountain_error, viewModel.errorMessage!!),
                         color = Rojo,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -358,7 +384,7 @@ fun AddFountainScreen(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "Subiendo...",
+                            text = stringResource(R.string.add_fountain_uploading),
                             color = Blanco,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp

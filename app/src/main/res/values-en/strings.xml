@@ -183,4 +183,21 @@
     <string name="fountain_status_ok">The fountain has water</string>
     <string name="fountain_status_error">The fountain is broken</string>
     <string name="edit_comment">Edit comment</string>
+
+    <!-- Textos para AddFountainScreen -->
+    <string name="add_fountain_photo_label">Fountain photo</string>
+    <string name="add_fountain_select_photo">Upload or take photo</string>
+    <string name="add_fountain_remove_image">Remove image</string>
+    <string name="add_fountain_preview">Preview</string>
+    <string name="add_fountain_upload_progress">Uploading image: %1$d%%</string>
+    <string name="add_fountain_uploading">Uploading...</string>
+    <string name="add_fountain_error">Error: %1$s</string>
+    <string name="add_fountain_upload_error">Error uploading image: %1$s</string>
+
+    <!-- Textos para ImagePickerHelper -->
+    <string name="image_picker_title">Select photo</string>
+    <string name="image_picker_gallery">Gallery</string>
+    <string name="image_picker_camera">Camera</string>
+    <string name="image_picker_gallery_description">Gallery</string>
+    <string name="image_picker_camera_description">Camera</string>
 </resources>
