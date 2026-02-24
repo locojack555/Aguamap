@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -46,10 +47,12 @@ fun CommentItem(
     onCensor: () -> Unit,
     onDelete: () -> Unit,
     onEdit: () -> Unit,
-    onReport: () -> Unit
+    onReport: () -> Unit // Este callback ahora activará el flujo de reporte al admin
 ) {
-    val dateStr =
+    // Formateador de fecha localizado
+    val dateStr = remember(commentObj.timestamp) {
         SimpleDateFormat("dd/MM/yy", Locale.getDefault()).format(Date(commentObj.timestamp))
+    }
 
     Column(
         modifier = Modifier
@@ -57,6 +60,7 @@ fun CommentItem(
             .padding(vertical = 12.dp)
     ) {
         Row(verticalAlignment = Alignment.Top) {
+            // Información del autor y rating
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = commentObj.userName,
@@ -71,7 +75,7 @@ fun CommentItem(
                     repeat(5) { i ->
                         Icon(
                             imageVector = Icons.Default.Star,
-                            contentDescription = null, // Decorativo
+                            contentDescription = null,
                             modifier = Modifier.size(14.dp),
                             tint = if (i < commentObj.rating) Naranja else GrisClaro
                         )
@@ -80,6 +84,8 @@ fun CommentItem(
                     Text(text = dateStr, fontSize = 11.sp, color = NegroMuySuave)
                 }
             }
+
+            // Acciones (Editar, Borrar, Reportar, Censurar)
             Row {
                 if (isMyComment) {
                     if (!commentObj.isCensored) {
@@ -101,16 +107,21 @@ fun CommentItem(
                         )
                     }
                 }
+
+                // Botón de Reporte (Para usuarios que no son dueños del comentario ni admins)
                 if (!isMyComment && !isAdmin) {
                     IconButton(onClick = onReport, modifier = Modifier.size(32.dp)) {
                         Icon(
                             imageVector = Icons.Default.Flag,
                             contentDescription = stringResource(R.string.report_button),
+                            // Si el comentario ya ha sido marcado por el usuario actual, cambiamos el color
                             tint = if (commentObj.isReported) Naranja else NegroSuave,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                 }
+
+                // Botón de Censura (Solo Administradores)
                 if (isAdmin && !commentObj.isCensored) {
                     IconButton(onClick = onCensor, modifier = Modifier.size(32.dp)) {
                         Icon(
@@ -124,6 +135,7 @@ fun CommentItem(
             }
         }
 
+        // Contenido del comentario o mensaje de censura
         if (commentObj.isCensored) {
             Text(
                 text = stringResource(R.string.comment_censored),
