@@ -201,4 +201,7 @@
     <string name="image_picker_camera">Cámara</string>
     <string name="image_picker_gallery_description">Galería</string>
     <string name="image_picker_camera_description">Cámara</string>
+
+    <string name="game_result_click_red_marker">Haz clic en el marcador rojo para ver los detalles de la fuente</string>
+    <string name="game_result_you_won">¡HAS GANADO!</string>
 </resources>

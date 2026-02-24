@@ -175,7 +175,8 @@
     <string name="dialog_add_comment_label">El teu comentari (opcional)</string>
     <string name="dialog_add_comment_publish">Publicar</string>
     <string name="dialog_add_comment_cancel">Cancel·lar</string>
-
+    <string name="game_result_click_red_marker">Fes clic al marcador vermell per veure els detalls de la font</string>
+    <string name="game_result_you_won">HAS GUANYAT!</string>
     <string name="add_fountain_subtitle">Ajuda a la comunitat afegint una nova font</string>
     <string name="fountain_name_placeholder">Ex: Font de la Plaça Major</string>
     <string name="fountain_description_placeholder">Explica\'ns detalls sobre el seu estat...</string>

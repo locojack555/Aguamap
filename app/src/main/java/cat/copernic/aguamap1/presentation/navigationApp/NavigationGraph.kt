@@ -9,16 +9,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
+import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.DetailFountainViewModel
+import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
 import cat.copernic.aguamap1.presentation.game.GameScreen
+import cat.copernic.aguamap1.presentation.game.GameViewModel
 import cat.copernic.aguamap1.presentation.maps.mapView.MapScreen
 import cat.copernic.aguamap1.presentation.music.SoundManager
 import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.ranking.RankingScreen
-import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
-import cat.copernic.aguamap1.presentation.game.GameViewModel
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 
 @Composable
 fun NavigationGraph(
@@ -30,33 +29,31 @@ fun NavigationGraph(
         initialValue = navController.currentBackStackEntry?.destination?.route
     )
 
-    // DETENER TODOS LOS SONIDOS cuando NO estamos en la pantalla de juego
     LaunchedEffect(currentRoute) {
         if (currentRoute != BottomNavItem.Game.route) {
             soundManager.stopAllSounds()
         }
     }
 
-    //Contenedor de navegación
     NavHost(
         navController = navController,
-        //ruta inicial
         startDestination = BottomNavItem.Map.route
     ) {
-        //Dibuja la pantalla si esta en la ruta
         composable(BottomNavItem.Map.route) {
             MapScreen(isHome = true)
         }
         composable(BottomNavItem.Categories.route) {
-            // ¡Aquí llamamos a tu pantalla!
             CategoriesScreen()
         }
         composable(BottomNavItem.Game.route) {
-            // 2. Obtén el ViewModel usando hiltViewModel()
             val gameViewModel: GameViewModel = hiltViewModel()
+            val detailFountainViewModel: DetailFountainViewModel = hiltViewModel()
+            val commentsViewModel: FountainCommentsViewModel = hiltViewModel()
 
             GameScreen(
-                viewModel = gameViewModel, // 3. Pásalo explícitamente a la pantalla
+                viewModel = gameViewModel,
+                detailFountainViewModel = detailFountainViewModel,
+                commentsViewModel = commentsViewModel,
                 onBackToHome = {
                     soundManager.stopAllSounds()
                     navController.navigate(BottomNavItem.Map.route) {
@@ -70,7 +67,6 @@ fun NavigationGraph(
             RankingScreen()
         }
         composable(BottomNavItem.Profile.route) {
-            // Placeholder para Perfil
             ProfileScreen(
                 navigateToLogin = {
                     soundManager.stopAllSounds()
@@ -78,7 +74,8 @@ fun NavigationGraph(
                         popUpTo(RootScreen.Home.route) { inclusive = true }
                         launchSingleTop = true
                     }
-                })
+                }
+            )
         }
     }
 }

@@ -200,4 +200,6 @@
     <string name="image_picker_camera">Camera</string>
     <string name="image_picker_gallery_description">Gallery</string>
     <string name="image_picker_camera_description">Camera</string>
+    <string name="game_result_click_red_marker">Click on the red marker to see fountain details</string>
+    <string name="game_result_you_won">YOU WON!</string>
 </resources>
