@@ -124,4 +124,55 @@
 
     <!-- Pantalla ErrorScreen -->
     <string name="game_error_retry_button">REINTENTAR</string>
+    <string name="back">Atrás</string>
+    <string name="delete">Borrar</string>
+    <string name="description_title">Descripción</string>
+    <string name="no_description">Sin descripción disponible.</string>
+    <string name="distancia_label">Distancia</string>
+    <string name="estado_label">Estado</string>
+    <string name="funcionando">Funcionando</string>
+    <string name="averiada">Averiada</string>
+    <string name="fecha_alta_label">Fecha de alta</string>
+    <string name="coordenadas_label">Coordenadas</string>
+    <string name="edit_fountain_admin">Editar fuente (Admin)</string>
+    <string name="confirm_button">Confirmar</string>
+    <string name="report_button">Reportar</string>
+    <string name="ratings_title">Valoraciones (%1$d)</string>
+    <string name="add_comment">Añadir</string>
+    <string name="first_comment_prompt">¡Sé el primero en comentar!</string>
+
+    <string name="report_dialog_title">Reportar incidencia</string>
+    <string name="report_dialog_text">¿Qué problema has encontrado en esta fuente?</string>
+    <string name="report_not_exists">No existe</string>
+    <string name="report_broken">Está averiada</string>
+    <string name="report_fixed">Ya funciona</string>
+    <string name="delete_fountain_title">Borrar fuente</string>
+    <string name="delete_fountain_text">Esta acción no se puede deshacer.</string>
+    <string name="delete_confirm">Eliminar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete_comment_title">Eliminar valoración</string>
+    <string name="delete_fountain_confirm_text">¿Estás seguro de que deseas eliminar esta fuente permanentemente? Esta acción no se puede deshacer.</string>
+    <string name="delete_comment_text">¿Estás seguro de que deseas eliminar esta valoración? Esta acción es permanente.</string>
+
+    <string name="comment_censored">[Contenido eliminado por moderación]</string>
+    <string name="edit">Editar</string>
+    <string name="censor">Censurar</string>
+    <string name="pending_validation">Pendiente de validación</string>
+    <string name="reported_non_existent">Reportada como inexistente</string>
+    <string name="validation_count_singular">1 persona ha reportado esto.</string>
+    <string name="validation_count_plural">%1$d de %2$d personas han reportado esto.</string>
+
+    <string name="dialog_add_comment_title">Añadir valoración</string>
+    <string name="dialog_add_comment_prompt">Puntúa la fuente:</string>
+    <string name="dialog_add_comment_label">Tu comentario (opcional)</string>
+    <string name="dialog_add_comment_publish">Publicar</string>
+    <string name="dialog_add_comment_cancel">Cancelar</string>
+
+    <string name="add_fountain_subtitle">Ayuda a la comunidad añadiendo una nueva fuente</string>
+    <string name="fountain_name_placeholder">Ej: Fuente de la Plaza Mayor</string>
+    <string name="fountain_description_placeholder">Cuéntanos detalles sobre su estado...</string>
+    <string name="fountain_is_operational_title">¿Funciona actualmente?</string>
+    <string name="fountain_status_ok">La fuente tiene agua</string>
+    <string name="fountain_status_error">La fuente está averiada</string>
+    <string name="edit_comment">Editar comentario</string>
 </resources>

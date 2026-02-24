@@ -46,22 +46,9 @@ class FirebaseFountainRepository @Inject constructor(
         updates: Map<String, Any>
     ): Result<Unit> {
         return try {
-            val finalUpdates = updates.toMutableMap()
-
-            // Soporte para incrementar contadores (votos o ratings) de forma atómica
-            // Si el mapa contiene "totalRatings", "positiveVotes" o "negativeVotes", usamos increment
-            val incrementableFields = listOf("totalRatings", "positiveVotes", "negativeVotes")
-
-            incrementableFields.forEach { field ->
-                if (updates.containsKey(field)) {
-                    val value = (updates[field] as? Number)?.toLong() ?: 0L
-                    finalUpdates[field] = FieldValue.increment(value)
-                }
-            }
-
             db.collection("fountains")
                 .document(fountainId)
-                .update(finalUpdates)
+                .update(updates)
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -81,23 +68,20 @@ class FirebaseFountainRepository @Inject constructor(
         }
     }
 
-    // --- GESTIÓN DE COMENTARIOS (SUBCOLECCIÓN) ---
+    // --- GESTIÓN DE COMENTARIOS ---
 
     override suspend fun addComment(fountainId: String, comment: Comment): Result<Unit> {
         return try {
-            val ref = db.collection("fountains")
-                .document(fountainId)
-                .collection("comments")
-                .document()
+            val fountainRef = db.collection("fountains").document(fountainId)
+            val commentRef = fountainRef.collection("comments").document()
 
-            // 1. Guardamos el comentario
-            ref.set(comment.copy(id = ref.id)).await()
-
-            // 2. Incrementamos el contador en el documento padre
-            db.collection("fountains")
-                .document(fountainId)
-                .update("totalRatings", FieldValue.increment(1))
-                .await()
+            // Usamos una transacción para asegurar que el contador y el comentario van a la par
+            db.runTransaction { transaction ->
+                // 1. Guardar comentario
+                transaction.set(commentRef, comment.copy(id = commentRef.id))
+                // 2. Incrementar totalRatings
+                transaction.update(fountainRef, "totalRatings", FieldValue.increment(1))
+            }.await()
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -143,20 +127,33 @@ class FirebaseFountainRepository @Inject constructor(
 
     override suspend fun deleteComment(fountainId: String, commentId: String): Result<Unit> {
         return try {
-            // 1. Borramos el comentario de la subcolección
+            val fountainRef = db.collection("fountains").document(fountainId)
+            val commentRef = fountainRef.collection("comments").document(commentId)
+
+            db.runTransaction { transaction ->
+                transaction.delete(commentRef)
+                transaction.update(fountainRef, "totalRatings", FieldValue.increment(-1))
+            }.await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Método para el futuro Panel de Admin
+    override suspend fun reportComment(
+        fountainId: String,
+        commentId: String,
+        userId: String // Lo mantenemos en la firma si tu interfaz lo requiere, aunque no lo usemos
+    ): Result<Unit> {
+        return try {
             db.collection("fountains")
                 .document(fountainId)
                 .collection("comments")
                 .document(commentId)
-                .delete()
+                .update("isReported", true) // Solo cambiamos el flag a true
                 .await()
-
-            // 2. Decrementamos el contador totalRatings en el documento padre
-            db.collection("fountains")
-                .document(fountainId)
-                .update("totalRatings", FieldValue.increment(-1))
-                .await()
-
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

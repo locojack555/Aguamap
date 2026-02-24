@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.home.map
+package cat.copernic.aguamap1.presentation.fountain.addFountain
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,18 +20,28 @@ class AddFountainViewModel @Inject constructor(
     private val getCategoriesUseCase: GetCategoriesUseCase
 ) : ViewModel() {
 
-    var showAddFountainSheet by mutableStateOf(false)
+    // --- ESTADO DE NAVEGACIÓN (pantalla completa, ya no modal) ---
+    var isAdding by mutableStateOf(false)
         private set
 
     var selectedLocationForNewFountain by mutableStateOf<GeoPoint?>(null)
         private set
 
+    // --- ESTADO DEL FORMULARIO (Hoisting) ---
+    var name by mutableStateOf("")
+    var description by mutableStateOf("")
+    var selectedCategory by mutableStateOf<Category?>(null)
+    var isOperational by mutableStateOf(true)
+
     // Estado para las categorías de la UI
     var categories by mutableStateOf<List<Category>>(emptyList())
         private set
 
+    // Validación reactiva
+    val isFormValid: Boolean
+        get() = name.isNotBlank() && description.isNotBlank() && selectedCategory != null
+
     init {
-        // Cargamos las categorías al iniciar
         viewModelScope.launch {
             getCategoriesUseCase().collect { lista ->
                 categories = lista
@@ -41,25 +51,25 @@ class AddFountainViewModel @Inject constructor(
 
     fun openAddFountain(lat: Double, lng: Double) {
         selectedLocationForNewFountain = GeoPoint(lat, lng)
-        showAddFountainSheet = true
+        isAdding = true
     }
 
     fun closeAddFountain() {
-        showAddFountainSheet = false
+        resetForm()
+        isAdding = false
         selectedLocationForNewFountain = null
     }
 
-    fun addNewFountain(
-        name: String,
-        description: String,
-        category: Category,
-        isOperational: Boolean,
-        onSuccess: () -> Unit
-    ) {
-        val location = selectedLocationForNewFountain ?: return
+    private fun resetForm() {
+        name = ""
+        description = ""
+        selectedCategory = null
+        isOperational = true
+    }
 
-        // Validación de campos obligatorios (Clean Architecture: la lógica de validación previa)
-        if (name.isBlank() || description.isBlank() || category.id.isEmpty()) return
+    fun addNewFountain(onSuccess: () -> Unit) {
+        val location = selectedLocationForNewFountain ?: return
+        val category = selectedCategory ?: return
 
         viewModelScope.launch {
             val newFountain = Fountain(
@@ -72,6 +82,7 @@ class AddFountainViewModel @Inject constructor(
             )
 
             val result = createFountainUseCase(newFountain, isUserAdmin = false)
+
             result.onSuccess {
                 onSuccess()
                 closeAddFountain()

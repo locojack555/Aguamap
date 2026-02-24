@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.home.navigation
+package cat.copernic.aguamap1.presentation.navigationApp
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon

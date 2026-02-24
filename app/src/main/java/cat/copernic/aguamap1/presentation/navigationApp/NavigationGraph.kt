@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.home.navigation
+package cat.copernic.aguamap1.presentation.navigationApp
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -7,15 +7,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
 import cat.copernic.aguamap1.presentation.game.GameScreen
-import cat.copernic.aguamap1.presentation.home.map.MapScreen
+import cat.copernic.aguamap1.presentation.maps.mapView.MapScreen
 import cat.copernic.aguamap1.presentation.music.SoundManager
-import cat.copernic.aguamap1.presentation.navigation.RootScreen
+import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.ranking.RankingScreen
-import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 
 @Composable
 fun NavigationGraph(

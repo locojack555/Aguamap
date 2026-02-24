@@ -3,7 +3,7 @@ package cat.copernic.aguamap1.presentation.initial
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.repository.AuthRepository
-import cat.copernic.aguamap1.presentation.navigation.RootScreen
+import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
