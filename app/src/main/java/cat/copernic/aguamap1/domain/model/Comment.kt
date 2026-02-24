@@ -7,5 +7,6 @@ data class Comment(
     val rating: Int = 0,
     val comment: String = "",
     val isCensored: Boolean = false,
+    val isReported: Boolean = false,
     val timestamp: Long = System.currentTimeMillis()
 )

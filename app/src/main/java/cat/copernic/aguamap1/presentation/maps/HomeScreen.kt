@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.home
+package cat.copernic.aguamap1.presentation.maps
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -8,14 +8,16 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import cat.copernic.aguamap1.presentation.home.navigation.HomeBottomNavigation
-import cat.copernic.aguamap1.presentation.home.navigation.NavigationGraph
-import cat.copernic.aguamap1.presentation.music.SoundManager
 import cat.copernic.aguamap1.presentation.music.SoundManagerViewModel
+import cat.copernic.aguamap1.presentation.navigationApp.HomeBottomNavigation
+import cat.copernic.aguamap1.presentation.navigationApp.NavigationGraph
 
 
 @Composable
-fun HomeScreen(rootNavController: NavHostController,  soundManagerViewModel: SoundManagerViewModel = hiltViewModel()) {
+fun HomeScreen(
+    rootNavController: NavHostController,
+    soundManagerViewModel: SoundManagerViewModel = hiltViewModel()
+) {
     val internalNavController = rememberNavController()
     val soundManager = soundManagerViewModel.soundManager
     //Componente que ya tiene huecos listos para usar topbar, bottombar

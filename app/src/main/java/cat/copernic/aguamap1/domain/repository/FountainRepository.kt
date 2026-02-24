@@ -55,4 +55,6 @@ interface FountainRepository {
      * Elimina un comentario permanentemente.
      */
     suspend fun deleteComment(fountainId: String, commentId: String): Result<Unit>
+
+    suspend fun reportComment(fountainId: String, commentId: String, userId: String): Result<Unit>
 }

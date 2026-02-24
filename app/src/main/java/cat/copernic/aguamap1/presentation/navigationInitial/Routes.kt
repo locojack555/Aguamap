@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.navigation
+package cat.copernic.aguamap1.presentation.navigationInitial
 
 sealed class RootScreen(val route: String) {
     object Initial : RootScreen("initial")

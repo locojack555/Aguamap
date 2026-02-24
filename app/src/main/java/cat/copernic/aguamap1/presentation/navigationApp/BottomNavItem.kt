@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.home.navigation
+package cat.copernic.aguamap1.presentation.navigationApp
 
 import cat.copernic.aguamap1.R
 

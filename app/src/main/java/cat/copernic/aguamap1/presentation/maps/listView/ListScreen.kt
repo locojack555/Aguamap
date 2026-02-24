@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.home.list
+package cat.copernic.aguamap1.presentation.maps.listView
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
-import cat.copernic.aguamap1.presentation.home.map.MapViewModel
+import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
 import cat.copernic.aguamap1.presentation.util.getStatusColor
 import cat.copernic.aguamap1.presentation.util.getStatusText
 import cat.copernic.aguamap1.ui.theme.Blanco
@@ -51,14 +51,19 @@ import coil.compose.AsyncImage
 import java.util.Locale
 
 @Composable
-fun ListScreen(viewModel: MapViewModel) {
+fun ListScreen(
+    viewModel: MapViewModel,
+    onFountainClick: (Fountain) -> Unit // Añadido para desacoplar del ViewModel
+) {
     val state = viewModel.uiState
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Blanco
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Espaciador para la TopBar personalizada
             Spacer(modifier = Modifier.height(72.dp))
+
             if (state.fountains.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = stringResource(R.string.noth_fountains), color = Negro)
@@ -69,14 +74,14 @@ fun ListScreen(viewModel: MapViewModel) {
                         start = 16.dp,
                         top = 16.dp,
                         end = 16.dp,
-                        bottom = 100.dp
+                        bottom = 100.dp // Espacio para botones flotantes
                     ),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(state.fountains) { fountain ->
                         FountainItem(
                             fountain = fountain,
-                            onClick = { viewModel.selectFountain(fountain) }
+                            onClick = { onFountainClick(fountain) }
                         )
                     }
                 }
@@ -104,6 +109,7 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                 .padding(12.dp)
                 .height(IntrinsicSize.Min)
         ) {
+            // Imagen de la fuente
             AsyncImage(
                 model = fountain.imageUrl,
                 contentDescription = null,
@@ -114,7 +120,9 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
+
             Spacer(modifier = Modifier.width(16.dp))
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.SpaceBetween
@@ -136,7 +144,7 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // --- ESTRELLAS DINÁMICAS BASADAS EN RATING ---
+                // --- ESTRELLAS DINÁMICAS ---
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val rating = fountain.ratingAverage
                     repeat(5) { index ->
@@ -167,6 +175,7 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Distancia
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.pin_lleno),
@@ -186,6 +195,7 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                         )
                     }
 
+                    // Etiqueta de Estado (Funcionando/Averiada/etc)
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         border = BorderStroke(1.dp, themeColor),

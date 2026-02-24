@@ -124,4 +124,54 @@
 
     <!-- Pantalla ErrorScreen -->
     <string name="game_error_retry_button">REINTENTAR</string>
+    <string name="back">Enrere</string>
+    <string name="delete">Esborrar</string>
+    <string name="description_title">Descripció</string>
+    <string name="no_description">Sense descripció disponible.</string>
+    <string name="distancia_label">Distància</string>
+    <string name="estado_label">Estat</string>
+    <string name="funcionando">Funcionant</string>
+    <string name="averiada">Avariada</string>
+    <string name="fecha_alta_label">Data d’alta</string>
+    <string name="coordenadas_label">Coordenades</string>
+    <string name="edit_fountain_admin">Editar font (Admin)</string>
+    <string name="confirm_button">Confirmar</string>
+    <string name="report_button">Reportar</string>
+    <string name="ratings_title">Valoracions (%1$d)</string>
+    <string name="add_comment">Afegir</string>
+    <string name="first_comment_prompt">Sigues el primer en comentar!</string>
+
+    <string name="report_dialog_title">Reportar incidència</string>
+    <string name="report_dialog_text">Quin problema has trobat en aquesta font?</string>
+    <string name="report_not_exists">No existeix</string>
+    <string name="report_broken">Està avariada</string>
+    <string name="report_fixed">Ja funciona</string>
+    <string name="delete_fountain_title">Esborrar font</string>
+    <string name="delete_fountain_text">Aquesta acció no es pot desfer.</string>
+    <string name="delete_confirm">Eliminar</string>
+    <string name="cancel">Cancel·lar</string>
+    <string name="delete_comment_title">Eliminar valoració</string>
+    <string name="delete_comment_text">Estàs segur que vols eliminar aquesta valoració? Aquesta acció és permanent.</string>
+
+    <string name="comment_censored">[Contingut eliminat per moderació]</string>
+    <string name="edit">Editar</string>
+    <string name="censor">Censurar</string>
+    <string name="pending_validation">Pendent de validació</string>
+    <string name="reported_non_existent">Reportada com a inexistent</string>
+    <string name="validation_count_singular">1 persona ha reportat això.</string>
+    <string name="delete_fountain_confirm_text">Estàs segur que vols eliminar aquesta font permanentment? Aquesta acció no es pot desfer.</string>
+    <string name="validation_count_plural">%1$d de %2$d persones han reportat això.</string>
+    <string name="dialog_add_comment_title">Afegir valoració</string>
+    <string name="dialog_add_comment_prompt">Puntua la font:</string>
+    <string name="dialog_add_comment_label">El teu comentari (opcional)</string>
+    <string name="dialog_add_comment_publish">Publicar</string>
+    <string name="dialog_add_comment_cancel">Cancel·lar</string>
+
+    <string name="add_fountain_subtitle">Ajuda a la comunitat afegint una nova font</string>
+    <string name="fountain_name_placeholder">Ex: Font de la Plaça Major</string>
+    <string name="fountain_description_placeholder">Explica\'ns detalls sobre el seu estat...</string>
+    <string name="fountain_is_operational_title">Funciona actualment?</string>
+    <string name="fountain_status_ok">La font té aigua</string>
+    <string name="fountain_status_error">La font està avariada</string>
+    <string name="edit_comment">Editar comentari</string>
 </resources>

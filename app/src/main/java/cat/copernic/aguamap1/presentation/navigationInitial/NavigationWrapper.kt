@@ -1,13 +1,13 @@
-package cat.copernic.aguamap1.presentation.navigation
+package cat.copernic.aguamap1.presentation.navigationInitial
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.presentation.forgotpassword.ForgotPasswordScreen
-import cat.copernic.aguamap1.presentation.home.HomeScreen
 import cat.copernic.aguamap1.presentation.initial.InitialScreen
 import cat.copernic.aguamap1.presentation.login.LoginScreen
+import cat.copernic.aguamap1.presentation.maps.HomeScreen
 import cat.copernic.aguamap1.presentation.singup.SingUpScreen
 
 @Composable

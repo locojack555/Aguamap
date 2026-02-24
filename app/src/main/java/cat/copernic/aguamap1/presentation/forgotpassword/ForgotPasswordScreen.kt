@@ -102,7 +102,7 @@ fun ForgotPasswordScreen(
                         onClick = { viewModel.onResetPasswordClick() },
                         modifier = Modifier
                             .padding(top = 24.dp)
-                            .fillMaxWidth(0.6f)
+                            .fillMaxWidth(0.7f)
                             .align(Alignment.CenterHorizontally)
                             .height(50.dp),
                         shape = RoundedCornerShape(12.dp),

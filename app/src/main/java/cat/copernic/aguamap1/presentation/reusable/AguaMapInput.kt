@@ -81,7 +81,8 @@ fun AguaMapInput(
                 focusedLabelColor = color,
                 unfocusedLabelColor = color,
                 focusedPlaceholderColor = color,
-                unfocusedPlaceholderColor = color
+                unfocusedPlaceholderColor = color,
+                errorPlaceholderColor = color,
             )
         )
     }

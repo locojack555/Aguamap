@@ -8,8 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
-import cat.copernic.aguamap1.presentation.navigation.NavigationWrapper
+import cat.copernic.aguamap1.presentation.navigationInitial.NavigationWrapper
 import cat.copernic.aguamap1.ui.theme.AguaMap1Theme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -17,7 +18,9 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_AguaMap1)
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         //Carga el mapa una vez para que sea fluido
         org.osmdroid.config.Configuration.getInstance().load(
             applicationContext,

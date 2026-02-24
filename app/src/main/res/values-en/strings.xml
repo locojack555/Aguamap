@@ -123,4 +123,55 @@
 
     <!-- Pantalla ErrorScreen -->
     <string name="game_error_retry_button">RETRY</string>
+    <string name="back">Back</string>
+    <string name="delete">Delete</string>
+    <string name="description_title">Description</string>
+    <string name="no_description">No description available.</string>
+    <string name="distancia_label">Distance</string>
+    <string name="estado_label">Status</string>
+    <string name="funcionando">Operational</string>
+    <string name="averiada">Out of order</string>
+    <string name="fecha_alta_label">Date added</string>
+    <string name="coordenadas_label">Coordinates</string>
+    <string name="edit_fountain_admin">Edit fountain (Admin)</string>
+    <string name="confirm_button">Confirm</string>
+    <string name="report_button">Report</string>
+    <string name="ratings_title">Ratings (%1$d)</string>
+    <string name="add_comment">Add</string>
+    <string name="first_comment_prompt">Be the first to comment!</string>
+
+    <string name="report_dialog_title">Report an issue</string>
+    <string name="report_dialog_text">What problem did you find with this fountain?</string>
+    <string name="report_not_exists">Does not exist</string>
+    <string name="report_broken">It is broken</string>
+    <string name="report_fixed">It is working now</string>
+    <string name="delete_fountain_title">Delete fountain</string>
+    <string name="delete_fountain_text">This action cannot be undone.</string>
+    <string name="delete_confirm">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_comment_title">Delete rating</string>
+    <string name="delete_comment_text">Are you sure you want to delete this rating? This action is permanent.</string>
+
+    <string name="comment_censored">[Content removed by moderation]</string>
+    <string name="delete_fountain_confirm_text">Are you sure you want to permanently delete this fountain? This action cannot be undone.</string>
+    <string name="edit">Edit</string>
+    <string name="censor">Censor</string>
+    <string name="pending_validation">Pending validation</string>
+    <string name="reported_non_existent">Reported as non-existent</string>
+    <string name="validation_count_singular">1 person has reported this.</string>
+    <string name="validation_count_plural">%1$d out of %2$d people have reported this.</string>
+
+    <string name="dialog_add_comment_title">Add rating</string>
+    <string name="dialog_add_comment_prompt">Rate this fountain:</string>
+    <string name="dialog_add_comment_label">Your comment (optional)</string>
+    <string name="dialog_add_comment_publish">Publish</string>
+    <string name="dialog_add_comment_cancel">Cancel</string>
+
+    <string name="add_fountain_subtitle">Help the community by adding a new fountain</string>
+    <string name="fountain_name_placeholder">e.g., Main Square Fountain</string>
+    <string name="fountain_description_placeholder">Tell us details about its condition...</string>
+    <string name="fountain_is_operational_title">Is it currently working?</string>
+    <string name="fountain_status_ok">The fountain has water</string>
+    <string name="fountain_status_error">The fountain is broken</string>
+    <string name="edit_comment">Edit comment</string>
 </resources>

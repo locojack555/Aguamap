@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.home.map
+package cat.copernic.aguamap1.presentation.maps.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -17,8 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Category
+import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
 import cat.copernic.aguamap1.presentation.util.FilterState
 import cat.copernic.aguamap1.presentation.util.SortOption
 import cat.copernic.aguamap1.ui.theme.AguaMapGradient
@@ -56,7 +55,7 @@ import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Negro
 
 @Composable
-fun HomeTopBar(
+fun MapTopBar(
     isMapView: Boolean,
     onToggleView: () -> Unit,
     viewModel: MapViewModel = hiltViewModel()
@@ -72,21 +71,31 @@ fun HomeTopBar(
         OutlinedTextField(
             value = viewModel.searchQuery,
             onValueChange = { viewModel.onSearchQueryChanged(it) },
-            placeholder = { Text(stringResource(R.string.search_fountains), color = Negro) },
+            placeholder = {
+                Text(
+                    stringResource(R.string.search_fountains),
+                    color = Negro.copy(alpha = 0.6f)
+                )
+            },
             leadingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.search_24px),
-                    contentDescription = stringResource(R.string.search_fountains),
-                    tint = Color.Unspecified
+                    contentDescription = null,
+                    tint = Negro.copy(alpha = 0.7f)
                 )
             },
             trailingIcon = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
                     IconButton(onClick = { viewModel.toggleFilterMenu() }) {
                         Icon(
                             painterResource(R.drawable.filter_alt_24px),
                             contentDescription = stringResource(R.string.filter),
-                            tint = if (viewModel.filterState != FilterState()) Blue10 else Color.Unspecified
+                            tint = if (viewModel.filterState != FilterState()) Blue10 else Negro.copy(
+                                alpha = 0.7f
+                            )
                         )
                     }
                     FilterDropDown(
@@ -103,18 +112,9 @@ fun HomeTopBar(
                                 if (isMapView) R.drawable.format_list_bulleted_24px
                                 else R.drawable.map_24px
                             ),
-                            contentDescription = "Cambiar vista",
-                            tint = Color.Unspecified
+                            contentDescription = null,
+                            tint = Negro.copy(alpha = 0.7f)
                         )
-                    }
-                    IconButton(onClick = { /* Notificaciones */ }) {
-                        BadgedBox(badge = { Badge { Text("1") } }) {
-                            Icon(
-                                painterResource(R.drawable.notifications_24px),
-                                contentDescription = stringResource(R.string.notifactions),
-                                tint = Color.Unspecified
-                            )
-                        }
                     }
                 }
             },
@@ -122,7 +122,9 @@ fun HomeTopBar(
             shape = RoundedCornerShape(28.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent
+                unfocusedBorderColor = Color.Transparent,
+                focusedTextColor = Negro,
+                unfocusedTextColor = Negro
             )
         )
     }
@@ -138,12 +140,8 @@ fun FilterDropDown(
     showSortOptions: Boolean
 ) {
     val menuShape = RoundedCornerShape(28.dp)
-    val textColor = Blanco
-    val subButtonColor = Negro.copy(alpha = 0.7f)
 
-    MaterialTheme(
-        shapes = MaterialTheme.shapes.copy(extraSmall = menuShape)
-    ) {
+    MaterialTheme(shapes = MaterialTheme.shapes.copy(extraSmall = menuShape)) {
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = onDismiss,
@@ -153,7 +151,7 @@ fun FilterDropDown(
                 .border(0.5.dp, Blanco.copy(alpha = 0.2f), menuShape)
                 .padding(16.dp)
         ) {
-            // --- CABECERA ---
+            // Header
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -165,10 +163,10 @@ fun FilterDropDown(
                     stringResource(R.string.filter_title),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 18.sp,
-                    color = textColor
+                    color = Blanco
                 )
                 Surface(
-                    color = subButtonColor,
+                    color = Negro.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.clickable { onFilterChanged(FilterState()) }
                 ) {
@@ -184,20 +182,15 @@ fun FilterDropDown(
 
             HorizontalDivider(thickness = 0.5.dp, color = Blanco.copy(alpha = 0.3f))
 
-            // --- CUERPO ---
+            // Body
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // COLUMNA IZQUIERDA
                 Column(modifier = Modifier.weight(1f)) {
-                    FilterSectionTitle(
-                        stringResource(R.string.filter_by_category),
-                        color = textColor
-                    )
-
+                    FilterSectionTitle(stringResource(R.string.filter_by_category), Blanco)
                     categories.forEach { category ->
                         FilterChip(
                             label = category.name,
@@ -205,43 +198,13 @@ fun FilterDropDown(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
-                            onClick = {
-                                onFilterChanged(
-                                    state.copy(
-                                        selectedCategory = if (state.selectedCategory?.id == category.id) null else category
-                                    )
-                                )
-                            }
-                        )
-                    }
-
-                    // En la columna izquierda solo mostramos el switch si NO estamos mostrando opciones de ordenación (Vista Mapa)
-                    // Esto mantiene tu distribución original
-                    if (showSortOptions) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            stringResource(R.string.only_operational),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = textColor
-                        )
-                        Switch(
-                            checked = state.onlyOperational,
-                            onCheckedChange = { onFilterChanged(state.copy(onlyOperational = it)) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Blue10,
-                                checkedTrackColor = Blanco.copy(alpha = 0.5f),
-                                uncheckedThumbColor = Blanco.copy(alpha = 0.6f),
-                                uncheckedTrackColor = Negro.copy(alpha = 0.2f)
-                            ),
-                            modifier = Modifier.scale(0.8f)
+                            onClick = { onFilterChanged(state.copy(selectedCategory = if (state.selectedCategory?.id == category.id) null else category)) }
                         )
                     }
                 }
 
-                // COLUMNA DERECHA
                 Column(modifier = Modifier.weight(1f)) {
-                    FilterSectionTitle(stringResource(R.string.min_rating), color = textColor)
+                    FilterSectionTitle(stringResource(R.string.min_rating), Blanco)
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         (1..5).forEach { star ->
                             Icon(
@@ -257,7 +220,7 @@ fun FilterDropDown(
 
                     if (showSortOptions) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        FilterSectionTitle(stringResource(R.string.sort_by), color = textColor)
+                        FilterSectionTitle(stringResource(R.string.sort_by), Blanco)
                         SortOption.entries.forEach { option ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -280,41 +243,26 @@ fun FilterDropDown(
                                         SortOption.RATING -> stringResource(R.string.sort_rating)
                                         SortOption.DATE -> stringResource(R.string.sort_date)
                                     },
-                                    fontSize = 11.sp,
-                                    color = textColor
+                                    fontSize = 11.sp, color = Blanco
                                 )
                             }
                         }
-                    } else {
-                        // En Vista Mapa, el switch se muestra en la columna derecha para equilibrar el diseño
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            stringResource(R.string.only_operational),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = textColor
-                        )
-                        Switch(
-                            checked = state.onlyOperational,
-                            onCheckedChange = { onFilterChanged(state.copy(onlyOperational = it)) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Blue10,
-                                checkedTrackColor = Blanco.copy(alpha = 0.5f),
-                                uncheckedThumbColor = Blanco.copy(alpha = 0.6f),
-                                uncheckedTrackColor = Negro.copy(alpha = 0.2f)
-                            ),
-                            modifier = Modifier.scale(0.8f)
+                    }
+                    OperationalSwitch(state.onlyOperational) {
+                        onFilterChanged(
+                            state.copy(
+                                onlyOperational = it
+                            )
                         )
                     }
                 }
             }
 
-            // --- DISTANCIA ---
+            // Distance Slider
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(thickness = 0.5.dp, color = Blanco.copy(alpha = 0.3f))
-
             Row(
-                modifier = Modifier
+                Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -323,11 +271,11 @@ fun FilterDropDown(
                     stringResource(R.string.max_distance),
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    color = textColor
+                    color = Blanco
                 )
                 Text(
                     "${state.maxDistanceKm.toInt()} km",
-                    color = textColor,
+                    color = Blanco,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
@@ -338,12 +286,36 @@ fun FilterDropDown(
                 valueRange = 1f..10f,
                 steps = 8,
                 colors = SliderDefaults.colors(
-                    activeTrackColor = Negro,
-                    inactiveTrackColor = Negro.copy(alpha = 0.3f),
-                    thumbColor = Color.Transparent
+                    activeTrackColor = Blanco,
+                    inactiveTrackColor = Blanco.copy(alpha = 0.3f),
+                    thumbColor = Blanco
                 )
             )
         }
+    }
+}
+
+@Composable
+fun OperationalSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Column {
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            stringResource(R.string.only_operational),
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            color = Blanco
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Blue10,
+                checkedTrackColor = Blanco.copy(alpha = 0.5f),
+                uncheckedThumbColor = Blanco.copy(alpha = 0.6f),
+                uncheckedTrackColor = Negro.copy(alpha = 0.2f)
+            ),
+            modifier = Modifier.scale(0.8f)
+        )
     }
 }
 
