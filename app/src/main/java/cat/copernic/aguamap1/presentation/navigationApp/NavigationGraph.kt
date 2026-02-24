@@ -3,6 +3,7 @@ package cat.copernic.aguamap1.presentation.navigationApp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,6 +15,10 @@ import cat.copernic.aguamap1.presentation.music.SoundManager
 import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.ranking.RankingScreen
+import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
+import cat.copernic.aguamap1.presentation.game.GameViewModel
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 @Composable
 fun NavigationGraph(
@@ -47,9 +52,13 @@ fun NavigationGraph(
             CategoriesScreen()
         }
         composable(BottomNavItem.Game.route) {
+            // 2. Obtén el ViewModel usando hiltViewModel()
+            val gameViewModel: GameViewModel = hiltViewModel()
+
             GameScreen(
+                viewModel = gameViewModel, // 3. Pásalo explícitamente a la pantalla
                 onBackToHome = {
-                    soundManager.stopAllSounds() // Detener TODO al volver a home
+                    soundManager.stopAllSounds()
                     navController.navigate(BottomNavItem.Map.route) {
                         popUpTo(BottomNavItem.Map.route) { inclusive = false }
                         launchSingleTop = true

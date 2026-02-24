@@ -39,16 +39,6 @@ class AndroidSoundRepository @Inject constructor(
         isBackgroundPausedForEffect = false
     }
 
-    override fun pauseBackgroundMusic() {
-        backgroundMusicPlayer?.pause()
-    }
-
-    override fun resumeBackgroundMusic() {
-        if (backgroundMusicPlayer != null && !isBackgroundPausedForEffect) {
-            backgroundMusicPlayer?.start()
-        }
-    }
-
     override fun isBackgroundMusicPlaying(): Boolean {
         return backgroundMusicPlayer?.isPlaying == true
     }
@@ -60,14 +50,12 @@ class AndroidSoundRepository @Inject constructor(
             else -> return
         }
 
-        // Pausar música de fondo temporalmente si está sonando
         val wasBackgroundPlaying = backgroundMusicPlayer?.isPlaying == true
         if (wasBackgroundPlaying) {
             backgroundMusicPlayer?.pause()
             isBackgroundPausedForEffect = true
         }
 
-        // Liberar el player anterior si existe
         effectPlayer?.release()
 
         effectPlayer = MediaPlayer.create(context, soundRes).apply {
@@ -75,7 +63,7 @@ class AndroidSoundRepository @Inject constructor(
             setOnCompletionListener {
                 it.release()
                 effectPlayer = null
-                // Reanudar música de fondo después del efecto
+
                 if (wasBackgroundPlaying) {
                     backgroundMusicPlayer?.start()
                     isBackgroundPausedForEffect = false
@@ -94,12 +82,10 @@ class AndroidSoundRepository @Inject constructor(
     }
 
     override fun stopAllSounds() {
-        // Detener música de fondo
         backgroundMusicPlayer?.stop()
         backgroundMusicPlayer?.release()
         backgroundMusicPlayer = null
 
-        // Detener efecto si está sonando
         effectPlayer?.stop()
         effectPlayer?.release()
         effectPlayer = null
