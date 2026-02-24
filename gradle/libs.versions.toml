@@ -25,6 +25,7 @@ coil = "2.7.0"
 material3 = "1.4.0"
 foundation = "1.10.3"
 roomKtx = "2.8.4"
+playServicesCastTv = "21.1.1"
 
 
 [libraries]
@@ -63,6 +64,7 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
+play-services-cast-tv = { group = "com.google.android.gms", name = "play-services-cast-tv", version.ref = "playServicesCastTv" }
 
 
 [plugins]
