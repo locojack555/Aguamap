@@ -11,6 +11,7 @@ import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.usecase.category.GetCategoriesUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetDistanceFountainsUseCaseUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
+import cat.copernic.aguamap1.domain.usecase.validation.generateSearchRegex
 import cat.copernic.aguamap1.presentation.util.FilterState
 import cat.copernic.aguamap1.presentation.util.SortOption
 import cat.copernic.aguamap1.ui.map.MapUiState
@@ -124,17 +125,23 @@ class MapViewModel @Inject constructor(
         var filtered = allFountainsList
 
         if (searchQuery.isNotBlank()) {
-            filtered = filtered.filter { it.name.contains(searchQuery, ignoreCase = true) }
+            val regex = generateSearchRegex(searchQuery)
+            filtered = if (regex != null) {
+                filtered.filter { fountain ->
+                    regex.containsMatchIn(fountain.name)
+                }
+            } else {
+                filtered.filter { it.name.contains(searchQuery, ignoreCase = true) }
+            }
         }
 
+        // --- EL RESTO DE TUS FILTROS (Categoría, Rating, etc.) SIGUEN IGUAL ---
         filterState.selectedCategory?.let { cat ->
             filtered = filtered.filter { it.category.id == cat.id }
         }
-
         if (filterState.onlyOperational) {
             filtered = filtered.filter { it.operational }
         }
-
         filtered = filtered.filter {
             it.ratingAverage >= filterState.minRating &&
                     (it.distanceFromUser ?: 0.0) / 1000.0 <= filterState.maxDistanceKm

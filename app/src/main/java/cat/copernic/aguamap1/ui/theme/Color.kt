@@ -17,7 +17,10 @@ val Blue10 = Color(0xFF007BFF)
 val Blue20 = Color(0xFF00C3FF)
 val AzulOscuro = Color(0xFF0A4D68)
 
-
+val BgGray50 = Color(0xFFF9FAFB)
+val TextGray800 = Color(0xFF1F2937)
+val DangerRed = Color(0xFFEF4444)
+val InfoBlue = Color(0xFF3B82F6)
 val AzulTurquesa = Color(0xFF75C9C8)
 val AzulGrisaceo = Color(0xFF2D3142)
 val AzulClaro = Color(0xFFF1F8FF)

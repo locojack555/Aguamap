@@ -19,7 +19,7 @@ class LoginViewModel @Inject constructor(
 
     // Estados de la UI
     var email by mutableStateOf("")
-        private set // Solo se puede modificar desde dentro del ViewModel
+        private set
     var password by mutableStateOf("")
         private set
     var isError by mutableStateOf(false)
@@ -28,6 +28,7 @@ class LoginViewModel @Inject constructor(
         private set
     var name by mutableStateOf("")
     var needsName by mutableStateOf(false)
+
     private val _navigateToHome = MutableSharedFlow<Boolean>()
     val navigateToHome = _navigateToHome.asSharedFlow()
 
@@ -64,6 +65,8 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             val result = repository.login(email, password)
             if (result.isSuccess) {
+                // Si el login es correcto y el email está verificado (lógica del repo),
+                // entonces comprobamos si existe el documento en Firestore.
                 checkUserAndNavigate()
             } else {
                 val exception = result.exceptionOrNull()
@@ -85,6 +88,7 @@ class LoginViewModel @Inject constructor(
             if (exists) {
                 _navigateToHome.emit(true)
             } else {
+                // Solo pedimos el nombre si NO existe el documento del usuario en Firestore
                 needsName = true
             }
         }
@@ -99,20 +103,6 @@ class LoginViewModel @Inject constructor(
                 _navigateToHome.emit(true)
             } else {
                 isError = true
-            }
-        }
-    }
-
-    fun checkPendingRegistration() {
-        val uid = repository.getCurrentUserUid()
-        if (uid != null) {
-            viewModelScope.launch {
-                val exists = repository.checkIfUserExists(uid)
-                if (!exists) {
-                    needsName = true
-                } else {
-                    _navigateToHome.emit(true)
-                }
             }
         }
     }

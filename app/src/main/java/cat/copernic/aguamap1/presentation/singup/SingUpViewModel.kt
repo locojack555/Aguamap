@@ -27,25 +27,42 @@ class SingUpViewModel @Inject constructor(
     var isWaitingVerification by mutableStateOf(false)
 
     fun onSingUpClick() {
+        // 1. Validaciones locales
         val emailResult = validateEmail(email)
         val passwordResult = validatePassword(password)
+
         emailError = null
         passwordError = null
+
         if (!emailResult.success || !passwordResult.success) {
             emailError = emailResult.errorResId
             passwordError = passwordResult.errorResId
             return
         }
+
+        // 2. Registro en Firebase
         viewModelScope.launch {
             val result = repository.signUp(email, password)
             if (result.isSuccess) {
+                // Al tener el signOut() en el Repositorio, el usuario
+                // queda bloqueado hasta que vuelva a loguearse tras verificar.
                 isWaitingVerification = true
                 email = ""
                 password = ""
             } else {
-                emailError =
-                    if (result.exceptionOrNull()?.message == "ERROR_DUPLICATED") R.string.error_email_duplicated else R.string.error_email_generic
+                val exception = result.exceptionOrNull()
+                emailError = if (exception?.message == "ERROR_DUPLICATED") {
+                    R.string.error_email_duplicated
+                } else {
+                    R.string.error_email_generic
+                }
             }
         }
+    }
+
+    fun resetState() {
+        isWaitingVerification = false
+        emailError = null
+        passwordError = null
     }
 }

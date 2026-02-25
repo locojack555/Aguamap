@@ -11,6 +11,7 @@ import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.usecase.category.GetCategoriesUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.CreateFountainUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.UpdateFountainUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
@@ -19,15 +20,19 @@ import javax.inject.Inject
 @HiltViewModel
 class AddFountainViewModel @Inject constructor(
     private val createFountainUseCase: CreateFountainUseCase,
+    private val updateFountainUseCase: UpdateFountainUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val cloudinaryService: CloudinaryService // AÑADIDO
+    private val cloudinaryService: CloudinaryService
 ) : ViewModel() {
 
-    // --- ESTADO DE NAVEGACIÓN ---
+    // --- ESTADO DE NAVEGACIÓN Y EDICIÓN ---
     var isAdding by mutableStateOf(false)
         private set
 
     var selectedLocationForNewFountain by mutableStateOf<GeoPoint?>(null)
+        private set
+
+    var fountainToEdit by mutableStateOf<Fountain?>(null)
         private set
 
     // --- ESTADO DEL FORMULARIO ---
@@ -36,8 +41,10 @@ class AddFountainViewModel @Inject constructor(
     var selectedCategory by mutableStateOf<Category?>(null)
     var isOperational by mutableStateOf(true)
 
-    // NUEVO: Estado para la imagen
     var selectedImageUri by mutableStateOf<Uri?>(null)
+        private set
+
+    var currentImageUrl by mutableStateOf("")
         private set
 
     var isUploading by mutableStateOf(false)
@@ -63,8 +70,19 @@ class AddFountainViewModel @Inject constructor(
         }
     }
 
-    fun openAddFountain(lat: Double, lng: Double) {
-        selectedLocationForNewFountain = GeoPoint(lat, lng)
+    fun openAddFountain(lat: Double, lng: Double, fountain: Fountain? = null) {
+        if (fountain != null) {
+            fountainToEdit = fountain
+            name = fountain.name
+            description = fountain.description
+            selectedCategory = fountain.category
+            isOperational = fountain.operational
+            currentImageUrl = fountain.imageUrl
+            selectedLocationForNewFountain = GeoPoint(fountain.latitude, fountain.longitude)
+        } else {
+            resetForm()
+            selectedLocationForNewFountain = GeoPoint(lat, lng)
+        }
         isAdding = true
     }
 
@@ -80,22 +98,26 @@ class AddFountainViewModel @Inject constructor(
         selectedCategory = null
         isOperational = true
         selectedImageUri = null
+        currentImageUrl = ""
         isUploading = false
         uploadProgress = 0
         errorMessage = null
+        fountainToEdit = null
     }
 
-    // NUEVO: Actualizar URI de imagen
     fun updateSelectedImage(uri: Uri?) {
         selectedImageUri = uri
     }
 
-    // NUEVO: Limpiar imagen seleccionada
     fun clearSelectedImage() {
         selectedImageUri = null
+        currentImageUrl = ""
     }
 
-    fun addNewFountain(onSuccess: () -> Unit) {
+    /**
+     * Guarda la fuente: Crea una nueva o actualiza la existente si fountainToEdit != null.
+     */
+    fun saveFountain(onSuccess: () -> Unit) {
         val location = selectedLocationForNewFountain ?: return
         val category = selectedCategory ?: return
 
@@ -104,53 +126,58 @@ class AddFountainViewModel @Inject constructor(
             errorMessage = null
 
             try {
-                // 1. Subir imagen si hay una seleccionada
-                val imageUrl = if (selectedImageUri != null) {
-                    // Suscribirse al progreso
+                var imageUrl = currentImageUrl
+
+                if (selectedImageUri != null) {
                     cloudinaryService.uploadImageWithProgress(selectedImageUri!!)
                         .collect { progress ->
-                            when (progress) {
-                                is cat.copernic.aguamap1.data.cloudinary.UploadProgress.InProgress -> {
-                                    uploadProgress = progress.percentage
-                                }
-                                is cat.copernic.aguamap1.data.cloudinary.UploadProgress.Success -> {
-                                    uploadProgress = 100
-                                    // Continuar con la creación
-                                }
-                                is cat.copernic.aguamap1.data.cloudinary.UploadProgress.Error -> {
-                                    errorMessage = "Error al subir imagen: ${progress.message}"
-                                    isUploading = false
-                                    return@collect
-                                }
-                                else -> {}
+                            if (progress is cat.copernic.aguamap1.data.cloudinary.UploadProgress.InProgress) {
+                                uploadProgress = progress.percentage
                             }
                         }
 
-                    // En un caso real, aquí esperarías la URL. Simplificamos:
-                    // Alternativa: usar uploadImage suspendido
-                    cloudinaryService.uploadImage(selectedImageUri!!).getOrNull()
-                } else {
-                    null
+                    val uploadResult = cloudinaryService.uploadImage(selectedImageUri!!)
+                    uploadResult.onSuccess { imageUrl = it }
                 }
 
-                // 2. Crear la fuente con la URL de la imagen
-                val newFountain = Fountain(
-                    name = name,
-                    latitude = location.latitude,
-                    longitude = location.longitude,
-                    operational = isOperational,
-                    category = category,
-                    description = description,
-                    imageUrl = imageUrl ?: "" // Guardamos la URL
-                )
+                if (fountainToEdit != null) {
+                    // --- MODO ACTUALIZAR ---
+                    // IMPORTANTE: Mantenemos el status original de la fuente (ACCEPTED o PENDING)
+                    val updatedFields = mutableMapOf<String, Any>(
+                        "name" to name,
+                        "description" to description,
+                        "category" to category,
+                        "operational" to isOperational,
+                        "imageUrl" to imageUrl,
+                        "status" to fountainToEdit!!.status // <--- CORRECCIÓN: Mantiene el estado confirmado
+                    )
 
-                val result = createFountainUseCase(newFountain, isUserAdmin = false)
+                    updateFountainUseCase(fountainToEdit!!.id, updatedFields)
+                        .onSuccess {
+                            onSuccess()
+                            closeAddFountain()
+                        }
+                        .onFailure { errorMessage = it.message }
+                } else {
+                    // --- MODO CREAR ---
+                    val newFountain = Fountain(
+                        name = name,
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        operational = isOperational,
+                        category = category,
+                        description = description,
+                        imageUrl = imageUrl
+                        // Aquí no hace falta poner status porque el modelo/DB suele
+                        // asignar PENDING por defecto al crear.
+                    )
 
-                result.onSuccess {
-                    onSuccess()
-                    closeAddFountain()
-                }.onFailure {
-                    errorMessage = it.message
+                    createFountainUseCase(newFountain, isUserAdmin = false)
+                        .onSuccess {
+                            onSuccess()
+                            closeAddFountain()
+                        }
+                        .onFailure { errorMessage = it.message }
                 }
             } catch (e: Exception) {
                 errorMessage = "Error: ${e.message}"

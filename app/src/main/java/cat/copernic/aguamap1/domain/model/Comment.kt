@@ -6,7 +6,7 @@ data class Comment(
     val userName: String = "",
     val rating: Int = 0,
     val comment: String = "",
-    val isCensored: Boolean = false,
-    val isReported: Boolean = false,
+    val censored: Boolean = false,
+    val reported: Boolean = false,
     val timestamp: Long = System.currentTimeMillis()
 )

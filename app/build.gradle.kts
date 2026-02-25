@@ -38,6 +38,12 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        jniLibs {
+            // Esta es la clave para solucionar el error de alineación
+            useLegacyPackaging = true
+        }
+    }
 }
 
 dependencies {
@@ -55,7 +61,6 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.hilt.android)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.play.services.cast.tv)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
@@ -72,10 +77,10 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.room.ktx)
 // Cloudinary
-    implementation("com.cloudinary:cloudinary-android:2.5.0")
+    implementation(libs.cloudinary.android)
 
     // Para seleccionar imágenes de la galería
-    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation(libs.androidx.activity.compose.v1124)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

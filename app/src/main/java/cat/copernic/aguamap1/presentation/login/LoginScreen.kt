@@ -42,7 +42,6 @@ import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.PurpleGrey40
 import cat.copernic.aguamap1.ui.theme.Rojo
 
-//@Preview
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
@@ -50,14 +49,15 @@ fun LoginScreen(
     navigateToSingUp: () -> Unit = {},
     onLoginSuccess: () -> Unit = {}
 ) {
-    //Se ejecuta una vez al abrir esta pantalla
+    // Se ejecuta una vez al abrir esta pantalla
     LaunchedEffect(Unit) {
         viewModel.resetState()
-        viewModel.checkPendingRegistration()
+        // Eliminada la comprobación automática que causaba el salto al diálogo de nombre
         viewModel.navigateToHome.collect {
             onLoginSuccess()
         }
     }
+
     if (viewModel.needsName) {
         AlertDialog(
             onDismissRequest = { /* Opcional: podrías poner needsName = false */ },
@@ -85,8 +85,7 @@ fun LoginScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.onCompleteRegistration() },
-                    enabled = viewModel.name.trim()
-                        .split(" ").size >= 2,
+                    enabled = viewModel.name.trim().split(" ").size >= 2,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Negro.copy(alpha = 0.8f),
                         disabledContainerColor = Negro.copy(alpha = 0.8f)
@@ -99,6 +98,7 @@ fun LoginScreen(
             modifier = Modifier.background(AguaMapGradient)
         )
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()

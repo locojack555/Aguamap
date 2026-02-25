@@ -32,47 +32,38 @@ class FountainCommentsViewModel @Inject constructor(
 
     var comments by mutableStateOf<List<Comment>>(emptyList())
         private set
+    var reportSuccess by mutableStateOf(false)
+        private set
 
-    // ErrorMessage ahora podría ser un ID de recurso o un objeto de estado para evitar strings hardcoded
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
     private var commentsJob: Job? = null
 
-    /**
-     * Observa los comentarios de una fuente específica en tiempo real.
-     */
     fun observeComments(fountainId: String) {
         commentsJob?.cancel()
         commentsJob = viewModelScope.launch {
+            // fetchComments debe devolver un Flow directamente desde Firestore (.snapshots())
             getFountainsUseCase.fetchComments(fountainId).collect { result ->
                 result.onSuccess { list ->
-                    comments = list
+                    // Actualizamos la lista con lo que diga la NUBE
+                    comments = list.sortedByDescending { it.timestamp }
                 }.onFailure {
-                    // Aquí lo ideal es usar una Sealed Class de errores o un ID de StringResource
-                    errorMessage = "error_loading_comments"
+                    errorMessage = "Error al sincronizar comentarios"
                 }
             }
         }
     }
 
-    /**
-     * Detiene la observación y limpia la lista de comentarios.
-     */
     fun stopObserving() {
         commentsJob?.cancel()
         comments = emptyList()
     }
 
-    // --- ACCIONES DE COMENTARIOS ---
-
-    /**
-     * Añade un nuevo comentario a la fuente.
-     */
     fun addComment(fountain: Fountain, rating: Int, text: String) {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUserUid() ?: return@launch
-            val uName = authRepository.getCurrentUserName() ?: ""
+            val uName = authRepository.getCurrentUserName() ?: "Usuario"
 
             val newComment = Comment(
                 userId = uid,
@@ -83,59 +74,60 @@ class FountainCommentsViewModel @Inject constructor(
             )
 
             addCommentUseCase(fountain, newComment).onFailure {
-                errorMessage = "error_adding_comment"
+                errorMessage = "Error al añadir comentario"
             }
         }
     }
 
-    /**
-     * Actualiza un comentario existente (Rating y Texto).
-     */
     fun editComment(fountain: Fountain, oldComment: Comment, newRating: Int, newText: String) {
         viewModelScope.launch {
             updateCommentUseCase(fountain, oldComment, newRating, newText).onFailure {
-                errorMessage = "error_editing_comment"
+                errorMessage = "Error al editar"
             }
         }
     }
 
-    /**
-     * Elimina permanentemente un comentario.
-     */
     fun deleteComment(fountain: Fountain, comment: Comment) {
         viewModelScope.launch {
             deleteCommentUseCase(fountain, comment).onFailure {
-                errorMessage = "error_deleting_comment"
+                errorMessage = "Error al eliminar"
             }
         }
     }
 
-    /**
-     * Reporta un comentario al administrador.
-     * Implementa la lógica de reporte similar a la de las fuentes.
-     */
     fun onReportComment(fountainId: String, commentId: String) {
+        if (fountainId.isEmpty() || commentId.isEmpty()) return
         viewModelScope.launch {
-            // El tercer parámetro (reason) se envía vacío por defecto o podrías pasar un string desde un diálogo
-            repository.reportComment(fountainId, commentId, "")
-                .onFailure { errorMessage = "error_reporting_comment" }
+            repository.reportComment(fountainId, commentId, "Reporte de usuario")
+                .onSuccess { reportSuccess = true }
+                .onFailure { errorMessage = "Error al reportar" }
         }
     }
 
+    fun clearReportSuccess() {
+        reportSuccess = false
+    }
+
     /**
-     * Censura un comentario (Acción exclusiva de Admin).
+     * CENSURAR COMENTARIO (ADMIN)
+     * Asegúrate de que el UseCase acceda a:
+     * fountains/{fountainId}/comments/{commentId} -> update("isCensored", true)
      */
     fun censorComment(fountainId: String, commentId: String) {
         viewModelScope.launch {
-            censorCommentUseCase(fountainId, commentId).onFailure {
-                errorMessage = "error_censoring_comment"
-            }
+            censorCommentUseCase(fountainId, commentId)
+                .onSuccess {
+                    // Actualización local inmediata para feedback visual
+                    comments = comments.map {
+                        if (it.id == commentId) it.copy(censored = true) else it
+                    }
+                }
+                .onFailure {
+                    errorMessage = "Error al censurar: ${it.message}"
+                }
         }
     }
 
-    /**
-     * Limpia el mensaje de error después de ser mostrado.
-     */
     fun clearError() {
         errorMessage = null
     }
