@@ -57,7 +57,6 @@ class CategoryViewModel @Inject constructor(
 
     private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
 
-    // MODIFICADO: Ahora utiliza generateSearchRegex para filtrar las categorías
     val categories: StateFlow<List<Category>> =
         combine(_allCategories, _searchQuery) { list, query ->
             if (query.isBlank()) {
@@ -67,7 +66,6 @@ class CategoryViewModel @Inject constructor(
                 if (regex != null) {
                     list.filter { it.name.contains(regex) }
                 } else {
-                    // Fallback por si la expresión regular no es válida
                     list.filter { it.name.contains(query, ignoreCase = true) }
                 }
             }
@@ -83,7 +81,6 @@ class CategoryViewModel @Inject constructor(
         } else {
             fountains.filter { it.operational == isOp }
         }
-        // Agrupamos por ID exacto (evitamos lowercase/trim para coincidir con Firestore)
         filtered.groupBy { it.category.id }
 
     }.stateIn(
@@ -92,7 +89,7 @@ class CategoryViewModel @Inject constructor(
         initialValue = emptyMap()
     )
 
-    // --- ESTADO DEL FORMULARIO (PARA CREAR/EDITAR) ---
+    // --- ESTADO DEL FORMULARIO ---
     var name by mutableStateOf("")
     var description by mutableStateOf("")
     var selectedImageUri by mutableStateOf<Uri?>(null)
@@ -126,8 +123,6 @@ class CategoryViewModel @Inject constructor(
     }
 
     fun toggleOperationalFilter(currentIsOnlyAveriadas: Boolean) {
-        // Si ya estaba seleccionado (true), lo ponemos a null (quitar filtro)
-        // Si no estaba seleccionado, lo ponemos a false (solo averiadas)
         _operationalFilter.value = if (currentIsOnlyAveriadas) null else false
     }
 
@@ -145,6 +140,10 @@ class CategoryViewModel @Inject constructor(
         uploadProgress = 0; errorMessage = null
     }
 
+    fun clearError() {
+        errorMessage = null
+    }
+
     fun saveCategory(onSuccess: () -> Unit) {
         viewModelScope.launch {
             isUploading = true
@@ -152,7 +151,6 @@ class CategoryViewModel @Inject constructor(
             try {
                 var finalUrl = currentImageUrl
 
-                // 1. Subir a Cloudinary si hay URI nueva
                 selectedImageUri?.let { uri ->
                     cloudinaryService.uploadImageWithProgress(uri).collect { progress ->
                         if (progress is UploadProgress.InProgress) {
@@ -163,7 +161,6 @@ class CategoryViewModel @Inject constructor(
                     finalUrl = uploadResult.getOrThrow()
                 }
 
-                // 2. Operación en Firestore
                 val categoryData = Category(
                     id = categoryToEdit?.id ?: "",
                     name = name,
@@ -187,10 +184,40 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun deleteCategory(id: String) {
+    // --- GESTIÓN DE BORRADO ---
+
+    fun canDeleteCategory(categoryId: String): Boolean {
+        // Obtenemos el mapa actual de fuentes por categoría
+        val fountainsInCat = fountainsByCategory.value[categoryId] ?: emptyList()
+        return fountainsInCat.isEmpty()
+    }
+    // ... (dentro de la clase CategoryViewModel)
+
+    fun updateSelectedImage(uri: Uri?) {
+        selectedImageUri = uri
+    }
+
+    fun clearSelectedImage() {
+        selectedImageUri = null
+        currentImageUrl = ""
+    }
+
+// ... (el resto del código se mantiene igual)
+
+
+    fun deleteCategory(id: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
+                // Comprobación de seguridad: Si tiene fuentes, NO borramos y avisamos
+                if (!canDeleteCategory(id)) {
+                    errorMessage =
+                        "No se puede eliminar la categoría porque todavía tiene fuentes asociadas. Primero borra o mueve las fuentes."
+                    return@launch
+                }
+
+                // Si está vacía, procedemos al borrado
                 deleteCategoryUseCase(id)
+                onSuccess()
             } catch (e: Exception) {
                 errorMessage = "Error al eliminar: ${e.message}"
             }

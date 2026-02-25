@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // IMPORTANTE
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -72,7 +73,12 @@ fun CategoryItem(category: Category, count: Int, onClick: () -> Unit) {
                     color = AzulGrisaceo,
                     fontSize = 16.sp
                 )
-                Text(text = "$count fuentes", fontSize = 13.sp, color = Gris)
+                // Usamos stringResource pasándole el conteo como argumento
+                Text(
+                    text = stringResource(R.string.category_item_count, count),
+                    fontSize = 13.sp,
+                    color = Gris
+                )
             }
             Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = GrisClaro)
         }

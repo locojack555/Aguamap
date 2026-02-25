@@ -1,9 +1,6 @@
 package cat.copernic.aguamap1.presentation.categories
 
-import android.net.Uri
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,8 +20,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.presentation.categories.components.CategoriesHeader
@@ -32,6 +34,7 @@ import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.De
 import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
 import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainScreen
 import cat.copernic.aguamap1.ui.theme.BgGray50
+import cat.copernic.aguamap1.ui.theme.Rojo
 
 @Composable
 fun CategoriesScreen(
@@ -45,18 +48,18 @@ fun CategoriesScreen(
     val operationalFilter by viewModel.operationalFilter.collectAsState()
     val fountainsByCategory by viewModel.fountainsByCategory.collectAsState()
 
+    // Capturamos el mensaje de error del ViewModel
+    val errorMessage = viewModel.errorMessage
+
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var showDetailDialog by remember { mutableStateOf(false) }
     var showCreateDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showFountainDetails by remember { mutableStateOf<Fountain?>(null) }
 
+    // Manejo del botón atrás cuando estamos viendo detalles de una fuente
     BackHandler(enabled = showFountainDetails != null) { showFountainDetails = null }
-
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            viewModel.selectedImageUri = uri
-        }
 
     Box(
         modifier = Modifier
@@ -104,23 +107,43 @@ fun CategoriesScreen(
         }
     }
 
-    // Diálogos
+    // --- SECCIÓN DE DIÁLOGOS ---
+
+    // 1. DIÁLOGO DE ERROR (Aviso cuando hay fuentes vinculadas)
+    if (errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearError() },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearError() }) {
+                    Text(stringResource(R.string.category_accept))
+                }
+            },
+            title = { Text(stringResource(R.string.error_title)) },
+            text = { Text(errorMessage!!) }
+        )
+    }
+
+    // 2. Crear Categoría (Ahora usa el selector de cámara/galería interno)
     if (showCreateDialog) {
         CategoryFormDialog(
-            "Nueva Categoría",
-            viewModel,
-            launcher,
-            { showCreateDialog = false },
-            { viewModel.saveCategory { showCreateDialog = false } })
+            title = stringResource(R.string.category_new_title),
+            viewModel = viewModel,
+            onDismiss = { showCreateDialog = false },
+            onConfirm = { viewModel.saveCategory { showCreateDialog = false } }
+        )
     }
+
+    // 3. Editar Categoría
     if (showEditDialog && selectedCategory != null) {
         CategoryFormDialog(
-            "Editar Categoría",
-            viewModel,
-            launcher,
-            { showEditDialog = false },
-            { viewModel.saveCategory { showEditDialog = false } })
+            title = stringResource(R.string.category_edit_title),
+            viewModel = viewModel,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { viewModel.saveCategory { showEditDialog = false } }
+        )
     }
+
+    // 4. Detalle de Categoría
     if (showDetailDialog && selectedCategory != null) {
         CategoryDetailDialog(
             category = selectedCategory!!,
@@ -128,15 +151,52 @@ fun CategoriesScreen(
             isAdmin = isAdmin,
             onDismiss = { showDetailDialog = false },
             onDeleteCategory = {
-                viewModel.deleteCategory(selectedCategory!!.id); showDetailDialog = false
+                val categoryId = selectedCategory!!.id
+                showDetailDialog = false // Cerramos detalle para mostrar el siguiente diálogo
+
+                if (viewModel.canDeleteCategory(categoryId)) {
+                    showDeleteConfirmation = true
+                } else {
+                    // Esto activará automáticamente el Diálogo de Error (1)
+                    viewModel.deleteCategory(categoryId) {}
+                }
             },
             onEditCategory = {
-                viewModel.onEditCategory(selectedCategory!!); showEditDialog = true
+                viewModel.onEditCategory(selectedCategory!!)
+                showEditDialog = true
             },
             onFountainClick = { id ->
                 val f = fountainsByCategory[selectedCategory!!.id]?.find { it.id == id }
                 if (f != null) {
-                    showDetailDialog = false; showFountainDetails = f
+                    showDetailDialog = false
+                    showFountainDetails = f
+                }
+            }
+        )
+    }
+
+    // 5. Confirmación de Borrado (Solo categorías sin fuentes)
+    if (showDeleteConfirmation && selectedCategory != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(stringResource(R.string.delete_category_title)) },
+            text = { Text(stringResource(R.string.delete_category_msg, selectedCategory!!.name)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteCategory(selectedCategory!!.id) {
+                            showDeleteConfirmation = false
+                            showDetailDialog = false
+                            selectedCategory = null
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.category_save), color = Rojo)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text(stringResource(R.string.category_cancel))
                 }
             }
         )

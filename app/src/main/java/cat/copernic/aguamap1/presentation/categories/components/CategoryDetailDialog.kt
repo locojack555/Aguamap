@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -114,7 +115,7 @@ fun CategoryDetailDialog(
                     if (fountains.isEmpty()) {
                         item {
                             Text(
-                                "No hay fuentes disponibles",
+                                stringResource(R.string.category_no_fountains), // LOCALIZADO
                                 color = Gris,
                                 modifier = Modifier.padding(16.dp),
                                 fontSize = 14.sp
@@ -136,7 +137,7 @@ fun CategoryDetailDialog(
                         .padding(top = 16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro),
                     shape = RoundedCornerShape(12.dp)
-                ) { Text("Cerrar", color = Blanco) }
+                ) { Text(stringResource(R.string.category_close), color = Blanco) } // LOCALIZADO
             }
         }
     }
@@ -167,7 +168,12 @@ private fun FountainRow(fountain: Fountain, onClick: () -> Unit) {
                 color = AzulGrisaceo
             )
             if (!fountain.operational) {
-                Text("Averiada", color = Rojo, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(R.string.legend_averiada), // LOCALIZADO (Asegúrate de tener esta clave)
+                    color = Rojo,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
         Icon(
