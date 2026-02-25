@@ -29,7 +29,7 @@ class FirebaseRankingRepository @Inject constructor(
         }
         val inicioHoy = calendar.time
 
-        val snapshot = db.collection("game_sessions")
+        val snapshot = db.collection("gameSessions")
             .whereGreaterThanOrEqualTo("date", inicioHoy)
             .get()
             .await()
