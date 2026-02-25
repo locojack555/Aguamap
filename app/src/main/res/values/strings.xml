@@ -232,4 +232,8 @@
 
     <string name="game_result_click_red_marker">Haz clic en el marcador rojo para ver los detalles de la fuente</string>
     <string name="game_result_you_won">¡HAS GANADO!</string>
+    <string name="location_title">Ubicación</string>
+    <string name="location_source_title">Origen de la ubicación</string>
+    <string name="location_gps">Usando GPS automático</string>
+    <string name="location_manual">Coordenadas manuales</string>
 </resources>

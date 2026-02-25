@@ -229,4 +229,8 @@
     <string name="image_picker_camera">Càmera</string>
     <string name="image_picker_gallery_description">Galeria</string>
     <string name="image_picker_camera_description">Càmera</string>
+    <string name="location_title">Ubicació</string>
+    <string name="location_source_title">Origen de la ubicació</string>
+    <string name="location_gps">Utilitzant GPS automàtic</string>
+    <string name="location_manual">Coordenades manuals</string>
 </resources>

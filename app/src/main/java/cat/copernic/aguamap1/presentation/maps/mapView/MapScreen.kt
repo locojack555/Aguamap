@@ -43,6 +43,11 @@ fun MapScreen(
     val isMapView by mapViewModel.isMapView.collectAsState()
     val isAdding = addViewModel.isAdding
     val selectedFountain = detailFountainViewModel.selectedFountain
+    // Si categories es un StateFlow, usa collectAsState
+    // val categories by mapViewModel.categories.collectAsState()
+
+    // Si categories es un mutableStateOf, úsalo directamente
+    val categories = mapViewModel.categories // Asumiendo que es un State<List<Category>>
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
@@ -60,7 +65,7 @@ fun MapScreen(
                 )
             }
 
-            // Capa Superior: Detalle de Fuente (ACTUALIZADO)
+            // Capa Superior: Detalle de Fuente
             selectedFountain != null -> {
                 DetailFountainScreen(
                     fountain = selectedFountain,
@@ -79,8 +84,6 @@ fun MapScreen(
                     onReportNoExiste = {
                         detailFountainViewModel.reportNonExistent { mapViewModel.loadFountains() }
                     }
-                    // Ya no pasamos onAddComment ni onEditComment porque DetailFountainScreen
-                    // ahora gestiona sus propios diálogos internamente.
                 )
             }
 
@@ -93,7 +96,10 @@ fun MapScreen(
                         onMapLoad = { mapViewRef = it },
                         onFountainClick = { detailFountainViewModel.selectFountain(it) }
                     )
-                    MapLegend(modifier = Modifier.align(Alignment.BottomStart))
+                    MapLegend(
+                        categories = categories,
+                        modifier = Modifier.align(Alignment.BottomStart)
+                    )
                 } else {
                     ListScreen(
                         viewModel = mapViewModel,
@@ -120,15 +126,10 @@ fun MapScreen(
 
             else -> {
                 PermissionRequestUI {
-                    // Si ya se denegó antes y Android dice que no debemos mostrar el diálogo nativo,
-                    // significa que el usuario marcó "No volver a preguntar" o denegó varias veces.
-                    // En ese caso, lo enviamos a Ajustes.
                     if (locationPermissionState.status.shouldShowRationale) {
                         locationPermissionState.launchPermissionRequest()
                     } else {
                         locationPermissionState.launchPermissionRequest()
-                        // Nota: Si launch no hace nada, es que está bloqueado.
-                        // Podrías añadir un Intent a los ajustes aquí.
                     }
                 }
             }

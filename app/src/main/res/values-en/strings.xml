@@ -231,4 +231,8 @@
     <string name="image_picker_camera_description">Camera</string>
     <string name="game_result_click_red_marker">Click on the red marker to see fountain details</string>
     <string name="game_result_you_won">YOU WON!</string>
+    <string name="location_title">Location</string>
+    <string name="location_source_title">Location source</string>
+    <string name="location_gps">Using automatic GPS</string>
+    <string name="location_manual">Manual coordinates</string>
 </resources>

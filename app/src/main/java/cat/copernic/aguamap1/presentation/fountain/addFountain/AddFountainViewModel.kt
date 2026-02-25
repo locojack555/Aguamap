@@ -15,6 +15,8 @@ import cat.copernic.aguamap1.domain.usecase.fountain.UpdateFountainUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
+import java.text.NumberFormat
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,6 +43,13 @@ class AddFountainViewModel @Inject constructor(
     var selectedCategory by mutableStateOf<Category?>(null)
     var isOperational by mutableStateOf(true)
 
+    // --- NUEVOS CAMPOS PARA COORDENADAS MANUALES ---
+    var useGpsLocation by mutableStateOf(true) // true = usar GPS, false = manual
+    var manualLatitude by mutableStateOf("")
+    var manualLongitude by mutableStateOf("")
+    var latitudeError by mutableStateOf<String?>(null)
+    var longitudeError by mutableStateOf<String?>(null)
+
     var selectedImageUri by mutableStateOf<Uri?>(null)
         private set
 
@@ -60,13 +69,41 @@ class AddFountainViewModel @Inject constructor(
         private set
 
     val isFormValid: Boolean
-        get() = name.isNotBlank() && description.isNotBlank() && selectedCategory != null
+        get() = name.isNotBlank() &&
+                description.isNotBlank() &&
+                selectedCategory != null &&
+                (useGpsLocation || validateManualCoordinates())
 
     init {
         viewModelScope.launch {
             getCategoriesUseCase().collect { lista ->
                 categories = lista
             }
+        }
+    }
+
+    private fun validateManualCoordinates(): Boolean {
+        return try {
+            val lat = manualLatitude.toDoubleOrNull()
+            val lng = manualLongitude.toDoubleOrNull()
+
+            latitudeError = when {
+                manualLatitude.isBlank() -> "La latitud es obligatoria"
+                lat == null -> "Formato de latitud inválido"
+                lat < -90 || lat > 90 -> "La latitud debe estar entre -90 y 90"
+                else -> null
+            }
+
+            longitudeError = when {
+                manualLongitude.isBlank() -> "La longitud es obligatoria"
+                lng == null -> "Formato de longitud inválido"
+                lng < -180 || lng > 180 -> "La longitud debe estar entre -180 y 180"
+                else -> null
+            }
+
+            latitudeError == null && longitudeError == null
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -78,9 +115,15 @@ class AddFountainViewModel @Inject constructor(
             selectedCategory = fountain.category
             isOperational = fountain.operational
             currentImageUrl = fountain.imageUrl
+            useGpsLocation = false // Al editar, usar coordenadas manuales
+            manualLatitude = fountain.latitude.toString()
+            manualLongitude = fountain.longitude.toString()
             selectedLocationForNewFountain = GeoPoint(fountain.latitude, fountain.longitude)
         } else {
             resetForm()
+            useGpsLocation = true
+            manualLatitude = ""
+            manualLongitude = ""
             selectedLocationForNewFountain = GeoPoint(lat, lng)
         }
         isAdding = true
@@ -97,6 +140,11 @@ class AddFountainViewModel @Inject constructor(
         description = ""
         selectedCategory = null
         isOperational = true
+        useGpsLocation = true
+        manualLatitude = ""
+        manualLongitude = ""
+        latitudeError = null
+        longitudeError = null
         selectedImageUri = null
         currentImageUrl = ""
         isUploading = false
@@ -114,11 +162,55 @@ class AddFountainViewModel @Inject constructor(
         currentImageUrl = ""
     }
 
+    fun toggleLocationSource() {
+        useGpsLocation = !useGpsLocation
+        if (!useGpsLocation && selectedLocationForNewFountain != null) {
+            // Precargar las coordenadas actuales del GPS como punto de partida
+            manualLatitude = selectedLocationForNewFountain!!.latitude.toString()
+            manualLongitude = selectedLocationForNewFountain!!.longitude.toString()
+        }
+        latitudeError = null
+        longitudeError = null
+    }
+
+    fun updateManualLatitude(value: String) {
+        manualLatitude = value
+        latitudeError = null
+    }
+
+    fun updateManualLongitude(value: String) {
+        manualLongitude = value
+        longitudeError = null
+    }
+
     /**
      * Guarda la fuente: Crea una nueva o actualiza la existente si fountainToEdit != null.
      */
     fun saveFountain(onSuccess: () -> Unit) {
-        val location = selectedLocationForNewFountain ?: return
+        val location = if (useGpsLocation) {
+            selectedLocationForNewFountain
+        } else {
+            try {
+                val lat = manualLatitude.toDoubleOrNull()
+                val lng = manualLongitude.toDoubleOrNull()
+                if (lat != null && lng != null) {
+                    GeoPoint(lat, lng)
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        if (location == null) {
+            errorMessage = if (useGpsLocation)
+                "No se ha podido obtener la ubicación GPS"
+            else
+                "Coordenadas manuales inválidas"
+            return
+        }
+
         val category = selectedCategory ?: return
 
         viewModelScope.launch {
@@ -142,14 +234,15 @@ class AddFountainViewModel @Inject constructor(
 
                 if (fountainToEdit != null) {
                     // --- MODO ACTUALIZAR ---
-                    // IMPORTANTE: Mantenemos el status original de la fuente (ACCEPTED o PENDING)
                     val updatedFields = mutableMapOf<String, Any>(
                         "name" to name,
                         "description" to description,
                         "category" to category,
                         "operational" to isOperational,
                         "imageUrl" to imageUrl,
-                        "status" to fountainToEdit!!.status // <--- CORRECCIÓN: Mantiene el estado confirmado
+                        "latitude" to location.latitude,
+                        "longitude" to location.longitude,
+                        "status" to fountainToEdit!!.status
                     )
 
                     updateFountainUseCase(fountainToEdit!!.id, updatedFields)
@@ -168,8 +261,6 @@ class AddFountainViewModel @Inject constructor(
                         category = category,
                         description = description,
                         imageUrl = imageUrl
-                        // Aquí no hace falta poner status porque el modelo/DB suele
-                        // asignar PENDING por defecto al crear.
                     )
 
                     createFountainUseCase(newFountain, isUserAdmin = false)

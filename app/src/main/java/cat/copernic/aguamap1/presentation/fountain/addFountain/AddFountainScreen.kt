@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,7 +29,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -50,6 +51,7 @@ import cat.copernic.aguamap1.presentation.util.rememberImagePickerHelper
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.GrisClaro
+import cat.copernic.aguamap1.ui.theme.Naranja
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.NegroMinimal
 import cat.copernic.aguamap1.ui.theme.NegroSuave
@@ -57,6 +59,7 @@ import cat.copernic.aguamap1.ui.theme.Rojo
 import cat.copernic.aguamap1.ui.theme.Verde
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import java.util.Locale
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -281,6 +284,143 @@ fun AddFountainScreen(
                                     }
                                 } else null
                             )
+                        }
+                    }
+                }
+
+                // --- NUEVA SECCIÓN DE UBICACIÓN ---
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = stringResource(R.string.location_title),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Negro
+                    )
+
+                    // Switch para elegir entre GPS o manual
+                    Surface(
+                        color = NegroMinimal,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.location_source_title),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = Black
+                                )
+                                Text(
+                                    text = if (viewModel.useGpsLocation)
+                                        stringResource(R.string.location_gps)
+                                    else
+                                        stringResource(R.string.location_manual),
+                                    fontSize = 12.sp,
+                                    color = if (viewModel.useGpsLocation) Blue10 else Naranja
+                                )
+                            }
+                            Switch(
+                                checked = viewModel.useGpsLocation,
+                                onCheckedChange = { viewModel.toggleLocationSource() }
+                            )
+                        }
+                    }
+
+                    if (viewModel.useGpsLocation) {
+                        // Mostrar coordenadas del GPS
+                        Surface(
+                            color = GrisClaro.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.pin_lleno),
+                                    contentDescription = null,
+                                    tint = Blue10,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = String.format(
+                                        Locale.US,
+                                        "Lat: %.6f, Lng: %.6f",
+                                        viewModel.selectedLocationForNewFountain?.latitude ?: 0.0,
+                                        viewModel.selectedLocationForNewFountain?.longitude ?: 0.0
+                                    ),
+                                    fontSize = 14.sp,
+                                    color = Negro
+                                )
+                            }
+                        }
+                    } else {
+                        // Campos manuales para coordenadas
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Latitud
+                            Column(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = viewModel.manualLatitude,
+                                    onValueChange = { viewModel.updateManualLatitude(it) },
+                                    label = { Text("Latitud") },
+                                    placeholder = { Text("Ej: 41.5632") },
+                                    isError = viewModel.latitudeError != null,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Negro,
+                                        unfocusedTextColor = Negro,
+                                        focusedBorderColor = if (viewModel.latitudeError != null) Rojo else Negro,
+                                        unfocusedBorderColor = if (viewModel.latitudeError != null) Rojo else Negro
+                                    )
+                                )
+                                if (viewModel.latitudeError != null) {
+                                    Text(
+                                        text = viewModel.latitudeError!!,
+                                        color = Rojo,
+                                        fontSize = 11.sp,
+                                        modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                                    )
+                                }
+                            }
+
+                            // Longitud
+                            Column(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = viewModel.manualLongitude,
+                                    onValueChange = { viewModel.updateManualLongitude(it) },
+                                    label = { Text("Longitud") },
+                                    placeholder = { Text("Ej: 2.0089") },
+                                    isError = viewModel.longitudeError != null,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Negro,
+                                        unfocusedTextColor = Negro,
+                                        focusedBorderColor = if (viewModel.longitudeError != null) Rojo else Negro,
+                                        unfocusedBorderColor = if (viewModel.longitudeError != null) Rojo else Negro
+                                    )
+                                )
+                                if (viewModel.longitudeError != null) {
+                                    Text(
+                                        text = viewModel.longitudeError!!,
+                                        color = Rojo,
+                                        fontSize = 11.sp,
+                                        modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
