@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -298,7 +299,8 @@ fun AddFountainScreen(
                             Text(
                                 text = stringResource(R.string.fountain_is_operational_title),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
+                                color = Black
                             )
                             Text(
                                 text = if (viewModel.isOperational) stringResource(R.string.fountain_status_ok) else stringResource(
@@ -312,15 +314,6 @@ fun AddFountainScreen(
                             checked = viewModel.isOperational,
                             onCheckedChange = { viewModel.isOperational = it })
                     }
-                }
-
-                // Barra de progreso inferior
-                if (viewModel.isUploading) {
-                    LinearProgressIndicator(
-                        progress = viewModel.uploadProgress / 100f,
-                        modifier = Modifier.fillMaxWidth(),
-                        color = Blue10
-                    )
                 }
 
                 if (viewModel.errorMessage != null) {

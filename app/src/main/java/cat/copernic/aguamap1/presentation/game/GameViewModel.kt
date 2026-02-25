@@ -231,6 +231,21 @@ class GameViewModel @Inject constructor(
         _error.value = null
     }
 
+    fun clearGameState() {
+        viewModelScope.launch {
+            _gameState.value = GameState.Initial
+            _currentFountain.value = null
+            _remainingTime.value = 10
+            _score.value = 0
+            _distance.value = 0.0
+            _error.value = null
+            _userGuessPos.value = null
+            _hasLost.value = false
+            _userLocation.value = null
+            soundManager.stopBackgroundMusic()
+        }
+    }
+
     sealed class GameState {
         object Initial : GameState()
         object Instructions : GameState()

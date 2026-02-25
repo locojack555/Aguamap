@@ -29,7 +29,12 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.16f)
-                .background(AguaMapGradient)
+                .background(brush = Brush.verticalGradient(
+                    colors = listOf(
+                        AzulOscuro,
+                        AzulTurquesa
+                    )
+                ))
                 .padding(18.dp)
         ) {
             Column(Modifier.align(Alignment.CenterStart)) {

@@ -1,8 +1,10 @@
 package cat.copernic.aguamap1.presentation.navigationApp
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -46,15 +48,25 @@ fun NavigationGraph(
             CategoriesScreen()
         }
         composable(BottomNavItem.Game.route) {
-            val gameViewModel: GameViewModel = hiltViewModel()
+            // Usamos un key único que cambia cada vez que entramos
+            val gameKey = remember { "game_${System.currentTimeMillis()}" }
+            val gameViewModel: GameViewModel = hiltViewModel(key = gameKey)
             val detailFountainViewModel: DetailFountainViewModel = hiltViewModel()
             val commentsViewModel: FountainCommentsViewModel = hiltViewModel()
+
+            // Limpia el estado cuando la pantalla se destruye
+            DisposableEffect(Unit) {
+                onDispose {
+                    gameViewModel.clearGameState()
+                }
+            }
 
             GameScreen(
                 viewModel = gameViewModel,
                 detailFountainViewModel = detailFountainViewModel,
                 commentsViewModel = commentsViewModel,
                 onBackToHome = {
+                    gameViewModel.clearGameState()  // Limpia antes de navegar
                     soundManager.stopAllSounds()
                     navController.navigate(BottomNavItem.Map.route) {
                         popUpTo(BottomNavItem.Map.route) { inclusive = false }
