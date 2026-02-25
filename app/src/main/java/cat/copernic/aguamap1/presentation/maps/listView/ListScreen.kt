@@ -1,6 +1,5 @@
 package cat.copernic.aguamap1.presentation.maps.listView
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -195,28 +194,41 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                         )
                     }
 
-                    // Etiqueta de Estado (Funcionando/Averiada/etc)
+                    // Definimos los colores de fondo basados en el estado (suaves)
+                    val containerColor =
+                        if (!fountain.operational) Rojo.copy(alpha = 0.1f) else themeColor.copy(
+                            alpha = 0.1f
+                        )
+                    // El color del contenido (texto e icono) debe ser sólido y fuerte
+                    val contentColor = if (!fountain.operational) Rojo else themeColor
+
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, themeColor),
-                        color = Blanco
+                        shape = RoundedCornerShape(8.dp), // Esquinas ligeramente menos redondeadas para un look más moderno
+                        color = containerColor,
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .padding(vertical = 4.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(
+                                horizontal = 10.dp,
+                                vertical = 6.dp
+                            ), // Aumentamos el padding para que "respire"
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.gota),
                                 contentDescription = null,
-                                tint = if (!fountain.operational) Rojo else themeColor,
-                                modifier = Modifier.size(12.dp)
+                                tint = contentColor,
+                                modifier = Modifier.size(14.dp) // Un pelín más grande para que sea legible
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = statusLabel,
-                                color = themeColor,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                                text = statusLabel.uppercase(), // El texto en mayúsculas suele dar un aire más "etiqueta"
+                                color = contentColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold, // Negrita para que destaque
+                                letterSpacing = 0.5.sp // Un poco de espacio entre letras para legibilidad
                             )
                         }
                     }

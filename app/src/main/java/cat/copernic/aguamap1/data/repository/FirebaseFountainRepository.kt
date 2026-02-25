@@ -119,8 +119,12 @@ class FirebaseFountainRepository @Inject constructor(
                 .document(commentId)
                 .update(updates)
                 .await()
+
+            android.util.Log.d("FIREBASE_OK", "Comentario $commentId actualizado con éxito")
             Result.success(Unit)
         } catch (e: Exception) {
+            // ESTO TE DIRÁ EL ERROR REAL EN EL LOGCAT
+            android.util.Log.e("FIREBASE_ERROR", "Error actualizando comentario: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -142,18 +146,36 @@ class FirebaseFountainRepository @Inject constructor(
     }
 
     // Método para el futuro Panel de Admin
+    // --- GESTIÓN DE REPORTES ---
+
     override suspend fun reportComment(
         fountainId: String,
         commentId: String,
-        userId: String // Lo mantenemos en la firma si tu interfaz lo requiere, aunque no lo usemos
+        reason: String // Cambiado de userId a reason para coincidir con el uso del ViewModel
     ): Result<Unit> {
         return try {
-            db.collection("fountains")
+            // 1. Marcamos el flag en el comentario (para que el icono cambie a naranja en la UI)
+            val commentRef = db.collection("fountains")
                 .document(fountainId)
                 .collection("comments")
                 .document(commentId)
-                .update("isReported", true) // Solo cambiamos el flag a true
-                .await()
+
+            // 2. Creamos un documento en una colección global 'reports_comments' para el Admin
+            val reportData = hashMapOf(
+                "fountainId" to fountainId,
+                "commentId" to commentId,
+                "reason" to reason,
+                "timestamp" to System.currentTimeMillis(),
+                "type" to "COMMENT_REPORT"
+            )
+
+            db.runBatch { batch ->
+                batch.update(commentRef, "isReported", true)
+                // Añadimos el reporte a una colección independiente que el admin pueda vigilar
+                val newReportRef = db.collection("reports_comments").document()
+                batch.set(newReportRef, reportData)
+            }.await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

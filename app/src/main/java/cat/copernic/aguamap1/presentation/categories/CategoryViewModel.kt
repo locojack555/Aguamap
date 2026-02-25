@@ -1,100 +1,199 @@
 package cat.copernic.aguamap1.presentation.categories
 
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
+import cat.copernic.aguamap1.data.cloudinary.UploadProgress
 import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.domain.model.Fountain
-import cat.copernic.aguamap1.domain.repository.CategoryRepository
+import cat.copernic.aguamap1.domain.model.UserRole
+import cat.copernic.aguamap1.domain.repository.AuthRepository
+import cat.copernic.aguamap1.domain.usecase.auth.GetUserRoleUseCase
+import cat.copernic.aguamap1.domain.usecase.category.CreateCategoryUseCase
+import cat.copernic.aguamap1.domain.usecase.category.DeleteCategoryUseCase
+import cat.copernic.aguamap1.domain.usecase.category.GetCategoriesUseCase
+import cat.copernic.aguamap1.domain.usecase.category.UpdateCategoryUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
+import cat.copernic.aguamap1.domain.usecase.validation.generateSearchRegex
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class SortOrder { NAME, BEST_RATING, WORST_RATING }
-enum class FountainStateFilter { ALL, OPERATIONAL, MAINTENANCE }
-
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
-    private val categoryRepository: CategoryRepository,
-    private val getFountainsUseCase: GetFountainsUseCase
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val createCategoryUseCase: CreateCategoryUseCase,
+    private val updateCategoryUseCase: UpdateCategoryUseCase,
+    private val deleteCategoryUseCase: DeleteCategoryUseCase,
+    private val getFountainsUseCase: GetFountainsUseCase,
+    private val cloudinaryService: CloudinaryService,
+    private val authRepository: AuthRepository,
+    private val getUserRoleUseCase: GetUserRoleUseCase
 ) : ViewModel() {
 
+    // --- ESTADO DE USUARIO Y ROL ---
+    var isAdmin by mutableStateOf(false)
+        private set
+
+    var currentUserId by mutableStateOf<String?>(null)
+        private set
+
+    // --- ESTADOS DE UI (LISTA Y FILTROS) ---
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
-    private val _sortOrder = MutableStateFlow(SortOrder.NAME)
-    val sortOrder: StateFlow<SortOrder> = _sortOrder
+    private val _operationalFilter = MutableStateFlow<Boolean?>(null)
+    val operationalFilter: StateFlow<Boolean?> = _operationalFilter
 
-    private val _stateFilter = MutableStateFlow(FountainStateFilter.ALL)
-    val stateFilter: StateFlow<FountainStateFilter> = _stateFilter
+    private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
 
-    // 1. Buscador exclusivo de Categorías
-    val categories: StateFlow<List<Category>> = combine(
-        categoryRepository.getCategories(),
-        _searchQuery
-    ) { list, query ->
-        if (query.isBlank()) {
-            list.sortedBy { it.name }
-        } else {
-            val regex = queryToRegex(query)
-            list.filter { it.name.matches(regex) }.sortedBy { it.name }
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    // MODIFICADO: Ahora utiliza generateSearchRegex para filtrar las categorías
+    val categories: StateFlow<List<Category>> =
+        combine(_allCategories, _searchQuery) { list, query ->
+            if (query.isBlank()) {
+                list
+            } else {
+                val regex = generateSearchRegex(query)
+                if (regex != null) {
+                    list.filter { it.name.contains(regex) }
+                } else {
+                    // Fallback por si la expresión regular no es válida
+                    list.filter { it.name.contains(query, ignoreCase = true) }
+                }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // 2. Filtros aplicados a las fuentes (sin buscador de texto)
     val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = combine(
-        getFountainsUseCase().map { it.getOrNull() ?: emptyList() },
-        _sortOrder,
-        _stateFilter
-    ) { fountains, order, state ->
-
-        // Filtrado por estado (Operativa / Mantenimiento)
-        val filteredByState = when(state) {
-            FountainStateFilter.OPERATIONAL -> fountains.filter { it.operational }
-            FountainStateFilter.MAINTENANCE -> fountains.filter { !it.operational }
-            FountainStateFilter.ALL -> fountains
+        getFountainsUseCase(),
+        _operationalFilter
+    ) { result, isOp ->
+        val fountains = result.getOrDefault(emptyList())
+        val filtered = if (isOp == null) {
+            fountains
+        } else {
+            fountains.filter { it.operational == isOp }
         }
+        // Agrupamos por ID exacto (evitamos lowercase/trim para coincidir con Firestore)
+        filtered.groupBy { it.category.id }
 
-        // Ordenación por valoración global
-        val processedList = when (order) {
-            SortOrder.BEST_RATING -> filteredByState.sortedByDescending { it.ratingAverage }
-            SortOrder.WORST_RATING -> filteredByState.sortedBy { it.ratingAverage }
-            else -> filteredByState.sortedBy { it.name }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap()
+    )
+
+    // --- ESTADO DEL FORMULARIO (PARA CREAR/EDITAR) ---
+    var name by mutableStateOf("")
+    var description by mutableStateOf("")
+    var selectedImageUri by mutableStateOf<Uri?>(null)
+    var currentImageUrl by mutableStateOf("")
+    var isUploading by mutableStateOf(false)
+    var uploadProgress by mutableIntStateOf(0)
+    var errorMessage by mutableStateOf<String?>(null)
+    var categoryToEdit by mutableStateOf<Category?>(null)
+
+    init {
+        loadUserData()
+        viewModelScope.launch {
+            getCategoriesUseCase().collect { _allCategories.value = it }
         }
+    }
 
-        // Agrupamos las fuentes
-        processedList.groupBy {
-            try {
-                it.category.id.lowercase().trim()
-            } catch (e: Exception) {
-                it.category.toString().lowercase().trim()
+    private fun loadUserData() {
+        viewModelScope.launch {
+            val uid = authRepository.getCurrentUserUid()
+            currentUserId = uid
+            if (uid != null) {
+                val role = getUserRoleUseCase(uid)
+                isAdmin = (role == UserRole.ADMIN)
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    }
 
-    private fun queryToRegex(query: String): Regex {
-        if (!query.contains("*") && !query.contains("?")) {
-            return Regex("(?i).*${Regex.escape(query)}.*")
+    // --- ACCIONES ---
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun toggleOperationalFilter(currentIsOnlyAveriadas: Boolean) {
+        // Si ya estaba seleccionado (true), lo ponemos a null (quitar filtro)
+        // Si no estaba seleccionado, lo ponemos a false (solo averiadas)
+        _operationalFilter.value = if (currentIsOnlyAveriadas) null else false
+    }
+
+    fun onEditCategory(category: Category) {
+        categoryToEdit = category
+        name = category.name
+        description = category.description
+        currentImageUrl = category.imageUrl
+        selectedImageUri = null
+    }
+
+    fun resetForm() {
+        name = ""; description = ""; selectedImageUri = null
+        currentImageUrl = ""; categoryToEdit = null
+        uploadProgress = 0; errorMessage = null
+    }
+
+    fun saveCategory(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            isUploading = true
+            errorMessage = null
+            try {
+                var finalUrl = currentImageUrl
+
+                // 1. Subir a Cloudinary si hay URI nueva
+                selectedImageUri?.let { uri ->
+                    cloudinaryService.uploadImageWithProgress(uri).collect { progress ->
+                        if (progress is UploadProgress.InProgress) {
+                            uploadProgress = progress.percentage
+                        }
+                    }
+                    val uploadResult = cloudinaryService.uploadImage(uri)
+                    finalUrl = uploadResult.getOrThrow()
+                }
+
+                // 2. Operación en Firestore
+                val categoryData = Category(
+                    id = categoryToEdit?.id ?: "",
+                    name = name,
+                    description = description,
+                    imageUrl = finalUrl
+                )
+
+                if (categoryToEdit != null) {
+                    updateCategoryUseCase(categoryData)
+                } else {
+                    createCategoryUseCase(categoryData)
+                }
+
+                onSuccess()
+                resetForm()
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "Error desconocido al guardar"
+            } finally {
+                isUploading = false
+            }
         }
-        val escaped = Regex.escape(query).replace("\\*", ".*").replace("\\?", ".")
-        return Regex("(?i)^$escaped$")
-    }
-
-    fun updateSearchQuery(query: String) { _searchQuery.value = query }
-    fun updateSortOrder(order: SortOrder) { _sortOrder.value = order }
-    fun updateStateFilter(filter: FountainStateFilter) { _stateFilter.value = filter }
-
-    // GESTIÓN DE CATEGORÍAS
-    fun addCategory(category: Category) {
-        viewModelScope.launch { categoryRepository.createCategory(category) }
-    }
-
-    fun updateCategory(category: Category) {
-        viewModelScope.launch { categoryRepository.updateCategory(category) }
     }
 
     fun deleteCategory(id: String) {
-        viewModelScope.launch { categoryRepository.deleteCategory(id) }
+        viewModelScope.launch {
+            try {
+                deleteCategoryUseCase(id)
+            } catch (e: Exception) {
+                errorMessage = "Error al eliminar: ${e.message}"
+            }
+        }
     }
 }

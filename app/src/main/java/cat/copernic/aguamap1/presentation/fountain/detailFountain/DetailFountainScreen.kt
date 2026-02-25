@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.LocationOn
@@ -47,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -59,6 +61,7 @@ import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.StateFountain
+import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
 import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.fountain.comments.AddCommentDialog
 import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
@@ -84,6 +87,7 @@ import java.util.Locale
 fun DetailFountainScreen(
     fountain: Fountain,
     viewModel: DetailFountainViewModel,
+    addFountainViewModel: AddFountainViewModel = hiltViewModel(), // Inyectamos el ViewModel de añadir/editar
     commentsViewModel: FountainCommentsViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onDelete: () -> Unit,
@@ -91,6 +95,7 @@ fun DetailFountainScreen(
     onReportAveria: () -> Unit,
     onReportNoExiste: () -> Unit
 ) {
+    val context = LocalContext.current
     var showReportDialog by remember { mutableStateOf(false) }
     var showOtherReportDialog by remember { mutableStateOf(false) }
     var otherReportText by remember { mutableStateOf("") }
@@ -103,7 +108,23 @@ fun DetailFountainScreen(
     val hasVotedPositive = currentUserId != null && fountain.votedByPositive.contains(currentUserId)
     val hasVotedNegative = currentUserId != null && fountain.votedByNegative.contains(currentUserId)
 
-    LaunchedEffect(fountain.id) { commentsViewModel.observeComments(fountain.id) }
+    // Asegúrate de que este bloque esté así en DetailFountainScreen
+    LaunchedEffect(fountain.id) {
+        commentsViewModel.observeComments(fountain.id)
+    }
+
+    // Feedback de reporte exitoso
+    LaunchedEffect(commentsViewModel.reportSuccess) {
+        if (commentsViewModel.reportSuccess) {
+            android.widget.Toast.makeText(
+                context,
+                R.string.report_sent_success,
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            commentsViewModel.clearReportSuccess()
+        }
+    }
+
     BackHandler { commentsViewModel.stopObserving(); onBack() }
 
     Surface(modifier = Modifier.fillMaxSize(), color = Blanco) {
@@ -142,19 +163,43 @@ fun DetailFountainScreen(
                             tint = Negro
                         )
                     }
+
                     if (viewModel.isAdmin) {
-                        IconButton(
-                            onClick = { showDeleteConfirm = true },
-                            modifier = Modifier.background(
-                                BlancoTranslucido,
-                                RoundedCornerShape(12.dp)
-                            )
-                        ) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.delete),
-                                tint = Rojo
-                            )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // BOTÓN EDITAR ADMIN: Llama al formulario de añadir/editar
+                            IconButton(
+                                onClick = {
+                                    addFountainViewModel.openAddFountain(
+                                        fountain.latitude,
+                                        fountain.longitude,
+                                        fountain
+                                    )
+                                },
+                                modifier = Modifier.background(
+                                    BlancoTranslucido,
+                                    RoundedCornerShape(12.dp)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Editar",
+                                    tint = Blue10
+                                )
+                            }
+                            // BOTÓN BORRAR ADMIN
+                            IconButton(
+                                onClick = { showDeleteConfirm = true },
+                                modifier = Modifier.background(
+                                    BlancoTranslucido,
+                                    RoundedCornerShape(12.dp)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = stringResource(R.string.delete),
+                                    tint = Rojo
+                                )
+                            }
                         }
                     }
                 }
@@ -166,7 +211,6 @@ fun DetailFountainScreen(
                     .padding(horizontal = 24.dp, vertical = 20.dp)
                     .fillMaxWidth()
             ) {
-
                 // Título y Categoría
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -376,6 +420,7 @@ fun DetailFountainScreen(
     }
 
     // --- GESTIÓN DE DIÁLOGOS ---
+
     if (showAddCommentDialog) {
         AddCommentDialog(
             isEditing = false,
@@ -388,6 +433,7 @@ fun DetailFountainScreen(
                 ); showAddCommentDialog = false
             })
     }
+
     editingComment?.let { comment ->
         AddCommentDialog(
             initialRating = comment.rating,
@@ -403,6 +449,7 @@ fun DetailFountainScreen(
                 ); editingComment = null
             })
     }
+
     if (showReportDialog) {
         MainReportDialog(
             negativeVotes = fountain.negativeVotes,
@@ -412,9 +459,9 @@ fun DetailFountainScreen(
             onConfirmExistence = { viewModel.confirmExistence { showReportDialog = false } },
             onReportNoExiste = { onReportNoExiste(); showReportDialog = false },
             onReportAveria = { onReportAveria(); showReportDialog = false },
-            onShowOther = { showOtherReportDialog = true; showReportDialog = false }
-        )
+            onShowOther = { showOtherReportDialog = true; showReportDialog = false })
     }
+
     if (showOtherReportDialog) {
         OtherReportDialog(
             otherReportText,
@@ -425,6 +472,7 @@ fun DetailFountainScreen(
             }
         }
     }
+
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
@@ -443,13 +491,11 @@ fun DetailFountainScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(
-                        stringResource(R.string.cancel)
-                    )
+                    Text(stringResource(R.string.cancel))
                 }
-            }
-        )
+            })
     }
+
     commentToDelete?.let { comment ->
         AlertDialog(
             onDismissRequest = { commentToDelete = null },
@@ -473,7 +519,6 @@ fun DetailFountainScreen(
                 TextButton(onClick = {
                     commentToDelete = null
                 }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
+            })
     }
 }

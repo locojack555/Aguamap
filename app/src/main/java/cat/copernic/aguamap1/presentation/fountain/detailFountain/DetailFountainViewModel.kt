@@ -63,6 +63,14 @@ class DetailFountainViewModel @Inject constructor(
         selectedFountain = fountain
     }
 
+    /**
+     * NUEVO: Permite actualizar la fuente seleccionada después de editarla
+     * en la AddFountainScreen para que los cambios se vean al instante.
+     */
+    fun refreshFountain(updatedFountain: Fountain) {
+        selectedFountain = updatedFountain
+    }
+
     fun clearSelection() {
         selectedFountain = null
         errorMessage = null
@@ -137,7 +145,6 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
-    // --- NUEVA FUNCIÓN: CONFIRMAR QUE SÍ EXISTE (RESTAR VOTO NEGATIVO) ---
     fun confirmExistence(onSuccess: () -> Unit) {
         val userId = currentUserId ?: return
         val fountain = selectedFountain ?: return
@@ -189,6 +196,17 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
+    fun updateFountainName(fountainId: String, newName: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            updateFountainUseCase(fountainId, mapOf("name" to newName))
+                .onSuccess {
+                    selectedFountain = selectedFountain?.copy(name = newName)
+                    onSuccess()
+                }
+                .onFailure { errorMessage = "Error al actualizar el nombre" }
+        }
+    }
+
     // --- FORMATEADORES ---
     fun getFormattedDate(date: Date): String =
         SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(date)
@@ -201,5 +219,9 @@ class DetailFountainViewModel @Inject constructor(
             if (it < 1000) "${it.toInt()}m"
             else String.format(Locale.US, "%.1fkm", it / 1000.0)
         } ?: "---"
+    }
+
+    fun clearError() {
+        errorMessage = null
     }
 }

@@ -50,6 +50,7 @@ class FirebaseAuthRepository @Inject constructor(
         return try {
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             authResult.user?.sendEmailVerification()?.await()
+            auth.signOut()
             Result.success(true)
         } catch (e: FirebaseAuthUserCollisionException) {
             Result.failure(Exception("ERROR_DUPLICATED"))
@@ -90,7 +91,7 @@ class FirebaseAuthRepository @Inject constructor(
                     "uid" to user.uid,
                     "nom" to name,
                     "email" to user.email,
-                    "role" to UserRole.USER
+                    "role" to UserRole.USER.name
                 )
                 firestore.collection("users")
                     .document(user.uid)

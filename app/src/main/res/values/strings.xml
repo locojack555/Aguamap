@@ -46,6 +46,12 @@
     <string name="ca">Català</string>
     <string name="category">Categorias</string>
     <string name="voted_label">Votado</string>
+    <string name="report_sent_success">Reporte enviado al administrador. ¡Gracias!</string>
+    <string name="edit_fountain_title">Editar Fuente (Admin)</string>
+    <string name="fountain_name_label">Nombre de la fuente</string>
+    <string name="save_changes">Guardar Cambios</string>
+    <string name="mark_operational">Marcar como OPERATIVA</string>
+    <string name="mark_broken">Marcar como AVERIADA</string>
     <string name="game">Juego</string>
     <string name="ranking">Ranking</string>
     <string name="profile">Perfil</string>

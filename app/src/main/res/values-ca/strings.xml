@@ -7,6 +7,12 @@
     <string name="voted_label">Votat</string>
     <string name="only_operational">Operatives</string>
     <string name="max_distance">Distància màxima</string>
+    <string name="report_sent_success">Report enviat a l\'administrador. Gràcies!</string>
+    <string name="edit_fountain_title">Editar Font (Admin)</string>
+    <string name="fountain_name_label">Nom de la font</string>
+    <string name="save_changes">Guardar Canvis</string>
+    <string name="mark_operational">Marcar com a OPERATIVA</string>
+    <string name="mark_broken">Marcar com a AVARIADA</string>
     <string name="report_confirm_existence">La font SÍ que existeix!</string>
     <string name="report_confirm_existence_hint">Prem aquí si la font existeix i el report és un error.</string>
     <string name="report_already_voted_not_exists">Ja has reportat que no existeix</string>

@@ -19,7 +19,7 @@ class UpdateCommentUseCase @Inject constructor(
         val updates = mapOf(
             "rating" to newRating,
             "comment" to newText,
-            "isReported" to false, // Limpiamos el reporte si el usuario edita
+            "reported" to false, // Limpiamos el reporte si el usuario edita
             "timestamp" to System.currentTimeMillis()
         )
 

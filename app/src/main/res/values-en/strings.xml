@@ -15,6 +15,12 @@
     <string name="text_recovery_password">Forgot your password?</string>
     <string name="report_confirm_existence">The fountain DOES exist!</string>
     <string name="voted_label">Voted</string>
+    <string name="report_sent_success">Report sent to administrator. Thank you!</string>
+    <string name="edit_fountain_title">Edit Fountain (Admin)</string>
+    <string name="fountain_name_label">Fountain Name</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="mark_operational">Mark as OPERATIONAL</string>
+    <string name="mark_broken">Mark as BROKEN</string>
     <string name="report_confirm_existence_hint">Click here if the fountain exists and the report is an error.</string>
     <string name="report_already_voted_not_exists">You have already reported it doesn\'t exist</string>
     <string name="report_other_reason">Other reason (Wrong name, etc.)</string>
