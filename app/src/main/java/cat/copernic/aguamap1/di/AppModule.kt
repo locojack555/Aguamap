@@ -12,16 +12,19 @@ import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
 import cat.copernic.aguamap1.data.repository.FirebaseGameRepository
 import cat.copernic.aguamap1.data.repository.FirebaseRankingRepository
 import cat.copernic.aguamap1.data.repository.FirebaseReportRepository
+import cat.copernic.aguamap1.data.repository.RealtimeStatusRepositoryImpl
 import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.CategoryRepository
 import cat.copernic.aguamap1.domain.repository.FountainRepository
 import cat.copernic.aguamap1.domain.repository.GameRepository
 import cat.copernic.aguamap1.domain.repository.RankingRepository
+import cat.copernic.aguamap1.domain.repository.RealtimeStatusRepository
 import cat.copernic.aguamap1.domain.repository.ReportRepository
 import cat.copernic.aguamap1.domain.repository.SoundRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -91,6 +94,18 @@ object AppModule {
         @ApplicationContext context: Context
     ): SoundRepository {
         return AndroidSoundRepository(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRealtimeStatusRepository(db: FirebaseDatabase): RealtimeStatusRepository {
+        return RealtimeStatusRepositoryImpl(db)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseDatabase(): FirebaseDatabase {
+        return FirebaseDatabase.getInstance("https://aguamap-9ad45-default-rtdb.europe-west1.firebasedatabase.app")
     }
 
     @Provides

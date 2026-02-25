@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain
+package cat.copernic.aguamap1.presentation.fountain.detailFountain
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,12 +10,19 @@ import cat.copernic.aguamap1.domain.model.Report
 import cat.copernic.aguamap1.domain.model.StateFountain
 import cat.copernic.aguamap1.domain.model.UserRole
 import cat.copernic.aguamap1.domain.repository.AuthRepository
+import cat.copernic.aguamap1.domain.repository.RealtimeStatusRepository
 import cat.copernic.aguamap1.domain.usecase.auth.GetUserRoleUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.DeleteFountainUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.ProcessFountainVoteUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.UpdateFountainUseCase
 import cat.copernic.aguamap1.domain.usecase.report.SendReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -29,20 +36,33 @@ class DetailFountainViewModel @Inject constructor(
     private val deleteFountainUseCase: DeleteFountainUseCase,
     private val updateFountainUseCase: UpdateFountainUseCase,
     private val processFountainVoteUseCase: ProcessFountainVoteUseCase,
-    private val sendReportUseCase: SendReportUseCase
+    private val sendReportUseCase: SendReportUseCase,
+    private val realtimeStatusRepository: RealtimeStatusRepository
 ) : ViewModel() {
 
+    // --- ESTADO DE USUARIO ---
     var isAdmin by mutableStateOf(false)
         private set
 
     var currentUserId by mutableStateOf<String?>(null)
         private set
 
+    // --- ESTADO DE LA FUENTE ---
     var selectedFountain by mutableStateOf<Fountain?>(null)
         private set
 
     var errorMessage by mutableStateOf<String?>(null)
         private set
+
+    // --- LÓGICA DE REALTIME DATABASE ---
+    private val _fountainIdFlow = MutableStateFlow<String?>(null)
+
+    val isOperationalRealtime: StateFlow<Boolean> = _fountainIdFlow
+        .flatMapLatest { id ->
+            if (id != null) realtimeStatusRepository.getFountainStatus(id)
+            else flowOf(true)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     init {
         loadUserData()
@@ -61,19 +81,42 @@ class DetailFountainViewModel @Inject constructor(
 
     fun selectFountain(fountain: Fountain) {
         selectedFountain = fountain
+        _fountainIdFlow.value = fountain.id
     }
 
-    /**
-     * NUEVO: Permite actualizar la fuente seleccionada después de editarla
-     * en la AddFountainScreen para que los cambios se vean al instante.
-     */
     fun refreshFountain(updatedFountain: Fountain) {
         selectedFountain = updatedFountain
+        _fountainIdFlow.value = updatedFountain.id
     }
 
     fun clearSelection() {
         selectedFountain = null
+        _fountainIdFlow.value = null
         errorMessage = null
+    }
+
+    // --- ACCIONES DE LA FUENTE ---
+
+    fun toggleOperationalStatus(onSuccess: () -> Unit) {
+        val fountain = selectedFountain ?: return
+        viewModelScope.launch {
+            // Usamos el valor actual de Realtime para invertirlo
+            val newStatus = !isOperationalRealtime.value
+
+            try {
+                // 1. Actualizamos Realtime DB (Para la prueba en vivo)
+                realtimeStatusRepository.updateFountainStatus(fountain.id, newStatus)
+
+                // 2. Sincronizamos con Firestore (Para persistencia)
+                updateFountainUseCase(fountain.id, mapOf("operational" to newStatus))
+
+                // 3. Actualizamos el objeto local
+                selectedFountain = fountain.copy(operational = newStatus)
+                onSuccess()
+            } catch (e: Exception) {
+                errorMessage = "Error al cambiar estado: ${e.message}"
+            }
+        }
     }
 
     fun deleteFountain(onDeleted: () -> Unit) {
@@ -86,6 +129,20 @@ class DetailFountainViewModel @Inject constructor(
                 }
                 .onFailure { errorMessage = "Error al eliminar: ${it.message}" }
         }
+    }
+
+    // ... dentro de la clase DetailFountainViewModel
+
+    // Función para verificar si el usuario actual puede editar/borrar
+    fun canUserModify(fountain: Fountain?): Boolean {
+        val f = fountain ?: return false
+        val userId = currentUserId ?: return false
+
+        // Si es Admin, siempre puede
+        if (isAdmin) return true
+
+        // Si es el creador Y la fuente está PENDIENTE, puede
+        return f.createdBy == userId && f.status == StateFountain.PENDING
     }
 
     fun confirmFountain(onSuccess: () -> Unit) {
@@ -162,19 +219,6 @@ class DetailFountainViewModel @Inject constructor(
                     onSuccess()
                 }
                 .onFailure { errorMessage = it.message ?: "Error al confirmar existencia" }
-        }
-    }
-
-    fun toggleOperationalStatus(onSuccess: () -> Unit) {
-        val fountain = selectedFountain ?: return
-        viewModelScope.launch {
-            val newStatus = !fountain.operational
-            updateFountainUseCase(fountain.id, mapOf("operational" to newStatus))
-                .onSuccess {
-                    selectedFountain = fountain.copy(operational = newStatus)
-                    onSuccess()
-                }
-                .onFailure { errorMessage = "Error al cambiar estado" }
         }
     }
 

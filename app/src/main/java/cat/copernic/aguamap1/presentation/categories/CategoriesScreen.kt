@@ -30,9 +30,9 @@ import cat.copernic.aguamap1.presentation.categories.components.CategoriesHeader
 import cat.copernic.aguamap1.presentation.categories.components.CategoryDetailDialog
 import cat.copernic.aguamap1.presentation.categories.components.CategoryFormDialog
 import cat.copernic.aguamap1.presentation.categories.components.CategoryItem
-import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
 import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainScreen
+import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.ui.theme.BgGray50
 import cat.copernic.aguamap1.ui.theme.Rojo
 

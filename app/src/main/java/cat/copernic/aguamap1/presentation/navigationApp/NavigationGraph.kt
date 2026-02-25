@@ -9,8 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
-import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
+import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.game.GameScreen
 import cat.copernic.aguamap1.presentation.game.GameViewModel
 import cat.copernic.aguamap1.presentation.maps.mapView.MapScreen
