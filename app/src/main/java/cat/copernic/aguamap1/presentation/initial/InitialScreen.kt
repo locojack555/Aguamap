@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,10 +23,12 @@ fun InitialScreen(
     viewModel: InitialViewModel = hiltViewModel()
 ) {
     //Launchedeffect para que solo se ejecute una vez al abrir la pantalla
-    LaunchedEffect(Unit) {
-        viewModel.destination.collect { route ->
-            navController.popBackStack() // Elimina la pantalla(anterior) de inicio en la pila
-            navController.navigate(route) // Navega a la ruta especificada
+    val destination by viewModel.destination.collectAsState()
+
+    LaunchedEffect(destination) {
+        destination?.let { route ->
+            navController.popBackStack()
+            navController.navigate(route)
         }
     }
     Splash()

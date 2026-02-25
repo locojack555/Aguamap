@@ -6,7 +6,9 @@ import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,10 +19,10 @@ class InitialViewModel @Inject constructor(
 ) : ViewModel() {
 
     //MutableSharedFlow para emitir la ruta
-    private val _destination = MutableSharedFlow<String>()
+    private val _destination = MutableStateFlow<String?>(null)
 
     //asSharedFlow para que solo se pueda leer desde el ViewModel
-    val destination = _destination.asSharedFlow()
+    val destination = _destination.asStateFlow()
 
     //Inicializamos la sesión y verificamos si hay una sesión activa
     init {
@@ -30,18 +32,14 @@ class InitialViewModel @Inject constructor(
     //Función para verificar la sesión y redirige a la pantalla correspondiente
     private fun checkSession() {
         viewModelScope.launch {
-            //delay(1000)
-            if (repository.isUserLoggedIn()) {
+            val route = if (repository.isUserLoggedIn()) {
                 val uid = repository.getCurrentUserUid()
                 val exists = if (uid != null) repository.checkIfUserExists(uid) else false
-                if (exists) {
-                    _destination.emit(RootScreen.Home.route)
-                } else {
-                    _destination.emit(RootScreen.Login.route)
-                }
+                if (exists) RootScreen.Home.route else RootScreen.Login.route
             } else {
-                _destination.emit(RootScreen.Login.route)
+                RootScreen.Login.route
             }
+            _destination.value = route
         }
     }
 }
