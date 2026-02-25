@@ -46,10 +46,11 @@ class ProfileViewModel @Inject constructor(
     private val _hasPendingVerification = MutableStateFlow(false)
     val hasPendingVerification: StateFlow<Boolean> = _hasPendingVerification.asStateFlow()
 
+    private var statsJob: kotlinx.coroutines.Job? = null
+    private var rankingJob: kotlinx.coroutines.Job? = null
+
     init {
         loadUserData()
-        observeUserStats()
-        observeUserHistoricRanking()
     }
 
     fun loadUserData(onAutoLogout: () -> Unit = {}) {
@@ -94,10 +95,42 @@ class ProfileViewModel @Inject constructor(
                         ratingsCount = commentsCount
                     )
                 }
+
+                startObservers(userId)
+
             } catch (e: Exception) {
                 _error.value = "Error al cargar datos: ${e.message}"
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    private fun startObservers(userId: String) {
+        // Cancelar jobs anteriores si existen
+        statsJob?.cancel()
+        rankingJob?.cancel()
+
+        statsJob = viewModelScope.launch {
+            observeUserStatsUseCase(userId).collect { stats ->
+                if (stats != null) {
+                    _profileState.update { currentState ->
+                        currentState.copy(
+                            fountainsCount = stats.fountainsCount,
+                            ratingsCount = stats.commentsCount
+                        )
+                    }
+                }
+            }
+        }
+
+        rankingJob = viewModelScope.launch {
+            observeUserHistoricRankingUseCase(userId).collect { ranking ->
+                if (ranking != null) {
+                    _profileState.update { currentState ->
+                        currentState.copy(points = ranking.points)
+                    }
+                }
             }
         }
     }
@@ -212,40 +245,5 @@ class ProfileViewModel @Inject constructor(
     }
     fun clearError() {
         _error.value = null
-    }
-
-    private fun observeUserStats() {
-        viewModelScope.launch {
-            val userId = authRepository.getCurrentUserUid() ?: return@launch
-
-            observeUserStatsUseCase(userId).collect { stats ->
-
-                if (stats != null) {
-                    _profileState.update { currentState ->
-                        currentState.copy(
-                            fountainsCount = stats.fountainsCount,
-                            ratingsCount = stats.commentsCount
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private fun observeUserHistoricRanking() {
-        viewModelScope.launch {
-            val userId = authRepository.getCurrentUserUid() ?: return@launch
-
-            observeUserHistoricRankingUseCase(userId).collect { ranking ->
-
-                if (ranking != null) {
-                    _profileState.update { currentState ->
-                        currentState.copy(
-                            points = ranking.points
-                        )
-                    }
-                }
-            }
-        }
     }
 }
