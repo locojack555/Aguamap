@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,7 +63,6 @@ import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.StateFountain
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
-import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.fountain.comments.AddCommentDialog
 import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
 import cat.copernic.aguamap1.presentation.fountain.detailFountain.components.CommentItem
@@ -87,7 +87,7 @@ import java.util.Locale
 fun DetailFountainScreen(
     fountain: Fountain,
     viewModel: DetailFountainViewModel,
-    addFountainViewModel: AddFountainViewModel = hiltViewModel(), // Inyectamos el ViewModel de añadir/editar
+    addFountainViewModel: AddFountainViewModel = hiltViewModel(),
     commentsViewModel: FountainCommentsViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onDelete: () -> Unit,
@@ -103,17 +103,22 @@ fun DetailFountainScreen(
     var showAddCommentDialog by remember { mutableStateOf(false) }
     var commentToDelete by remember { mutableStateOf<Comment?>(null) }
     var editingComment by remember { mutableStateOf<Comment?>(null) }
+    val isOpRealtime by viewModel.isOperationalRealtime.collectAsState()
 
     val currentUserId = viewModel.currentUserId
     val hasVotedPositive = currentUserId != null && fountain.votedByPositive.contains(currentUserId)
     val hasVotedNegative = currentUserId != null && fountain.votedByNegative.contains(currentUserId)
 
-    // Asegúrate de que este bloque esté así en DetailFountainScreen
+    // Lógica de permisos
+    val isOwner = currentUserId != null && fountain.createdBy == currentUserId
+    val isAdmin = viewModel.isAdmin
+    val isPending = fountain.status == StateFountain.PENDING
+
     LaunchedEffect(fountain.id) {
+        viewModel.selectFountain(fountain)
         commentsViewModel.observeComments(fountain.id)
     }
 
-    // Feedback de reporte exitoso
     LaunchedEffect(commentsViewModel.reportSuccess) {
         if (commentsViewModel.reportSuccess) {
             android.widget.Toast.makeText(
@@ -164,9 +169,9 @@ fun DetailFountainScreen(
                         )
                     }
 
-                    if (viewModel.isAdmin) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // BOTÓN EDITAR ADMIN: Llama al formulario de añadir/editar
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // BOTÓN EDITAR: Se muestra si es ADMIN o si es DUEÑO y está PENDIENTE
+                        if (isAdmin || (isOwner && isPending)) {
                             IconButton(
                                 onClick = {
                                     addFountainViewModel.openAddFountain(
@@ -186,7 +191,10 @@ fun DetailFountainScreen(
                                     tint = Blue10
                                 )
                             }
-                            // BOTÓN BORRAR ADMIN
+                        }
+
+                        // BOTÓN BORRAR: Solo se muestra si es ADMIN
+                        if (isAdmin) {
                             IconButton(
                                 onClick = { showDeleteConfirm = true },
                                 modifier = Modifier.background(
@@ -297,10 +305,8 @@ fun DetailFountainScreen(
                 InfoRow(
                     Icons.Default.Build,
                     stringResource(R.string.estado_label),
-                    if (fountain.operational) stringResource(R.string.funcionando) else stringResource(
-                        R.string.averiada
-                    ),
-                    if (fountain.operational) Verde else Rojo
+                    if (isOpRealtime) stringResource(R.string.funcionando) else stringResource(R.string.averiada),
+                    if (isOpRealtime) Verde else Rojo
                 )
                 InfoRow(
                     Icons.Default.CalendarMonth,
@@ -454,12 +460,15 @@ fun DetailFountainScreen(
         MainReportDialog(
             negativeVotes = fountain.negativeVotes,
             hasVotedNegative = hasVotedNegative,
-            isOperational = fountain.operational,
+            isOperational = isOpRealtime,
             onDismiss = { showReportDialog = false },
             onConfirmExistence = { viewModel.confirmExistence { showReportDialog = false } },
             onReportNoExiste = { onReportNoExiste(); showReportDialog = false },
-            onReportAveria = { onReportAveria(); showReportDialog = false },
-            onShowOther = { showOtherReportDialog = true; showReportDialog = false })
+            onReportAveria = {
+                viewModel.toggleOperationalStatus { showReportDialog = false }
+            },
+            onShowOther = { showOtherReportDialog = true; showReportDialog = false }
+        )
     }
 
     if (showOtherReportDialog) {

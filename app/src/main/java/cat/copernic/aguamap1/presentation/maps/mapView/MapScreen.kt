@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainScreen
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
-import cat.copernic.aguamap1.presentation.fountain.addFountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
 import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainScreen
+import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.maps.components.MapFloatingButtons
 import cat.copernic.aguamap1.presentation.maps.components.MapLegend
 import cat.copernic.aguamap1.presentation.maps.components.MapTopBar

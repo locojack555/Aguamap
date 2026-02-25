@@ -124,34 +124,47 @@ class MapViewModel @Inject constructor(
     private fun applyFilterAndSort() {
         var filtered = allFountainsList
 
+        // --- 1. BÚSQUEDA ---
         if (searchQuery.isNotBlank()) {
             val regex = generateSearchRegex(searchQuery)
             filtered = if (regex != null) {
-                filtered.filter { fountain ->
-                    regex.containsMatchIn(fountain.name)
-                }
+                filtered.filter { regex.containsMatchIn(it.name) }
             } else {
                 filtered.filter { it.name.contains(searchQuery, ignoreCase = true) }
             }
         }
 
-        // --- EL RESTO DE TUS FILTROS (Categoría, Rating, etc.) SIGUEN IGUAL ---
+        // --- 2. FILTROS ---
         filterState.selectedCategory?.let { cat ->
             filtered = filtered.filter { it.category.id == cat.id }
         }
+
         if (filterState.onlyOperational) {
             filtered = filtered.filter { it.operational }
         }
-        filtered = filtered.filter {
-            it.ratingAverage >= filterState.minRating &&
-                    (it.distanceFromUser ?: 0.0) / 1000.0 <= filterState.maxDistanceKm
+
+        filtered = filtered.filter { fountain ->
+            val ratingMatch = fountain.ratingAverage >= filterState.minRating
+            val distanceMatch =
+                (fountain.distanceFromUser ?: 0.0) / 1000.0 <= filterState.maxDistanceKm
+            ratingMatch && distanceMatch
         }
 
+        // --- 3. ORDENACIÓN (Bidireccional) ---
         val sorted = when (filterState.sortBy) {
-            SortOption.DISTANCE -> filtered.sortedBy { it.distanceFromUser ?: Double.MAX_VALUE }
-            SortOption.RATING -> filtered.sortedByDescending { it.ratingAverage }
-            SortOption.DATE -> filtered.sortedByDescending { it.dateCreated }
+            // Distancia: Ascendente (Más cerca) / Descendente (Más lejos)
+            SortOption.DISTANCE_ASC -> filtered.sortedBy { it.distanceFromUser ?: Double.MAX_VALUE }
+            SortOption.DISTANCE_DESC -> filtered.sortedByDescending { it.distanceFromUser ?: 0.0 }
+
+            // Valoración: Descendente (Mejor valoradas) / Ascendente (Peor valoradas)
+            SortOption.RATING_DESC -> filtered.sortedByDescending { it.ratingAverage }
+            SortOption.RATING_ASC -> filtered.sortedBy { it.ratingAverage }
+
+            // Fecha: Descendente (Nuevas primero) / Ascendente (Antiguas primero)
+            SortOption.DATE_DESC -> filtered.sortedByDescending { it.dateCreated }
+            SortOption.DATE_ASC -> filtered.sortedBy { it.dateCreated }
         }
+
         uiState = uiState.copy(fountains = sorted)
     }
 

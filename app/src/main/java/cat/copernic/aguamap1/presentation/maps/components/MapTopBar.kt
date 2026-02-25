@@ -104,7 +104,7 @@ fun MapTopBar(
                         state = viewModel.filterState,
                         categories = viewModel.categories,
                         onFilterChanged = { viewModel.updateFilters(it) },
-                        showSortOptions = !isMapView // Modo Lista = True
+                        showSortOptions = !isMapView
                     )
                     IconButton(onClick = { onToggleView() }) {
                         Icon(
@@ -187,7 +187,7 @@ fun FilterDropDown(
                     .padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // COLUMNA IZQUIERDA
+                // COLUMNA IZQUIERDA: Categorías
                 Column(modifier = Modifier.weight(1f)) {
                     FilterSectionTitle(stringResource(R.string.filter_by_category), Blanco)
                     categories.forEach { category ->
@@ -197,22 +197,20 @@ fun FilterDropDown(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
-                            onClick = { onFilterChanged(state.copy(selectedCategory = if (state.selectedCategory?.id == category.id) null else category)) }
+                            onClick = {
+                                onFilterChanged(state.copy(selectedCategory = if (state.selectedCategory?.id == category.id) null else category))
+                            }
                         )
                     }
-                    // SI ES MODO LISTA, OPERATIVAS AQUÍ
+
                     if (showSortOptions) {
                         OperationalSwitch(state.onlyOperational) {
-                            onFilterChanged(
-                                state.copy(
-                                    onlyOperational = it
-                                )
-                            )
+                            onFilterChanged(state.copy(onlyOperational = it))
                         }
                     }
                 }
 
-                // COLUMNA DERECHA
+                // COLUMNA DERECHA: Rating y Ordenación
                 Column(modifier = Modifier.weight(1f)) {
                     FilterSectionTitle(stringResource(R.string.min_rating), Blanco)
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -231,6 +229,8 @@ fun FilterDropDown(
                     if (showSortOptions) {
                         Spacer(modifier = Modifier.height(12.dp))
                         FilterSectionTitle(stringResource(R.string.sort_by), Blanco)
+
+                        // Lista de opciones de ordenación profesional
                         SortOption.entries.forEach { option ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -249,22 +249,22 @@ fun FilterDropDown(
                                 )
                                 Text(
                                     text = when (option) {
-                                        SortOption.DISTANCE -> stringResource(R.string.sort_distance)
-                                        SortOption.RATING -> stringResource(R.string.sort_rating)
-                                        SortOption.DATE -> stringResource(R.string.sort_date)
+                                        SortOption.DISTANCE_ASC -> "Cercanas primero"
+                                        SortOption.DISTANCE_DESC -> "Lejanas primero"
+                                        SortOption.RATING_DESC -> "Mejor valoradas"
+                                        SortOption.RATING_ASC -> "Peor valoradas"
+                                        SortOption.DATE_DESC -> "Más nuevas"
+                                        SortOption.DATE_ASC -> "Más antiguas"
                                     },
-                                    fontSize = 11.sp, color = Blanco
+                                    fontSize = 10.sp,
+                                    color = Blanco,
+                                    lineHeight = 12.sp
                                 )
                             }
                         }
                     } else {
-                        // SI ES MODO MAPA, OPERATIVAS AQUÍ
                         OperationalSwitch(state.onlyOperational) {
-                            onFilterChanged(
-                                state.copy(
-                                    onlyOperational = it
-                                )
-                            )
+                            onFilterChanged(state.copy(onlyOperational = it))
                         }
                     }
                 }
