@@ -30,6 +30,7 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
 import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
@@ -51,6 +52,28 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import kotlin.random.Random
+
+// Función para generar colores aleatorios basados en un seed
+fun getRandomCategoryColor(seed: Int): Color {
+    val random = Random(seed)
+    return Color(
+        red = random.nextFloat(),
+        green = random.nextFloat(),
+        blue = random.nextFloat(),
+        alpha = 1f
+    )
+}
+
+// Función para convertir Color a Int (ARGB)
+fun Color.toArgb(): Int {
+    return android.graphics.Color.argb(
+        (alpha * 255).toInt(),
+        (red * 255).toInt(),
+        (green * 255).toInt(),
+        (blue * 255).toInt()
+    )
+}
 
 @Composable
 fun OSMMapContent(
@@ -61,6 +84,7 @@ fun OSMMapContent(
 ) {
     val context = LocalContext.current
     val fountains = viewModel?.uiState?.fountains ?: emptyList()
+    val categories = viewModel?.categories ?: emptyList()
 
     AndroidView(
         factory = { ctx ->
@@ -84,7 +108,8 @@ fun OSMMapContent(
                 val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
                 val wrapped = drawable?.let {
                     val w = DrawableCompat.wrap(it).mutate()
-                    DrawableCompat.setTint(w, fountain.getMarkerColor())
+                    // Usar color aleatorio basado en el ID de la categoría
+                    DrawableCompat.setTint(w, getRandomCategoryColor(fountain.category.id.hashCode()).toArgb())
                     w
                 }
                 val bitmap = createBitmap(120, 120)
@@ -154,7 +179,7 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
 fun MapFloatingButtons(
     mapViewRef: MapView?,
     addViewModel: AddFountainViewModel,
-    mapViewModel: MapViewModel, // Inyectamos MapViewModel para validar ubicación
+    mapViewModel: MapViewModel,
     isMapView: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -166,7 +191,6 @@ fun MapFloatingButtons(
         // Botón AÑADIR FUENTE
         FloatingActionButton(
             onClick = {
-                // Solo abre la pantalla si el ViewModel tiene la ubicación guardada
                 if (mapViewModel.isLocationAvailable) {
                     addViewModel.openAddFountain(
                         mapViewModel.userLat!!,
@@ -174,7 +198,6 @@ fun MapFloatingButtons(
                     )
                 }
             },
-            // Cambiamos el color para indicar si está habilitado
             containerColor = if (mapViewModel.isLocationAvailable) Blanco else Gris.copy(alpha = 0.5f),
             modifier = Modifier.size(44.dp)
         ) {
@@ -208,7 +231,10 @@ fun MapFloatingButtons(
 }
 
 @Composable
-fun MapLegend(modifier: Modifier = Modifier) {
+fun MapLegend(
+    categories: List<Category>,
+    modifier: Modifier = Modifier
+) {
     Surface(
         modifier = modifier.padding(16.dp),
         shape = RoundedCornerShape(8.dp),
@@ -219,10 +245,23 @@ fun MapLegend(modifier: Modifier = Modifier) {
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            LegendItem(Verde, stringResource(R.string.legend_bebible))
-            LegendItem(Blue10, stringResource(R.string.legend_ornamental))
-            LegendItem(Rojo, stringResource(R.string.legend_averiada))
-            LegendItem(Naranja, stringResource(R.string.legend_pendiente))
+            // Categorías dinámicas con colores aleatorios
+            categories.forEach { category ->
+                LegendItem(
+                    color = getRandomCategoryColor(category.id.hashCode()),
+                    text = category.name
+                )
+            }
+
+            // Estados fijos
+            LegendItem(
+                color = Rojo,
+                text = stringResource(R.string.legend_averiada)
+            )
+            LegendItem(
+                color = Naranja,
+                text = stringResource(R.string.legend_pendiente)
+            )
         }
     }
 }
