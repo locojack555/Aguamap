@@ -3,11 +3,14 @@ package cat.copernic.aguamap1.data.repository
 import cat.copernic.aguamap1.domain.model.GameSession
 import cat.copernic.aguamap1.domain.model.RankingPeriod
 import cat.copernic.aguamap1.domain.model.UserRanking
+import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.RankingRepository
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 import java.util.Date
@@ -16,8 +19,8 @@ import javax.inject.Singleton
 
 @Singleton
 class FirebaseRankingRepository @Inject constructor(
-    private val db: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val authRepository: AuthRepository,
+    private val db: FirebaseFirestore
 ) : RankingRepository {
 
     override suspend fun getDailyRanking(): List<UserRanking> {
@@ -34,7 +37,7 @@ class FirebaseRankingRepository @Inject constructor(
             .get()
             .await()
 
-        val idUsuarioActual = getCurrentUserId()
+        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         return snapshot.documents
             .mapNotNull { doc ->
@@ -78,7 +81,7 @@ class FirebaseRankingRepository @Inject constructor(
             .get()
             .await()
 
-        val idUsuarioActual = getCurrentUserId()
+        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         return snapshot.documents.mapIndexed { index, doc ->
             UserRanking(
@@ -95,7 +98,7 @@ class FirebaseRankingRepository @Inject constructor(
     override suspend fun getYearlyRanking(): List<UserRanking> {
         val calendar = Calendar.getInstance()
         val añoActual = calendar.get(Calendar.YEAR)
-        val idUsuarioActual = getCurrentUserId()
+        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         val snapshot = db.collection("monthlyRanking")
             .whereEqualTo("year", añoActual)
@@ -131,5 +134,55 @@ class FirebaseRankingRepository @Inject constructor(
         }
     }
 
-    override fun getCurrentUserId(): String? = auth.currentUser?.uid
+    override suspend fun getCurrentUserHistoricRanking(userId: String): UserRanking? {
+        return try {
+
+
+            val doc = db.collection("historicRanking")
+                .document(userId)
+                .get()
+                .await()
+
+            if (!doc.exists()) return null
+
+            UserRanking(
+                position = 0,
+                name = doc.getString("userName") ?: "Jugador",
+                points = doc.getLong("totalScore")?.toInt() ?: 0,
+                discovered = doc.getLong("totalDiscovered")?.toInt() ?: 0,
+                games = doc.getLong("gamesCount")?.toInt() ?: 0,
+                isCurrentUser  = userId == userId
+            )
+
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override fun observeUserHistoricRanking(userId: String): Flow<UserRanking?> = callbackFlow {
+        val docRef = db.collection("historicRanking").document(userId)
+
+        val subscription = docRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                val ranking = UserRanking(
+                    position = 0,
+                    name = snapshot.getString("userName") ?: "Jugador",
+                    points = snapshot.getLong("totalScore")?.toInt() ?: 0,
+                    discovered = snapshot.getLong("totalDiscovered")?.toInt() ?: 0,
+                    games = snapshot.getLong("gamesCount")?.toInt() ?: 0,
+                    isCurrentUser = true
+                )
+                trySend(ranking)
+            } else {
+                trySend(null)
+            }
+        }
+
+        awaitClose { subscription.remove() }
+    }
 }

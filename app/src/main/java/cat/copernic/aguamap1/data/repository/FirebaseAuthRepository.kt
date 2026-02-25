@@ -64,6 +64,7 @@ class FirebaseAuthRepository @Inject constructor(
             val document = firestore.collection("users").document(uid).get().await()
             document.exists()
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }
@@ -117,5 +118,74 @@ class FirebaseAuthRepository @Inject constructor(
         } catch (e: Exception) {
             null
         }
+    }
+
+    override suspend fun getCurrentUserEmail(): String? {
+        // Reutilizamos tu función existente para obtener el UID
+        val uid = getCurrentUserUid() ?: return null
+
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            // Extraemos el campo "nom" que guardaste en completeRegistration
+            document.getString("email")
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getCurrentUserEmailAuth(): String? {
+        return auth.currentUser?.email
+    }
+
+    override suspend fun updateUserProfile(userId: String, nombre: String, email: String): Result<Unit> {
+        return try {
+            val userRef = firestore.collection("users").document(userId)
+
+            val updates = mapOf(
+                "nom" to nombre,
+                "email" to email
+            )
+
+            userRef.update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateUserEmail(newEmail: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("Usuario no autenticado")
+            user.verifyBeforeUpdateEmail(newEmail).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateUserName(newName: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("Usuario no autenticado")
+            val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                .setDisplayName(newName)
+                .build()
+            user.updateProfile(profileUpdates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun refreshUser() {
+        auth.currentUser?.reload()?.await()
+    }
+
+    override suspend fun signOut() {
+        auth.signOut()
+    }
+
+    override suspend fun isEmailVerified(): Boolean {
+        auth.currentUser?.reload()?.await()
+        return auth.currentUser?.isEmailVerified ?: false
     }
 }

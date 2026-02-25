@@ -9,5 +9,6 @@ interface RankingRepository {
     suspend fun getMonthlyRanking(): List<UserRanking>
     suspend fun getYearlyRanking(): List<UserRanking>
     suspend fun getRankingByPeriod(period: RankingPeriod): List<UserRanking>
-    fun getCurrentUserId(): String?
+    suspend fun getCurrentUserHistoricRanking(userId: String): UserRanking?
+    fun observeUserHistoricRanking(userId: String): Flow<UserRanking?>
 }

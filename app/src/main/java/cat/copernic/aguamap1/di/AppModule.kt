@@ -62,8 +62,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFountainRepository(db: FirebaseFirestore): FountainRepository {
-        return FirebaseFountainRepository(db)
+    fun provideFountainRepository(db: FirebaseFirestore, authRepository: AuthRepository): FountainRepository {
+        return FirebaseFountainRepository(db, authRepository)
     }
 
     // --- NUEVO PROVEEDOR ---
@@ -76,10 +76,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRankingRepository(
+        authRepository: AuthRepository,
         db: FirebaseFirestore,
-        auth: FirebaseAuth
     ): RankingRepository {
-        return FirebaseRankingRepository(db, auth)
+        return FirebaseRankingRepository(authRepository, db)
     }
 
     @Provides

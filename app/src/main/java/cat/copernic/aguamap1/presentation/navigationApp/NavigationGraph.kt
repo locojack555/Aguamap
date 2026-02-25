@@ -3,7 +3,10 @@ package cat.copernic.aguamap1.presentation.navigationApp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,6 +23,10 @@ import cat.copernic.aguamap1.presentation.music.SoundManager
 import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.ranking.RankingScreen
+import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
+import cat.copernic.aguamap1.presentation.navigationApp.BottomNavItem
+import cat.copernic.aguamap1.presentation.profile.EditProfileScreen
+import cat.copernic.aguamap1.presentation.profile.ProfileViewModel
 
 @Composable
 fun NavigationGraph(
@@ -79,13 +86,39 @@ fun NavigationGraph(
             RankingScreen()
         }
         composable(BottomNavItem.Profile.route) {
+            // Placeholder para Perfil
             ProfileScreen(
                 navigateToLogin = {
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
                     soundManager.stopAllSounds()
                     rootNavController.navigate(RootScreen.Login.route) {
                         popUpTo(RootScreen.Home.route) { inclusive = true }
                         launchSingleTop = true
                     }
+                },
+                navigateToEditProfile = {
+                    navController.navigate("edit_profile")
+                })
+
+        }
+
+        composable("edit_profile") { backStackEntry ->
+            // Buscamos la entrada de la pantalla de perfil
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(BottomNavItem.Profile.route)
+            }
+
+            // Recuperamos el ViewModel compartido
+            val profileViewModel: ProfileViewModel = hiltViewModel(parentEntry)
+            val profileState by profileViewModel.profileState.collectAsState()
+
+            EditProfileScreen(
+                initialNombre = profileState.userName,
+                viewModel = profileViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveComplete = {
+                    profileViewModel.loadUserData()
+                    navController.popBackStack()
                 }
             )
         }
