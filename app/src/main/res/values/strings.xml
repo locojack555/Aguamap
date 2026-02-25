@@ -95,7 +95,6 @@
     <string name="ranking_silver">Plata</string>
     <string name="ranking_bronze">Bronce</string>
 
-    <!-- Pantalla GameScreen (Errores y Estados) -->
     <string name="game_error_daily_limit">Ya has jugado hoy. Vuelve mañana.</string>
     <string name="game_error_unexpected">Ocurrió un error inesperado</string>
     <string name="game_error_login_required">Inicia sesión para jugar</string>
@@ -104,7 +103,6 @@
     <string name="game_error_no_fountains">No hay fuentes disponibles</string>
     <string name="game_error_generic">Error: %1$s</string>
 
-    <!-- Pantalla GameInstructionsScreen -->
     <string name="game_instructions_title_app">AguaQuest</string>
     <string name="game_instructions_subtitle">¿Dónde está esta fuente?</string>
     <string name="game_instructions_play_learn_title">¡Juega y aprende!</string>
@@ -114,11 +112,9 @@
     <string name="game_instructions_rule_three">• Máximo 1000 puntos</string>
     <string name="game_instructions_start_button">Empezar Juego</string>
 
-    <!-- Pantalla GamePlayScreen -->
     <string name="game_play_confirm_button">¡CONFIRMAR UBICACIÓN!</string>
     <string name="game_play_hint_text">Toca el mapa para marcar</string>
 
-    <!-- Pantalla GameResultScreen -->
     <string name="game_result_lost_title">¡HAS PERDIDO!</string>
     <string name="game_result_lost_message">Se te acabó el tiempo sin marcar una ubicación</string>
     <string name="game_result_lost_points">No has conseguido puntos</string>
@@ -128,10 +124,8 @@
     <string name="game_result_daily_message">Ya has jugado hoy. Vuelve mañana para una nueva partida</string>
     <string name="game_result_points">Puntos</string>
 
-    <!-- Pantalla LoadingPartida -->
     <string name="game_loading_message">PREPARANDO PARTIDA...</string>
 
-    <!-- Pantalla ErrorScreen -->
     <string name="game_error_retry_button">REINTENTAR</string>
     <string name="back">Atrás</string>
     <string name="delete">Borrar</string>
@@ -185,6 +179,17 @@
     <string name="fountain_status_error">La fuente está averiada</string>
     <string name="edit_comment">Editar comentario</string>
 
+    <string name="categories_title">Categorías</string>
+    <string name="search_placeholder">Buscar (* o ? permitidos)...</string>
+    <string name="best_rated">Mejor valoradas</string>
+    <string name="worst_rated">Peor valoradas</string>
+    <string name="new_category">Nueva Categoría</string>
+    <string name="delete_category">Borrar Categoría</string>
+    <string name="expand_info">Ampliar información</string>
+    <string name="fountains">fuentes</string>
+    <string name="bebible">Bebible</string>
+    <string name="ornamental">Ornamental</string>
+    <string name="historica">Histórica</string>
     <!-- Textos para AddFountainScreen -->
     <string name="add_fountain_photo_label">Foto de la fuente</string>
     <string name="add_fountain_select_photo">Subir o hacer foto</string>

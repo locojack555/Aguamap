@@ -94,7 +94,7 @@
     <string name="ranking_gold">Gold</string>
     <string name="ranking_silver">Silver</string>
     <string name="ranking_bronze">Bronze</string>
-    <!-- Pantalla GameScreen (Errors and States) -->
+
     <string name="game_error_daily_limit">You have already played today. Come back tomorrow.</string>
     <string name="game_error_unexpected">An unexpected error occurred</string>
     <string name="game_error_login_required">Log in to play</string>
@@ -103,7 +103,6 @@
     <string name="game_error_no_fountains">No fountains available</string>
     <string name="game_error_generic">Error: %1$s</string>
 
-    <!-- Pantalla GameInstructionsScreen -->
     <string name="game_instructions_title_app">AguaQuest</string>
     <string name="game_instructions_subtitle">Where is this fountain?</string>
     <string name="game_instructions_play_learn_title">Play and learn!</string>
@@ -113,11 +112,9 @@
     <string name="game_instructions_rule_three">• Maximum 1000 points</string>
     <string name="game_instructions_start_button">Start Game</string>
 
-    <!-- Pantalla GamePlayScreen -->
     <string name="game_play_confirm_button">CONFIRM LOCATION!</string>
     <string name="game_play_hint_text">Tap the map to mark</string>
 
-    <!-- Pantalla GameResultScreen -->
     <string name="game_result_lost_title">YOU LOST!</string>
     <string name="game_result_lost_message">You ran out of time without marking a location</string>
     <string name="game_result_lost_points">You didn\'t get any points</string>
@@ -127,10 +124,8 @@
     <string name="game_result_daily_message">You have already played today. Come back tomorrow for a new game</string>
     <string name="game_result_points">Points</string>
 
-    <!-- Pantalla LoadingPartida -->
     <string name="game_loading_message">PREPARING GAME...</string>
 
-    <!-- Pantalla ErrorScreen -->
     <string name="game_error_retry_button">RETRY</string>
     <string name="back">Back</string>
     <string name="delete">Delete</string>
@@ -184,6 +179,17 @@
     <string name="fountain_status_error">The fountain is broken</string>
     <string name="edit_comment">Edit comment</string>
 
+    <string name="categories_title">Categories</string>
+    <string name="search_placeholder">Search (* or ? allowed)...</string>
+    <string name="best_rated">Best rated</string>
+    <string name="worst_rated">Worst rated</string>
+    <string name="new_category">New Category</string>
+    <string name="delete_category">Delete Category</string>
+    <string name="expand_info">More info</string>
+    <string name="fountains">fountains</string>
+    <string name="bebible">Potable</string>
+    <string name="ornamental">Ornamental</string>
+    <string name="historica">Historical</string>
     <!-- Textos para AddFountainScreen -->
     <string name="add_fountain_photo_label">Fountain photo</string>
     <string name="add_fountain_select_photo">Upload or take photo</string>
