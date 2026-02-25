@@ -13,6 +13,15 @@
     <string name="error_password_uppercase">Password must contain at least one uppercase letter.</string>
     <string name="recovery_password">Recover password</string>
     <string name="text_recovery_password">Forgot your password?</string>
+    <string name="report_confirm_existence">The fountain DOES exist!</string>
+    <string name="voted_label">Voted</string>
+    <string name="report_confirm_existence_hint">Click here if the fountain exists and the report is an error.</string>
+    <string name="report_already_voted_not_exists">You have already reported it doesn\'t exist</string>
+    <string name="report_other_reason">Other reason (Wrong name, etc.)</string>
+    <string name="report_other_title">Report another issue</string>
+    <string name="report_other_hint">Briefly explain what is happening (e.g., Wrong name):</string>
+    <string name="report_other_placeholder">Write here...</string>
+    <string name="report_other_send">Send report</string>
     <string name="text_forgot_password">We will send you a link to recover your password</string>
     <string name="email">Email</string>
     <string name="info">Data</string>
@@ -181,4 +190,22 @@
     <string name="bebible">Potable</string>
     <string name="ornamental">Ornamental</string>
     <string name="historica">Historical</string>
+    <!-- Textos para AddFountainScreen -->
+    <string name="add_fountain_photo_label">Fountain photo</string>
+    <string name="add_fountain_select_photo">Upload or take photo</string>
+    <string name="add_fountain_remove_image">Remove image</string>
+    <string name="add_fountain_preview">Preview</string>
+    <string name="add_fountain_upload_progress">Uploading image: %1$d%%</string>
+    <string name="add_fountain_uploading">Uploading...</string>
+    <string name="add_fountain_error">Error: %1$s</string>
+    <string name="add_fountain_upload_error">Error uploading image: %1$s</string>
+
+    <!-- Textos para ImagePickerHelper -->
+    <string name="image_picker_title">Select photo</string>
+    <string name="image_picker_gallery">Gallery</string>
+    <string name="image_picker_camera">Camera</string>
+    <string name="image_picker_gallery_description">Gallery</string>
+    <string name="image_picker_camera_description">Camera</string>
+    <string name="game_result_click_red_marker">Click on the red marker to see fountain details</string>
+    <string name="game_result_you_won">YOU WON!</string>
 </resources>

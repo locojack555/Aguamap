@@ -45,9 +45,18 @@
     <string name="en">English</string>
     <string name="ca">Català</string>
     <string name="category">Categorias</string>
+    <string name="voted_label">Votado</string>
     <string name="game">Juego</string>
     <string name="ranking">Ranking</string>
     <string name="profile">Perfil</string>
+    <string name="report_confirm_existence">¡La fuente SÍ existe!</string>
+    <string name="report_confirm_existence_hint">Pulsa aquí si la fuente existe y el reporte es un error.</string>
+    <string name="report_already_voted_not_exists">Ya has reportado que no existe</string>
+    <string name="report_other_reason">Otro motivo (Nombre mal, etc.)</string>
+    <string name="report_other_title">Reportar otro problema</string>
+    <string name="report_other_hint">Explica brevemente qué ocurre (ej: El nombre es incorrecto):</string>
+    <string name="report_other_placeholder">Escribe aquí...</string>
+    <string name="report_other_send">Enviar reporte</string>
     <string name="login">Entrar</string>
     <string name="info">Datos</string>
     <string name="all_categories">Todas</string>
@@ -181,4 +190,23 @@
     <string name="bebible">Bebible</string>
     <string name="ornamental">Ornamental</string>
     <string name="historica">Histórica</string>
+    <!-- Textos para AddFountainScreen -->
+    <string name="add_fountain_photo_label">Foto de la fuente</string>
+    <string name="add_fountain_select_photo">Subir o hacer foto</string>
+    <string name="add_fountain_remove_image">Quitar imagen</string>
+    <string name="add_fountain_preview">Vista previa</string>
+    <string name="add_fountain_upload_progress">Subiendo imagen: %1$d%%</string>
+    <string name="add_fountain_uploading">Subiendo...</string>
+    <string name="add_fountain_error">Error: %1$s</string>
+    <string name="add_fountain_upload_error">Error al subir imagen: %1$s</string>
+
+    <!-- Textos para ImagePickerHelper -->
+    <string name="image_picker_title">Seleccionar foto</string>
+    <string name="image_picker_gallery">Galería</string>
+    <string name="image_picker_camera">Cámara</string>
+    <string name="image_picker_gallery_description">Galería</string>
+    <string name="image_picker_camera_description">Cámara</string>
+
+    <string name="game_result_click_red_marker">Haz clic en el marcador rojo para ver los detalles de la fuente</string>
+    <string name="game_result_you_won">¡HAS GANADO!</string>
 </resources>

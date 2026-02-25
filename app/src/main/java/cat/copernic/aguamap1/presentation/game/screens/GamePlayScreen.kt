@@ -1,12 +1,16 @@
 package cat.copernic.aguamap1.presentation.game.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +22,8 @@ import cat.copernic.aguamap1.presentation.game.components.GameMapView
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Rojo
 import cat.copernic.aguamap1.ui.theme.VerdeClaro
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import org.osmdroid.util.GeoPoint
 
 @Composable
@@ -46,33 +52,84 @@ fun GamePlayScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 40.dp, start = 16.dp, end = 16.dp),
-            color = Color.White.copy(alpha = 0.9f),
-            shape = RoundedCornerShape(12.dp),
-            shadowElevation = 4.dp
+            color = Color.White.copy(alpha = 0.95f),
+            shape = RoundedCornerShape(16.dp),
+            shadowElevation = 8.dp
         ) {
-            Row(
-                Modifier.padding(12.dp),
-                Arrangement.SpaceBetween,
-                Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${remainingTime}s",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (remainingTime < 10) Rojo else Color.Black
-                )
-                Text(
-                    stringResource(R.string.game_instructions_title_app),
-                    color = Color.Black,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 14.sp
-                )
-                Icon(
-                    painterResource(R.drawable.timer_24px),
-                    null,
-                    tint = Color.Black,
-                    modifier = Modifier.size(24.dp)
-                )
+            Column(Modifier.padding(12.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    Arrangement.SpaceBetween,
+                    Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${remainingTime}s",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (remainingTime < 10) Rojo else Color.Black
+                    )
+                    Text(
+                        stringResource(R.string.game_instructions_title_app),
+                        color = Color.Black,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp
+                    )
+                    Icon(
+                        painterResource(R.drawable.timer_24px),
+                        null,
+                        tint = Color.Black,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                if (fountain.imageUrl.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "¿Dónde está esta fuente?",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(fountain.imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = fountain.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp),
+                        color = Color.LightGray.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.pin_lleno),
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Text(
+                                fountain.name,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -91,7 +148,7 @@ fun GamePlayScreen(
                     stringResource(R.string.game_play_confirm_button),
                     color = Blanco,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 18.sp
                 )
             }
         } else {
@@ -105,8 +162,8 @@ fun GamePlayScreen(
                 Text(
                     stringResource(R.string.game_play_hint_text),
                     color = Blanco,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    fontSize = 14.sp
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                    fontSize = 16.sp
                 )
             }
         }

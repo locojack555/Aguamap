@@ -4,8 +4,17 @@
     <string name="pass_off">Ocultar</string>
     <string name="all_categories">Totes</string>
     <string name="filter_title">Opcions de Filtre</string>
+    <string name="voted_label">Votat</string>
     <string name="only_operational">Operatives</string>
     <string name="max_distance">Distància màxima</string>
+    <string name="report_confirm_existence">La font SÍ que existeix!</string>
+    <string name="report_confirm_existence_hint">Prem aquí si la font existeix i el report és un error.</string>
+    <string name="report_already_voted_not_exists">Ja has reportat que no existeix</string>
+    <string name="report_other_reason">Altre motiu (Nom malament, etc.)</string>
+    <string name="report_other_title">Informar d\'un altre problema</string>
+    <string name="report_other_hint">Explica breument què passa (ex: El nom és incorrecte):</string>
+    <string name="report_other_placeholder">Escriu aquí...</string>
+    <string name="report_other_send">Enviar informe</string>
     <string name="sort_by">Ordena per</string>
     <string name="sort_distance">Distància</string>
     <string name="sort_rating">Valoració</string>
@@ -160,7 +169,8 @@
     <string name="dialog_add_comment_label">El teu comentari (opcional)</string>
     <string name="dialog_add_comment_publish">Publicar</string>
     <string name="dialog_add_comment_cancel">Cancel·lar</string>
-
+    <string name="game_result_click_red_marker">Fes clic al marcador vermell per veure els detalls de la font</string>
+    <string name="game_result_you_won">HAS GUANYAT!</string>
     <string name="add_fountain_subtitle">Ajuda a la comunitat afegint una nova font</string>
     <string name="fountain_name_placeholder">Ex: Font de la Plaça Major</string>
     <string name="fountain_description_placeholder">Explica\'ns detalls sobre el seu estat...</string>
@@ -180,4 +190,20 @@
     <string name="bebible">Beguda</string>
     <string name="ornamental">Ornamental</string>
     <string name="historica">Històrica</string>
+    <!-- Textos para AddFountainScreen -->
+    <string name="add_fountain_photo_label">Foto de la font</string>
+    <string name="add_fountain_select_photo">Pujar o fer foto</string>
+    <string name="add_fountain_remove_image">Treure imatge</string>
+    <string name="add_fountain_preview">Vista prèvia</string>
+    <string name="add_fountain_upload_progress">Pujant imatge: %1$d%%</string>
+    <string name="add_fountain_uploading">Pujant...</string>
+    <string name="add_fountain_error">Error: %1$s</string>
+    <string name="add_fountain_upload_error">Error en pujar la imatge: %1$s</string>
+
+    <!-- Textos para ImagePickerHelper -->
+    <string name="image_picker_title">Seleccionar foto</string>
+    <string name="image_picker_gallery">Galeria</string>
+    <string name="image_picker_camera">Càmera</string>
+    <string name="image_picker_gallery_description">Galeria</string>
+    <string name="image_picker_camera_description">Càmera</string>
 </resources>

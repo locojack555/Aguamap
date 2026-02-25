@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Para archivos en el caché externo -->
+    <external-cache-path name="external_cache" path="." />
+
+    <!-- Para archivos en el caché interno -->
+    <cache-path name="cache" path="/" />
+
+    <!-- Para archivos en Pictures -->
+    <external-files-path name="pictures" path="Pictures" />
+
+    <!-- Para archivos en el directorio de la app -->
+    <files-path name="files" path="/" />
+
+    <!-- Para archivos en Android/media (aquí está tu problema) -->
+    <external-media-path name="media" path="." />
+</paths>

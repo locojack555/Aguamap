@@ -1,19 +1,21 @@
 package cat.copernic.aguamap1.di
 
+// Nuevos imports para categorías
+
 import cat.copernic.aguamap1.data.repository.AndroidSoundRepository
 import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
+import cat.copernic.aguamap1.data.repository.FirebaseCategoryRepository
 import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
 import cat.copernic.aguamap1.data.repository.FirebaseGameRepository
 import cat.copernic.aguamap1.data.repository.FirebaseRankingRepository
-// Nuevos imports para categorías
-import cat.copernic.aguamap1.data.repository.FirebaseCategoryRepository
-import cat.copernic.aguamap1.domain.repository.CategoryRepository
-
+import cat.copernic.aguamap1.data.repository.FirebaseReportRepository
 import cat.copernic.aguamap1.domain.repository.AuthRepository
+import cat.copernic.aguamap1.domain.repository.CategoryRepository
 import cat.copernic.aguamap1.domain.repository.FountainRepository
 import cat.copernic.aguamap1.domain.repository.GameRepository
-import cat.copernic.aguamap1.domain.repository.SoundRepository
 import cat.copernic.aguamap1.domain.repository.RankingRepository
+import cat.copernic.aguamap1.domain.repository.ReportRepository
+import cat.copernic.aguamap1.domain.repository.SoundRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -25,6 +27,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import android.content.Context
+import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
 import cat.copernic.aguamap1.data.error.ErrorResourceProviderImpl
 import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -43,6 +46,12 @@ object AppModule {
         auth: FirebaseAuth,
         firestore: FirebaseFirestore
     ): AuthRepository = FirebaseAuthRepository(auth, firestore)
+
+    @Provides
+    @Singleton
+    fun provideReportRepository(db: FirebaseFirestore): ReportRepository {
+        return FirebaseReportRepository(db)
+    }
 
     @Provides
     @Singleton
@@ -90,5 +99,11 @@ object AppModule {
         @ApplicationContext context: Context
     ): ErrorResourceProvider {
         return ErrorResourceProviderImpl(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCloudinaryService(): CloudinaryService {
+        return CloudinaryService()
     }
 }
