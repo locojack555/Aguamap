@@ -36,7 +36,8 @@ import cat.copernic.aguamap1.R
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     navigateToLogin: () -> Unit = {},
-    navigateToEditProfile: () -> Unit = {}
+    navigateToEditProfile: () -> Unit = {},
+    navigateToSettings: () -> Unit = {}
 ) {
     val estadoScroll = rememberScrollState()
     val profileState by viewModel.profileState.collectAsState()
@@ -68,7 +69,8 @@ fun ProfileScreen(
                     DivisorPerfil()
                     ElementoOpcionPerfil(
                         icono = Icons.Default.Settings,
-                        etiqueta = "Configuración"
+                        etiqueta = "Configuración",
+                        onClick = navigateToSettings
                     )
                 }
 

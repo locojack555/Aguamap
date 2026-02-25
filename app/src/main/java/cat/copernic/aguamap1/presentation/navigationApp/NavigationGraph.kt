@@ -27,6 +27,7 @@ import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
 import cat.copernic.aguamap1.presentation.navigationApp.BottomNavItem
 import cat.copernic.aguamap1.presentation.profile.EditProfileScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileViewModel
+import cat.copernic.aguamap1.presentation.profile.SettingsScreen
 
 @Composable
 fun NavigationGraph(
@@ -98,8 +99,11 @@ fun NavigationGraph(
                 },
                 navigateToEditProfile = {
                     navController.navigate("edit_profile")
-                })
-
+                },
+                navigateToSettings = {
+                    navController.navigate("settings")
+                }
+            )
         }
 
         composable("edit_profile") { backStackEntry ->
@@ -120,6 +124,12 @@ fun NavigationGraph(
                     profileViewModel.loadUserData()
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable("settings") {
+            SettingsScreen(
+                onClose = { navController.popBackStack() }
             )
         }
     }

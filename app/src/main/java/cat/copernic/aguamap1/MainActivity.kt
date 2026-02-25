@@ -17,6 +17,12 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
+    override fun recreate() {
+        super.recreate()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_AguaMap1)
         super.onCreate(savedInstanceState)
