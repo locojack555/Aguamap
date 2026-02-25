@@ -17,31 +17,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
     initialNombre: String,
-    initialEmail: String,
     viewModel: ProfileViewModel,
     onBack: () -> Unit = {},
     onSaveComplete: () -> Unit = {}
 ) {
-    // Usamos el estado interno para que el usuario pueda escribir
     var nombre by remember(initialNombre) { mutableStateOf(initialNombre) }
-    var email by remember(initialEmail) { mutableStateOf(initialEmail) }
 
-    LaunchedEffect(initialNombre, initialEmail) {
+    LaunchedEffect(initialNombre) {
         if (nombre.isEmpty()) nombre = initialNombre
-        if (email.isEmpty()) email = initialEmail
     }
 
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
 
-    // Manejo de éxito
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             viewModel.resetSuccess()
@@ -49,11 +43,8 @@ fun EditProfileScreen(
         }
     }
 
-
     Scaffold(
-        bottomBar = {
-            // Aquí iría tu BottomNavigationBar existente
-        }
+        bottomBar = {}
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -63,7 +54,7 @@ fun EditProfileScreen(
                     .background(Color(0xFFF8F9FA))
                     .verticalScroll(rememberScrollState())
             ) {
-                // --- CABECERA CON GRADIENTE ---
+                // CABECERA
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -92,12 +83,9 @@ fun EditProfileScreen(
                     }
                 }
 
-                // --- CUERPO DE LA PANTALLA ---
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                ) {
-                    // Tarjeta Nombre
+                // CUERPO
+                Column(modifier = Modifier.padding(16.dp)) {
+
                     SeccionCampoEdicion(
                         titulo = "Nombre",
                         valor = nombre,
@@ -105,32 +93,11 @@ fun EditProfileScreen(
                         enabled = !isLoading
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Tarjeta Email
-                    SeccionCampoEdicion(
-                        titulo = "Correo electrónico",
-                        valor = email,
-                        onValueChange = { email = it },
-                        enabled = !isLoading
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Tarjeta Avatar (deshabilitada)
-                    SeccionCampoEdicion(
-                        titulo = "Avatar (no editable)",
-                        valor = "",
-                        onValueChange = { /* No hacer nada */ },
-                        enabled = false
-                    )
-
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- BOTÓN GUARDAR ---
                     Button(
                         onClick = {
-                            viewModel.updateProfile(nombre, email) {
+                            viewModel.updateProfile(nombre) {
                                 onSaveComplete()
                             }
                         },
@@ -142,7 +109,7 @@ fun EditProfileScreen(
                             containerColor = Color(0xFF0D0D2B),
                             disabledContainerColor = Color.Gray
                         ),
-                        enabled = !isLoading && nombre.isNotBlank() && email.isNotBlank()
+                        enabled = !isLoading && nombre.isNotBlank()
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
@@ -159,11 +126,12 @@ fun EditProfileScreen(
                     }
                 }
             }
-            // --- MANEJO DE ERRORES (SNACKBAR) ---
+
+            // SNACKBAR DE ERROR
             if (error != null) {
                 Snackbar(
                     modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-                    containerColor = Color(0xFFB00020), // Rojo error
+                    containerColor = Color(0xFFB00020),
                     action = {
                         TextButton(onClick = { viewModel.clearError() }) {
                             Text("OK", color = Color.White)
@@ -198,7 +166,6 @@ fun SeccionCampoEdicion(
                 color = Color(0xFF5D4037),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-
             TextField(
                 value = valor,
                 onValueChange = onValueChange,

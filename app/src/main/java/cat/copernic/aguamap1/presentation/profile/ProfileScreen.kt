@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -39,83 +41,58 @@ fun ProfileScreen(
     val estadoScroll = rememberScrollState()
     val profileState by viewModel.profileState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val hasPending by viewModel.hasPendingVerification.collectAsState()
     val isAdmin = profileState.userRole.equals("ADMIN", ignoreCase = true)
 
-    // Carga inicial SOLO UNA VEZ
-    LaunchedEffect(Unit) {
-        viewModel.loadUserData()
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF1F3F4))
-            .verticalScroll(estadoScroll)
+    PullToRefreshBox(
+        isRefreshing = isLoading,
+        onRefresh = { viewModel.loadUserData() },
+        modifier = Modifier.fillMaxSize()
     ) {
-        CabeceraPerfil(profileState, isAdmin, hasPending)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF1F3F4))
+                .verticalScroll(estadoScroll)
+        ) {
+            CabeceraPerfil(profileState, isAdmin)
 
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
 
-            // 🔥 BOTÓN SOLO SI HAY PENDIENTE
-            if (hasPending) {
-                Button(
-                    onClick = {
-                        // Al pulsar, comprobamos y si está verificado, logout
-                        viewModel.checkVerificationAndLogout(
-                            onVerified = navigateToLogin
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFF9C4)),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = ButtonDefaults.buttonElevation(2.dp),
-                    enabled = !isLoading
-                ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, tint = Color(0xFFFBC02D))
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = if (isLoading) "Comprobando..." else "Ya he verificado mi email",
-                        color = Color(0xFF827717),
-                        fontWeight = FontWeight.Bold
+                // SECCIÓN CUENTA
+                SeccionPerfil(titulo = "Cuenta") {
+                    ElementoOpcionPerfil(
+                        icono = Icons.Default.Edit,
+                        etiqueta = "Editar perfil",
+                        onClick = navigateToEditProfile
+                    )
+                    DivisorPerfil()
+                    ElementoOpcionPerfil(
+                        icono = Icons.Default.Settings,
+                        etiqueta = "Configuración"
                     )
                 }
-            }
 
-            // SECCIÓN CUENTA
-            SeccionPerfil(titulo = "Cuenta") {
-                ElementoOpcionPerfil(
-                    icono = Icons.Default.Edit,
-                    etiqueta = "Editar perfil",
-                    onClick = navigateToEditProfile
-                )
-                DivisorPerfil()
-                ElementoOpcionPerfil(
-                    icono = Icons.Default.Settings,
-                    etiqueta = "Configuración"
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // SECCIÓN ADMIN
-            if (isAdmin) {
-                SeccionPanelAdmin()
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // SECCIÓN ADMIN
+                if (isAdmin) {
+                    SeccionPanelAdmin()
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // BOTÓN CERRAR SESIÓN
+                BotonCerrarSesion(onClick = navigateToLogin)
+
+                Spacer(modifier = Modifier.height(100.dp))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // BOTÓN CERRAR SESIÓN
-            BotonCerrarSesion(onClick = navigateToLogin)
-
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
 
 @Composable
-fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean, hasPending: Boolean) {
+fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,23 +161,6 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean, hasPending: Boo
                         color = Color.White.copy(alpha = 0.9f),
                         fontSize = 15.sp
                     )
-
-                    // 🔥 AVISO DE PENDIENTE (usando la bandera)
-                    if (hasPending) {
-                        Surface(
-                            color = Color.Black.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(4.dp),
-                            modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            Text(
-                                text = "Verificación pendiente en tu nuevo email",
-                                color = Color(0xFFFFEB3B),
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
                 }
             }
 
@@ -210,7 +170,7 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean, hasPending: Boo
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                TarjetaEstadistica(profileState.fountainsCount.toString(), "fuentes", Icons.Default.LocationOn)
+                TarjetaEstadistica(profileState.fountainsCount.toString(), "Fuentes", Icons.Default.LocationOn)
                 TarjetaEstadistica(profileState.ratingsCount.toString(), "Valoraciones", Icons.Default.StarOutline)
                 TarjetaEstadistica(profileState.points.toString(), "Puntos", Icons.Outlined.EmojiEvents)
             }

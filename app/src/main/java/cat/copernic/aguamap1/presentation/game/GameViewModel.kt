@@ -84,12 +84,12 @@ class GameViewModel @Inject constructor(
                     return@launch
                 }
 
-                /*if (hasPlayedResult.getOrNull() == true) {
+                if (hasPlayedResult.getOrNull() == true) {
                     _error.value = errorResourceProvider.getString(R.string.game_error_daily_limit)
                     _gameState.value = GameState.DailyLimitReached
                     _isLoading.value = false
                     return@launch
-                }*/
+                }
 
                 val fountainResult = getRandomFountainUseCase()
                 if (fountainResult.isFailure) {

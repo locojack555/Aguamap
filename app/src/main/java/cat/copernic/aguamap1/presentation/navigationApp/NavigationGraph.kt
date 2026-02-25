@@ -102,7 +102,6 @@ fun NavigationGraph(
 
             EditProfileScreen(
                 initialNombre = profileState.userName,
-                initialEmail = profileState.userEmail,
                 viewModel = profileViewModel,
                 onBack = { navController.popBackStack() },
                 onSaveComplete = {
