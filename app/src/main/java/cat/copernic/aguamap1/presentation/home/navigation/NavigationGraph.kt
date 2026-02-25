@@ -2,7 +2,10 @@ package cat.copernic.aguamap1.presentation.home.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,8 +17,8 @@ import cat.copernic.aguamap1.presentation.navigation.RootScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.ranking.RankingScreen
 import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import cat.copernic.aguamap1.presentation.profile.EditProfileScreen
+import cat.copernic.aguamap1.presentation.profile.ProfileViewModel
 
 @Composable
 fun NavigationGraph(
@@ -72,7 +75,33 @@ fun NavigationGraph(
                         popUpTo(RootScreen.Home.route) { inclusive = true }
                         launchSingleTop = true
                     }
+                },
+                navigateToEditProfile = {
+                    navController.navigate("edit_profile")
                 })
+
+        }
+
+        composable("edit_profile") { backStackEntry ->
+            // Buscamos la entrada de la pantalla de perfil
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(BottomNavItem.Profile.route)
+            }
+
+            // Recuperamos el ViewModel compartido
+            val profileViewModel: ProfileViewModel = hiltViewModel(parentEntry)
+            val profileState by profileViewModel.profileState.collectAsState()
+
+            EditProfileScreen(
+                initialNombre = profileState.userName,
+                initialEmail = profileState.userEmail,
+                viewModel = profileViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveComplete = {
+                    profileViewModel.loadUserData()
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

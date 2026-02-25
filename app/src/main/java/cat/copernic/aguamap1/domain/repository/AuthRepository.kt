@@ -13,4 +13,11 @@ interface AuthRepository {
     suspend fun getUserRole(uid: String): UserRole
     suspend fun getCurrentUserName(): String?
     suspend fun getCurrentUserEmail(): String?
+    suspend fun getCurrentUserEmailAuth(): String?
+    suspend fun updateUserProfile(userId: String, nombre: String, email: String): Result<Unit>
+    suspend fun updateUserEmail(newEmail: String): Result<Unit>
+    suspend fun updateUserName(newName: String): Result<Unit>
+    suspend fun refreshUser()
+    suspend fun signOut()
+    suspend fun isEmailVerified(): Boolean
 }

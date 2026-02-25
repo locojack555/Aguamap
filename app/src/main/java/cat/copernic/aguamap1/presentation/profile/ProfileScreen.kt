@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -28,13 +29,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.domain.model.UserRanking
 
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel(),navigateToLogin: () -> Unit = {}) {
+fun ProfileScreen(
+    viewModel: ProfileViewModel = hiltViewModel(),
+    navigateToLogin: () -> Unit = {},
+    navigateToEditProfile: () -> Unit = {}
+) {
     val estadoScroll = rememberScrollState()
     val profileState by viewModel.profileState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val hasPending by viewModel.hasPendingVerification.collectAsState()
     val isAdmin = profileState.userRole.equals("ADMIN", ignoreCase = true)
+
+    // Carga inicial SOLO UNA VEZ
+    LaunchedEffect(Unit) {
+        viewModel.loadUserData()
+    }
 
     Column(
         modifier = Modifier
@@ -42,15 +53,47 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel(),navigateToLogin:
             .background(Color(0xFFF1F3F4))
             .verticalScroll(estadoScroll)
     ) {
-        CabeceraPerfil(profileState, isAdmin)
+        CabeceraPerfil(profileState, isAdmin, hasPending)
 
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
 
+            // 🔥 BOTÓN SOLO SI HAY PENDIENTE
+            if (hasPending) {
+                Button(
+                    onClick = {
+                        // Al pulsar, comprobamos y si está verificado, logout
+                        viewModel.checkVerificationAndLogout(
+                            onVerified = navigateToLogin
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFF9C4)),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = ButtonDefaults.buttonElevation(2.dp),
+                    enabled = !isLoading
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null, tint = Color(0xFFFBC02D))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = if (isLoading) "Comprobando..." else "Ya he verificado mi email",
+                        color = Color(0xFF827717),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             // SECCIÓN CUENTA
             SeccionPerfil(titulo = "Cuenta") {
-                ElementoOpcionPerfil(icono = Icons.Default.Edit, etiqueta = "Editar perfil", onClick = navigateToEditProfile)
+                ElementoOpcionPerfil(
+                    icono = Icons.Default.Edit,
+                    etiqueta = "Editar perfil",
+                    onClick = navigateToEditProfile
+                )
                 DivisorPerfil()
-                ElementoOpcionPerfil(icono = Icons.Default.Settings, etiqueta = "Configuración")
+                ElementoOpcionPerfil(
+                    icono = Icons.Default.Settings,
+                    etiqueta = "Configuración"
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -72,7 +115,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel(),navigateToLogin:
 }
 
 @Composable
-fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
+fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean, hasPending: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -110,57 +153,29 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
                         fontWeight = FontWeight.ExtraBold
                     )
 
-                    if (isAdmin) {
-                        // Badge de ADMIN (amarillo)
-                        Surface(
-                            color = Color(0xFFFFC107),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.padding(vertical = 4.dp)
+                    // Badge de Rol
+                    Surface(
+                        color = if (isAdmin) Color(0xFFFFC107) else colorResource(id = R.color.azulReal),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.Shield,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    profileState.userRole,
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    } else {
-                        // Badge de USUARIO (azul)
-                        Surface(
-                            color = colorResource(id = R.color.azulReal),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    profileState.userRole,
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Icon(
+                                if (isAdmin) Icons.Default.Shield else Icons.Default.Person,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                profileState.userRole,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 
@@ -169,6 +184,23 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
                         color = Color.White.copy(alpha = 0.9f),
                         fontSize = 15.sp
                     )
+
+                    // 🔥 AVISO DE PENDIENTE (usando la bandera)
+                    if (hasPending) {
+                        Surface(
+                            color = Color.Black.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Text(
+                                text = "Verificación pendiente en tu nuevo email",
+                                color = Color(0xFFFFEB3B),
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                 }
             }
 
@@ -178,21 +210,9 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                TarjetaEstadistica(
-                    valor = profileState.fountainsCount.toString(),
-                    etiqueta = "fuentes",
-                    icono = Icons.Default.LocationOn
-                )
-                TarjetaEstadistica(
-                    valor = profileState.ratingsCount.toString(),
-                    etiqueta = "Valoraciones",
-                    icono = Icons.Default.StarOutline
-                )
-                TarjetaEstadistica(
-                    valor = profileState.points.toString(),
-                    etiqueta = "Puntos",
-                    icono = Icons.Outlined.EmojiEvents
-                )
+                TarjetaEstadistica(profileState.fountainsCount.toString(), "fuentes", Icons.Default.LocationOn)
+                TarjetaEstadistica(profileState.ratingsCount.toString(), "Valoraciones", Icons.Default.StarOutline)
+                TarjetaEstadistica(profileState.points.toString(), "Puntos", Icons.Outlined.EmojiEvents)
             }
         }
     }
@@ -230,7 +250,6 @@ fun SeccionPanelAdmin() {
                 Spacer(Modifier.width(8.dp))
                 Text("Panel de Administrador", fontWeight = FontWeight.Bold, color = Color(0xFF5D4037), fontSize = 15.sp)
             }
-
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -242,7 +261,6 @@ fun SeccionPanelAdmin() {
                 Spacer(Modifier.width(8.dp))
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(16.dp))
             }
-
             DivisorPerfil()
             ElementoOpcionPerfil(icono = Icons.Default.EditNote, etiqueta = "Gestionar categorías")
         }
@@ -258,10 +276,7 @@ fun BotonCerrarSesion(onClick: () -> Unit) {
         shape = RoundedCornerShape(16.dp),
         onClick = onClick
     ) {
-        Row(
-            modifier = Modifier.padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null, tint = Color.Red)
             Spacer(Modifier.width(16.dp))
             Text("Cerrar Sesión", color = Color.Red, fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -272,35 +287,18 @@ fun BotonCerrarSesion(onClick: () -> Unit) {
 @Composable
 fun SeccionPerfil(titulo: String, contenido: @Composable ColumnScope.() -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = titulo,
-            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF616161),
-            fontSize = 14.sp
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(content = contenido)
-        }
+        Text(titulo, modifier = Modifier.padding(start = 8.dp, bottom = 8.dp), fontWeight = FontWeight.Bold, color = Color(0xFF616161), fontSize = 14.sp)
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(1.dp), shape = RoundedCornerShape(16.dp), content = contenido)
     }
 }
 
 @Composable
 fun ElementoOpcionPerfil(icono: ImageVector, etiqueta: String, indicador: String? = null, onClick: () -> Unit = {}) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp)
-            .clickable { onClick() },  // ← AÑADE clickable AQUÍ
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icono, contentDescription = null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))
+        Icon(icono, null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(16.dp))
         Text(etiqueta, modifier = Modifier.weight(1f), fontSize = 15.sp, color = Color.Black, fontWeight = FontWeight.Medium)
         if (indicador != null) {
@@ -309,7 +307,7 @@ fun ElementoOpcionPerfil(icono: ImageVector, etiqueta: String, indicador: String
             }
             Spacer(Modifier.width(8.dp))
         }
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
+        Icon(Icons.Default.ChevronRight, null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
     }
 }
 

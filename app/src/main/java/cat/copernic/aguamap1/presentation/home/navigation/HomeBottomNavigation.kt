@@ -61,6 +61,10 @@ fun HomeBottomNavigation(navController: NavHostController) {
                             restoreState = true
                         }
                     }
+                    // Para volver a perfil estando en editar o config
+                    if (item.route == BottomNavItem.Profile.route && currentRoute == "edit_profile") {
+                        navController.popBackStack(BottomNavItem.Profile.route, inclusive = false)
+                    }
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Blue10,
