@@ -2,6 +2,9 @@ package cat.copernic.aguamap1.di
 
 // Nuevos imports para categorías
 
+import android.content.Context
+import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
+import cat.copernic.aguamap1.data.error.ErrorResourceProviderImpl
 import cat.copernic.aguamap1.data.repository.AndroidSoundRepository
 import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
 import cat.copernic.aguamap1.data.repository.FirebaseCategoryRepository
@@ -9,6 +12,7 @@ import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
 import cat.copernic.aguamap1.data.repository.FirebaseGameRepository
 import cat.copernic.aguamap1.data.repository.FirebaseRankingRepository
 import cat.copernic.aguamap1.data.repository.FirebaseReportRepository
+import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.CategoryRepository
 import cat.copernic.aguamap1.domain.repository.FountainRepository
@@ -24,13 +28,9 @@ import com.google.firebase.ktx.Firebase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import android.content.Context
-import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
-import cat.copernic.aguamap1.data.error.ErrorResourceProviderImpl
-import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
-import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -103,7 +103,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCloudinaryService(): CloudinaryService {
-        return CloudinaryService()
+    fun provideCloudinaryService(
+        @ApplicationContext context: Context // Hilt te lo pasa aquí
+    ): CloudinaryService {
+        return CloudinaryService(context) // Y ahora se lo pasas al constructor
     }
 }

@@ -103,7 +103,7 @@ fun CategoriesHeader(
             FilterChip(
                 selected = isSelected,
                 onClick = { onToggleFilter(isSelected) },
-                label = { Text("Solo Averiadas") },
+                label = { Text(stringResource(R.string.category_only_broken)) }, // LOCALIZADO
                 leadingIcon = {
                     Icon(
                         Icons.Default.Warning,

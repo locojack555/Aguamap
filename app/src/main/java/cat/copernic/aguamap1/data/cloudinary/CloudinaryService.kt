@@ -1,9 +1,14 @@
 package cat.copernic.aguamap1.data.cloudinary
 
+import android.content.Context
 import android.net.Uri
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
+import com.cloudinary.android.preprocess.BitmapEncoder
+import com.cloudinary.android.preprocess.ImagePreprocessChain
+import com.cloudinary.android.preprocess.Limit
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -14,55 +19,50 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 @Singleton
-class CloudinaryService @Inject constructor() {
+class CloudinaryService @Inject constructor(
+    @ApplicationContext private val context: Context // Inyectamos el contexto aquí
+) {
 
-    private val uploadPreset = "aguamap_preset" // Lo crearás en la web
+    private val uploadPreset = "aguamap_preset"
 
-    /**
-     * Sube una imagen a Cloudinary usando corrutinas
-     */
-    suspend fun uploadImage(uri: Uri): Result<String> = suspendCancellableCoroutine { continuation ->
-        val requestId = MediaManager.get().upload(uri)
-            .unsigned(uploadPreset)
-            .callback(object : UploadCallback {
-                override fun onStart(requestId: String) {
-                    // Upload started
-                }
+    private val imagePreprocessingChain = ImagePreprocessChain()
+        .addStep(Limit(1200, 1200))
+        .saveWith(BitmapEncoder(BitmapEncoder.Format.JPEG, 80))
 
-                override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
-                    // Progress
-                }
-
-                override fun onSuccess(requestId: String, resultData: MutableMap<*, *>?) {
-                    val imageUrl = resultData?.get("secure_url") as? String
-                    if (imageUrl != null) {
-                        continuation.resume(Result.success(imageUrl))
-                    } else {
-                        continuation.resumeWithException(Exception("No se pudo obtener la URL de la imagen"))
+    suspend fun uploadImage(uri: Uri): Result<String> =
+        suspendCancellableCoroutine { continuation ->
+            val requestId = MediaManager.get().upload(uri)
+                .unsigned(uploadPreset)
+                .preprocess(imagePreprocessingChain)
+                .callback(object : UploadCallback {
+                    override fun onStart(requestId: String) {}
+                    override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
+                    override fun onSuccess(requestId: String, resultData: MutableMap<*, *>?) {
+                        val imageUrl = resultData?.get("secure_url") as? String
+                        if (imageUrl != null) {
+                            continuation.resume(Result.success(imageUrl))
+                        } else {
+                            continuation.resumeWithException(Exception("No se pudo obtener la URL"))
+                        }
                     }
-                }
 
-                override fun onError(requestId: String, error: ErrorInfo) {
-                    continuation.resumeWithException(Exception(error.description))
-                }
+                    override fun onError(requestId: String, error: ErrorInfo) {
+                        continuation.resumeWithException(Exception(error.description))
+                    }
 
-                override fun onReschedule(requestId: String, error: ErrorInfo) {
-                    // Reintentar
-                }
-            })
-            .dispatch()
+                    override fun onReschedule(requestId: String, error: ErrorInfo) {}
+                })
+                .dispatch(context) // <--- PASAMOS EL CONTEXTO AQUÍ
 
-        continuation.invokeOnCancellation {
-            MediaManager.get().cancelRequest(requestId)
+            continuation.invokeOnCancellation {
+                MediaManager.get().cancelRequest(requestId)
+            }
         }
-    }
 
-    /**
-     * Flow para seguir el progreso de la subida
-     */
     fun uploadImageWithProgress(uri: Uri): Flow<UploadProgress> = callbackFlow {
         val requestId = MediaManager.get().upload(uri)
             .unsigned(uploadPreset)
+            .preprocess(imagePreprocessingChain)
             .callback(object : UploadCallback {
                 override fun onStart(requestId: String) {
                     trySend(UploadProgress.Started)
@@ -92,13 +92,15 @@ class CloudinaryService @Inject constructor() {
                     trySend(UploadProgress.Reschedule)
                 }
             })
-            .dispatch()
+            .dispatch(context) // <--- Y AQUÍ TAMBIÉN
 
         awaitClose {
             MediaManager.get().cancelRequest(requestId)
         }
     }
 }
+
+// ... (El resto del código de UploadProgress se mantiene igual)
 
 sealed class UploadProgress {
     object Started : UploadProgress()
