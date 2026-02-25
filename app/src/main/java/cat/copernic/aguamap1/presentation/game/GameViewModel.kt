@@ -1,10 +1,9 @@
-// presentation/game/GameViewModel.kt
 package cat.copernic.aguamap1.presentation.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cat.copernic.aguamap1.R  // 👈 IMPORTANTE: importar R
-import cat.copernic.aguamap1.domain.error.ErrorResourceProvider  // 👈 IMPORTAR EL PROVIDER DESDE DOMAIN.ERROR
+import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.GameSession
 import cat.copernic.aguamap1.domain.usecase.game.*
@@ -28,7 +27,7 @@ class GameViewModel @Inject constructor(
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
     private val auth: FirebaseAuth,
     private val soundManager: SoundManager,
-    private val errorResourceProvider: ErrorResourceProvider  // 👈 AÑADIMOS EL PROVIDER DE ERRORES
+    private val errorResourceProvider: ErrorResourceProvider
 ) : ViewModel() {
 
     private val _gameState = MutableStateFlow<GameState>(GameState.Initial)
@@ -37,7 +36,7 @@ class GameViewModel @Inject constructor(
     private val _currentFountain = MutableStateFlow<Fountain?>(null)
     val currentFountain: StateFlow<Fountain?> = _currentFountain.asStateFlow()
 
-    private val _remainingTime = MutableStateFlow(60)
+    private val _remainingTime = MutableStateFlow(10)
     val remainingTime: StateFlow<Int> = _remainingTime.asStateFlow()
 
     private val _score = MutableStateFlow(0)
@@ -58,13 +57,18 @@ class GameViewModel @Inject constructor(
     private val _hasLost = MutableStateFlow(false)
     val hasLost: StateFlow<Boolean> = _hasLost.asStateFlow()
 
+    private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
+    val userLocation: StateFlow<Pair<Double, Double>?> = _userLocation.asStateFlow()
+
     fun checkCanPlay(userLat: Double, userLng: Double) {
+        // Guarda la ubicación del usuario
+        _userLocation.value = Pair(userLat, userLng)
+
         viewModelScope.launch {
             _isLoading.value = true
             val userId = auth.currentUser?.uid
 
             if (userId == null) {
-                // 👇 AHORA USAMOS EL PROVIDER DE ERRORES
                 _error.value = errorResourceProvider.getString(R.string.game_error_login_required)
                 _gameState.value = GameState.Error
                 _isLoading.value = false
@@ -104,7 +108,6 @@ class GameViewModel @Inject constructor(
                     _gameState.value = GameState.Instructions
                 }
             } catch (e: Exception) {
-                // 👇 PARA EL CASO GENÉRICO CON FORMATO
                 _error.value = errorResourceProvider.getString(R.string.game_error_generic, e.message ?: "")
                 _gameState.value = GameState.Error
             } finally {
@@ -116,7 +119,7 @@ class GameViewModel @Inject constructor(
     fun onStartGameClicked() {
         soundManager.startBackgroundMusic()
         _gameState.value = GameState.Playing
-        _remainingTime.value = 60
+        _remainingTime.value = 10
         _score.value = 0
         _userGuessPos.value = null
         _hasLost.value = false
@@ -213,6 +216,8 @@ class GameViewModel @Inject constructor(
     fun onBackToHomePressed() {
         viewModelScope.launch {
             soundManager.stopBackgroundMusic()
+            _error.value = errorResourceProvider.getString(R.string.game_error_daily_limit)
+            _gameState.value = GameState.DailyLimitReached
         }
     }
 
@@ -224,12 +229,6 @@ class GameViewModel @Inject constructor(
     fun retryGame() {
         _gameState.value = GameState.Initial
         _error.value = null
-    }
-
-    fun onExitGame() {
-        viewModelScope.launch {
-            soundManager.stopBackgroundMusic()
-        }
     }
 
     sealed class GameState {

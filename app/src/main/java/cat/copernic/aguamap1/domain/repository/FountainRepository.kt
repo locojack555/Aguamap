@@ -78,4 +78,5 @@ interface FountainRepository {
     suspend fun getUserCommentsCount(userId: String): Int
 
     fun observeUserStats(userId: String): Flow<UserStats?>
+    suspend fun reportComment(fountainId: String, commentId: String, userId: String): Result<Unit>
 }

@@ -1,7 +1,10 @@
 [versions]
 accompanistPermissions = "0.37.3"
+activityComposeVersion = "1.12.4"
 agp = "9.0.0"
+cloudinaryAndroid = "3.1.2"
 coreKtx = "1.17.0"
+coreSplashscreen = "1.2.0"
 hiltAndroid = "2.59.1"
 hiltNavigationCompose = "1.3.0"
 ksp = "2.0.21-1.0.25"
@@ -13,6 +16,7 @@ activityCompose = "1.12.3"
 kotlin = "2.0.21"
 composeBom = "2024.09.00"
 
+material = "1.13.0"
 osmdroidAndroid = "6.1.20"
 playServicesLocation = "21.3.0"
 services = "4.4.2"
@@ -23,12 +27,16 @@ coil = "2.7.0"
 material3 = "1.4.0"
 foundation = "1.10.3"
 roomKtx = "2.8.4"
+playServicesCastTv = "21.1.1"
 
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+androidx-activity-compose-v1124 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+cloudinary-android = { module = "com.cloudinary:cloudinary-android", version.ref = "cloudinaryAndroid" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -52,6 +60,7 @@ firebase-auth = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
 osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -59,6 +68,7 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
+play-services-cast-tv = { group = "com.google.android.gms", name = "play-services-cast-tv", version.ref = "playServicesCastTv" }
 
 
 [plugins]

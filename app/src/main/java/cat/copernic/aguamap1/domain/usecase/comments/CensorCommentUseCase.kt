@@ -8,8 +8,8 @@ class CensorCommentUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(fountainId: String, commentId: String): Result<Unit> {
         val updates = mapOf(
-            "comment" to "",
-            "isCensored" to true
+            "censored" to true,
+            "reported" to false
         )
         return repository.updateComment(fountainId, commentId, updates)
     }

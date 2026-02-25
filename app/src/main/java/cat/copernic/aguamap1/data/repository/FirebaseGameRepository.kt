@@ -53,7 +53,6 @@ class FirebaseGameRepository @Inject constructor(
             // Guardar la sesión diaria
             db.collection("gameSessions").add(session).await()
 
-            // Actualizar estadísticas mensuales
             val monthlyResult = updateMonthlyStats(
                 userId = session.userId,
                 userName = session.userName,
@@ -69,6 +68,7 @@ class FirebaseGameRepository @Inject constructor(
                 discovered = 1
             )
 
+            // Combinar resultados
             if (monthlyResult.isSuccess && historicResult.isSuccess) {
                 Result.success(Unit)
             } else {
@@ -91,10 +91,9 @@ class FirebaseGameRepository @Inject constructor(
     ): Result<Unit> {
         return try {
             val calendar = Calendar.getInstance()
-            val month = calendar.get(Calendar.MONTH) + 1 // Enero es 0, por eso +1
+            val month = calendar.get(Calendar.MONTH) + 1
             val year = calendar.get(Calendar.YEAR)
 
-            // El ID único asegura que cada usuario tenga solo UN doc por mes
             val docId = "${userId}_${month}_${year}"
             val monthlyRef = db.collection("monthlyRanking").document(docId)
 
@@ -108,7 +107,6 @@ class FirebaseGameRepository @Inject constructor(
                 "year" to year
             )
 
-            // Si no existe el doc lo crea, si existe solo suma los valores
             monthlyRef.set(data, SetOptions.merge()).await()
             Result.success(Unit)
         } catch (e: Exception) {

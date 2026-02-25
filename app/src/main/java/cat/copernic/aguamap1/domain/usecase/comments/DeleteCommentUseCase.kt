@@ -1,27 +1,40 @@
 package cat.copernic.aguamap1.domain.usecase.comments
 
+import cat.copernic.aguamap1.domain.model.Comment
+import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.repository.FountainRepository
 import javax.inject.Inject
+import kotlin.math.round
 
-/**
- * UseCase para eliminar un comentario de una fuente.
- * Orquesta la eliminación del documento y la actualización de los contadores.
- */
 class DeleteCommentUseCase @Inject constructor(
     private val repository: FountainRepository
 ) {
-    suspend operator fun invoke(fountainId: String, commentId: String): Result<Unit> {
-        // 1. Intentamos borrar el comentario.
-        // Con la nueva versión del repositorio, este método ya decrementa 'totalRatings'.
-        val deleteResult = repository.deleteComment(fountainId, commentId)
+    suspend operator fun invoke(fountain: Fountain, comment: Comment): Result<Unit> {
+        // 1. Borramos el comentario (el repositorio ya resta -1 a totalRatings)
+        val result = repository.deleteComment(fountain.id, comment.id)
 
-        return if (deleteResult.isSuccess) {
-            // Si en el futuro quisieras hacer algo extra tras el borrado exitoso,
-            // como registrar un log o actualizar otro contador, lo harías aquí.
-            Result.success(Unit)
+        return if (result.isSuccess) {
+            // 2. Calculamos los nuevos valores para la fuente
+            val newTotal = (fountain.totalRatings - 1).coerceAtLeast(0)
+
+            val newAverage = if (newTotal > 0) {
+                // Revertimos la media: (Suma actual - nota borrada) / nuevo total
+                val currentSum = fountain.ratingAverage * fountain.totalRatings
+                val rawAverage = (currentSum - comment.rating) / newTotal
+                // Redondeamos a 1 decimal
+                round(rawAverage * 10) / 10.0
+            } else {
+                0.0 // Si no quedan comentarios, la media es 0
+            }
+
+            // 3. Actualizamos la fuente con la nueva media
+            // Nota: totalRatings ya fue actualizado por el repositorio en el paso 1
+            repository.updateFountain(
+                fountain.id,
+                mapOf("ratingAverage" to newAverage)
+            )
         } else {
-            // Si el borrado falla (ej. sin internet o permisos), devolvemos el error.
-            deleteResult
+            result
         }
     }
 }

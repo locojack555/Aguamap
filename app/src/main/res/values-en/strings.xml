@@ -7,12 +7,44 @@
     <string name="error_email_generic">There was an error creating the user.</string>
     <string name="error_email_empty">Email can\'t be empty.</string>
     <string name="error_email_pattern">Invalid email format.</string>
+    <string name="category_form_select_image">Select image</string>
+    <string name="error_title">Attention</string>
+    <string name="category_accept">Accept</string>
+    <string name="category_form_image_changed">Image changed</string>
+    <string name="delete_category_title">Confirm deletion</string>
+    <string name="delete_category_msg">Are you sure you want to delete the category \"%s\"? This action cannot be undone.</string>
+    <string name="error_category_not_empty">Cannot delete: there are fountains linked to this category.</string>
+    <string name="category_form_name">Name</string>
+    <string name="category_form_description">Description</string>
     <string name="error_password_len">Password must be at least 8 characters long.</string>
     <string name="error_password_number">Password must contain at least one number.</string>
     <string name="error_password_special">Password must contain at least one special character.</string>
     <string name="error_password_uppercase">Password must contain at least one uppercase letter.</string>
     <string name="recovery_password">Recover password</string>
+    <string name="category_new_title">New Category</string>
+    <string name="category_item_count">%d fountains</string>
+    <string name="category_edit_title">Edit Category</string>
+    <string name="category_close">Close</string>
+    <string name="category_no_fountains">No fountains available</string>
+    <string name="category_only_broken">Only Broken</string>
+    <string name="category_save">Save</string>
+    <string name="category_cancel">Cancel</string>
     <string name="text_recovery_password">Forgot your password?</string>
+    <string name="report_confirm_existence">The fountain DOES exist!</string>
+    <string name="voted_label">Voted</string>
+    <string name="report_sent_success">Report sent to administrator. Thank you!</string>
+    <string name="edit_fountain_title">Edit Fountain (Admin)</string>
+    <string name="fountain_name_label">Fountain Name</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="mark_operational">Mark as OPERATIONAL</string>
+    <string name="mark_broken">Mark as BROKEN</string>
+    <string name="report_confirm_existence_hint">Click here if the fountain exists and the report is an error.</string>
+    <string name="report_already_voted_not_exists">You have already reported it doesn\'t exist</string>
+    <string name="report_other_reason">Other reason (Wrong name, etc.)</string>
+    <string name="report_other_title">Report another issue</string>
+    <string name="report_other_hint">Briefly explain what is happening (e.g., Wrong name):</string>
+    <string name="report_other_placeholder">Write here...</string>
+    <string name="report_other_send">Send report</string>
     <string name="text_forgot_password">We will send you a link to recover your password</string>
     <string name="email">Email</string>
     <string name="info">Data</string>
@@ -85,7 +117,7 @@
     <string name="ranking_gold">Gold</string>
     <string name="ranking_silver">Silver</string>
     <string name="ranking_bronze">Bronze</string>
-    <!-- Pantalla GameScreen (Errors and States) -->
+
     <string name="game_error_daily_limit">You have already played today. Come back tomorrow.</string>
     <string name="game_error_unexpected">An unexpected error occurred</string>
     <string name="game_error_login_required">Log in to play</string>
@@ -94,7 +126,6 @@
     <string name="game_error_no_fountains">No fountains available</string>
     <string name="game_error_generic">Error: %1$s</string>
 
-    <!-- Pantalla GameInstructionsScreen -->
     <string name="game_instructions_title_app">AguaQuest</string>
     <string name="game_instructions_subtitle">Where is this fountain?</string>
     <string name="game_instructions_play_learn_title">Play and learn!</string>
@@ -104,11 +135,9 @@
     <string name="game_instructions_rule_three">• Maximum 1000 points</string>
     <string name="game_instructions_start_button">Start Game</string>
 
-    <!-- Pantalla GamePlayScreen -->
     <string name="game_play_confirm_button">CONFIRM LOCATION!</string>
     <string name="game_play_hint_text">Tap the map to mark</string>
 
-    <!-- Pantalla GameResultScreen -->
     <string name="game_result_lost_title">YOU LOST!</string>
     <string name="game_result_lost_message">You ran out of time without marking a location</string>
     <string name="game_result_lost_points">You didn\'t get any points</string>
@@ -118,9 +147,88 @@
     <string name="game_result_daily_message">You have already played today. Come back tomorrow for a new game</string>
     <string name="game_result_points">Points</string>
 
-    <!-- Pantalla LoadingPartida -->
     <string name="game_loading_message">PREPARING GAME...</string>
 
-    <!-- Pantalla ErrorScreen -->
     <string name="game_error_retry_button">RETRY</string>
+    <string name="back">Back</string>
+    <string name="delete">Delete</string>
+    <string name="description_title">Description</string>
+    <string name="no_description">No description available.</string>
+    <string name="distancia_label">Distance</string>
+    <string name="estado_label">Status</string>
+    <string name="funcionando">Operational</string>
+    <string name="averiada">Out of order</string>
+    <string name="fecha_alta_label">Date added</string>
+    <string name="coordenadas_label">Coordinates</string>
+    <string name="edit_fountain_admin">Edit fountain (Admin)</string>
+    <string name="confirm_button">Confirm</string>
+    <string name="report_button">Report</string>
+    <string name="ratings_title">Ratings (%1$d)</string>
+    <string name="add_comment">Add</string>
+    <string name="first_comment_prompt">Be the first to comment!</string>
+
+    <string name="report_dialog_title">Report an issue</string>
+    <string name="report_dialog_text">What problem did you find with this fountain?</string>
+    <string name="report_not_exists">Does not exist</string>
+    <string name="report_broken">It is broken</string>
+    <string name="report_fixed">It is working now</string>
+    <string name="delete_fountain_title">Delete fountain</string>
+    <string name="delete_fountain_text">This action cannot be undone.</string>
+    <string name="delete_confirm">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_comment_title">Delete rating</string>
+    <string name="delete_comment_text">Are you sure you want to delete this rating? This action is permanent.</string>
+
+    <string name="comment_censored">[Content removed by moderation]</string>
+    <string name="delete_fountain_confirm_text">Are you sure you want to permanently delete this fountain? This action cannot be undone.</string>
+    <string name="edit">Edit</string>
+    <string name="censor">Censor</string>
+    <string name="pending_validation">Pending validation</string>
+    <string name="reported_non_existent">Reported as non-existent</string>
+    <string name="validation_count_singular">1 person has reported this.</string>
+    <string name="validation_count_plural">%1$d out of %2$d people have reported this.</string>
+
+    <string name="dialog_add_comment_title">Add rating</string>
+    <string name="dialog_add_comment_prompt">Rate this fountain:</string>
+    <string name="dialog_add_comment_label">Your comment (optional)</string>
+    <string name="dialog_add_comment_publish">Publish</string>
+    <string name="dialog_add_comment_cancel">Cancel</string>
+
+    <string name="add_fountain_subtitle">Help the community by adding a new fountain</string>
+    <string name="fountain_name_placeholder">e.g., Main Square Fountain</string>
+    <string name="fountain_description_placeholder">Tell us details about its condition...</string>
+    <string name="fountain_is_operational_title">Is it currently working?</string>
+    <string name="fountain_status_ok">The fountain has water</string>
+    <string name="fountain_status_error">The fountain is broken</string>
+    <string name="edit_comment">Edit comment</string>
+
+    <string name="categories_title">Categories</string>
+    <string name="search_placeholder">Search (* or ? allowed)...</string>
+    <string name="best_rated">Best rated</string>
+    <string name="worst_rated">Worst rated</string>
+    <string name="new_category">New Category</string>
+    <string name="delete_category">Delete Category</string>
+    <string name="expand_info">More info</string>
+    <string name="fountains">fountains</string>
+    <string name="bebible">Potable</string>
+    <string name="ornamental">Ornamental</string>
+    <string name="historica">Historical</string>
+    <!-- Textos para AddFountainScreen -->
+    <string name="add_fountain_photo_label">Fountain photo</string>
+    <string name="add_fountain_select_photo">Upload or take photo</string>
+    <string name="add_fountain_remove_image">Remove image</string>
+    <string name="add_fountain_preview">Preview</string>
+    <string name="add_fountain_upload_progress">Uploading image: %1$d%%</string>
+    <string name="add_fountain_uploading">Uploading...</string>
+    <string name="add_fountain_error">Error: %1$s</string>
+    <string name="add_fountain_upload_error">Error uploading image: %1$s</string>
+
+    <!-- Textos para ImagePickerHelper -->
+    <string name="image_picker_title">Select photo</string>
+    <string name="image_picker_gallery">Gallery</string>
+    <string name="image_picker_camera">Camera</string>
+    <string name="image_picker_gallery_description">Gallery</string>
+    <string name="image_picker_camera_description">Camera</string>
+    <string name="game_result_click_red_marker">Click on the red marker to see fountain details</string>
+    <string name="game_result_you_won">YOU WON!</string>
 </resources>

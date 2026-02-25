@@ -55,22 +55,9 @@ class FirebaseFountainRepository @Inject constructor(
         updates: Map<String, Any>
     ): Result<Unit> {
         return try {
-            val finalUpdates = updates.toMutableMap()
-
-            // Soporte para incrementar contadores (votos o ratings) de forma atómica
-            // Si el mapa contiene "totalRatings", "positiveVotes" o "negativeVotes", usamos increment
-            val incrementableFields = listOf("totalRatings", "positiveVotes", "negativeVotes")
-
-            incrementableFields.forEach { field ->
-                if (updates.containsKey(field)) {
-                    val value = (updates[field] as? Number)?.toLong() ?: 0L
-                    finalUpdates[field] = FieldValue.increment(value)
-                }
-            }
-
             db.collection("fountains")
                 .document(fountainId)
-                .update(finalUpdates)
+                .update(updates)
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -99,23 +86,20 @@ class FirebaseFountainRepository @Inject constructor(
         }
     }
 
-    // --- GESTIÓN DE COMENTARIOS (SUBCOLECCIÓN) ---
+    // --- GESTIÓN DE COMENTARIOS ---
 
     override suspend fun addComment(fountainId: String, comment: Comment): Result<Unit> {
         return try {
-            val ref = db.collection("fountains")
-                .document(fountainId)
-                .collection("comments")
-                .document()
+            val fountainRef = db.collection("fountains").document(fountainId)
+            val commentRef = fountainRef.collection("comments").document()
 
-            // 1. Guardamos el comentario
-            ref.set(comment.copy(id = ref.id)).await()
-
-            // 2. Incrementamos el contador en el documento padre
-            db.collection("fountains")
-                .document(fountainId)
-                .update("totalRatings", FieldValue.increment(1))
-                .await()
+            // Usamos una transacción para asegurar que el contador y el comentario van a la par
+            db.runTransaction { transaction ->
+                // 1. Guardar comentario
+                transaction.set(commentRef, comment.copy(id = commentRef.id))
+                // 2. Incrementar totalRatings
+                transaction.update(fountainRef, "totalRatings", FieldValue.increment(1))
+            }.await()
 
             // 3. ACTUALIZAR CONTADOR AGREGADO DEL USUARIO
             updateUserCommentsCount(comment.userId, comment.userName, 1)
@@ -156,15 +140,20 @@ class FirebaseFountainRepository @Inject constructor(
                 .document(commentId)
                 .update(updates)
                 .await()
+
+            android.util.Log.d("FIREBASE_OK", "Comentario $commentId actualizado con éxito")
             Result.success(Unit)
         } catch (e: Exception) {
+            // ESTO TE DIRÁ EL ERROR REAL EN EL LOGCAT
+            android.util.Log.e("FIREBASE_ERROR", "Error actualizando comentario: ${e.message}", e)
             Result.failure(e)
         }
     }
 
     override suspend fun deleteComment(fountainId: String, commentId: String): Result<Unit> {
         return try {
-            // Primero obtenemos el comentario para saber el userId
+            val fountainRef = db.collection("fountains").document(fountainId)
+            val commentRef = fountainRef.collection("comments").document(commentId)
             val commentDoc = db.collection("fountains")
                 .document(fountainId)
                 .collection("comments")
@@ -175,15 +164,13 @@ class FirebaseFountainRepository @Inject constructor(
             val userId = commentDoc.getString("userId") ?: ""
             val userName = commentDoc.getString("userName") ?: "Usuario"
 
-            // 1. Borramos el comentario de la subcolección
-            db.collection("fountains")
-                .document(fountainId)
-                .collection("comments")
-                .document(commentId)
-                .delete()
-                .await()
 
-            // 2. Decrementamos el contador totalRatings en el documento padre
+            db.runTransaction { transaction ->
+                transaction.delete(commentRef)
+                transaction.update(fountainRef, "totalRatings", FieldValue.increment(-1))
+            }.await()
+
+            //Decretar total comentarios
             db.collection("fountains")
                 .document(fountainId)
                 .update("totalRatings", FieldValue.increment(-1))
@@ -192,6 +179,43 @@ class FirebaseFountainRepository @Inject constructor(
             if (userId.isNotEmpty()) {
                 updateUserCommentsCount(userId, userName, -1)
             }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Método para el futuro Panel de Admin
+    // --- GESTIÓN DE REPORTES ---
+
+    override suspend fun reportComment(
+        fountainId: String,
+        commentId: String,
+        reason: String // Cambiado de userId a reason para coincidir con el uso del ViewModel
+    ): Result<Unit> {
+        return try {
+            // 1. Marcamos el flag en el comentario (para que el icono cambie a naranja en la UI)
+            val commentRef = db.collection("fountains")
+                .document(fountainId)
+                .collection("comments")
+                .document(commentId)
+
+            // 2. Creamos un documento en una colección global 'reports_comments' para el Admin
+            val reportData = hashMapOf(
+                "fountainId" to fountainId,
+                "commentId" to commentId,
+                "reason" to reason,
+                "timestamp" to System.currentTimeMillis(),
+                "type" to "COMMENT_REPORT"
+            )
+
+            db.runBatch { batch ->
+                batch.update(commentRef, "isReported", true)
+                // Añadimos el reporte a una colección independiente que el admin pueda vigilar
+                val newReportRef = db.collection("reports_comments").document()
+                batch.set(newReportRef, reportData)
+            }.await()
 
             Result.success(Unit)
         } catch (e: Exception) {

@@ -13,26 +13,31 @@ class CreateFountainUseCase @Inject constructor(
     suspend operator fun invoke(fountain: Fountain, isUserAdmin: Boolean): Result<Unit> {
         val currentUser = authRepository.getCurrentUserUid()
 
-        // 1. Aseguramos campos que SIEMPRE deben generarse al crear (por seguridad)
+        // Creamos la lista inicial con el ID del creador si existe
+        val initialVoterList = if (currentUser != null) listOf(currentUser) else emptyList()
+
+        // 1. Campos base
         val baseFountain = fountain.copy(
-            dateCreated = java.util.Date(), // Fecha de creación real en este momento
-            ratingAverage = 0.0,            // Nueva fuente empieza sin estrellas
-            totalRatings = 0,               // Nueva fuente empieza sin votos de estrellas
-            negativeVotes = 0,              // Nueva fuente empieza sin votos negativos
-            id = ""                         // El ID lo suele generar Firebase al añadir
+            dateCreated = java.util.Date(),
+            ratingAverage = 0.0,
+            totalRatings = 0,
+            negativeVotes = 0,
+            id = ""
         )
 
-        // 2. Aplicamos la lógica de roles (Status y Votos iniciales)
+        // 2. Lógica de roles con registro en 'votedBy'
         val fountainToSave = if (isUserAdmin) {
             baseFountain.copy(
                 status = StateFountain.ACCEPTED,
-                positiveVotes = 3, // Los admins dan confianza inmediata
+                positiveVotes = 3,
+                votedByPositive = initialVoterList, // El admin cuenta como votante
                 createdBy = currentUser ?: "ADMIN"
             )
         } else {
             baseFountain.copy(
                 status = StateFountain.PENDING,
-                positiveVotes = 1, // El usuario que la propone es el primer voto positivo
+                positiveVotes = 1,
+                votedByPositive = initialVoterList, // <--- AQUÍ: El creador se añade a la lista de votos
                 createdBy = currentUser ?: "ANONYMOUS"
             )
         }

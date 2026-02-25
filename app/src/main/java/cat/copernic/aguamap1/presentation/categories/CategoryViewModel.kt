@@ -1,58 +1,226 @@
 package cat.copernic.aguamap1.presentation.categories
 
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
+import cat.copernic.aguamap1.data.cloudinary.UploadProgress
 import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.domain.model.Fountain
-import cat.copernic.aguamap1.domain.repository.CategoryRepository
-import cat.copernic.aguamap1.domain.repository.FountainRepository
+import cat.copernic.aguamap1.domain.model.UserRole
+import cat.copernic.aguamap1.domain.repository.AuthRepository
+import cat.copernic.aguamap1.domain.usecase.auth.GetUserRoleUseCase
+import cat.copernic.aguamap1.domain.usecase.category.CreateCategoryUseCase
+import cat.copernic.aguamap1.domain.usecase.category.DeleteCategoryUseCase
+import cat.copernic.aguamap1.domain.usecase.category.GetCategoriesUseCase
+import cat.copernic.aguamap1.domain.usecase.category.UpdateCategoryUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
+import cat.copernic.aguamap1.domain.usecase.validation.generateSearchRegex
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
-    private val categoryRepository: CategoryRepository,
-    private val fountainRepository: FountainRepository
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val createCategoryUseCase: CreateCategoryUseCase,
+    private val updateCategoryUseCase: UpdateCategoryUseCase,
+    private val deleteCategoryUseCase: DeleteCategoryUseCase,
+    private val getFountainsUseCase: GetFountainsUseCase,
+    private val cloudinaryService: CloudinaryService,
+    private val authRepository: AuthRepository,
+    private val getUserRoleUseCase: GetUserRoleUseCase
 ) : ViewModel() {
 
+    // --- ESTADO DE USUARIO Y ROL ---
+    var isAdmin by mutableStateOf(false)
+        private set
+
+    var currentUserId by mutableStateOf<String?>(null)
+        private set
+
+    // --- ESTADOS DE UI (LISTA Y FILTROS) ---
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
-    val categories: StateFlow<List<Category>> = combine(
-        categoryRepository.getCategories(),
-        _searchQuery
-    ) { list, query ->
-        if (query.isBlank()) list else list.filter { it.name.contains(query, ignoreCase = true) }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _operationalFilter = MutableStateFlow<Boolean?>(null)
+    val operationalFilter: StateFlow<Boolean?> = _operationalFilter
 
-    val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> =
-        fountainRepository.fetchSources()
-            .map { result: Result<List<Fountain>> ->
-                val listaFuentes = result.getOrNull() ?: emptyList()
-                listaFuentes.groupBy { fuente: Fountain -> fuente.category.id }
+    private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
+
+    val categories: StateFlow<List<Category>> =
+        combine(_allCategories, _searchQuery) { list, query ->
+            if (query.isBlank()) {
+                list
+            } else {
+                val regex = generateSearchRegex(query)
+                if (regex != null) {
+                    list.filter { it.name.contains(regex) }
+                } else {
+                    list.filter { it.name.contains(query, ignoreCase = true) }
+                }
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = combine(
+        getFountainsUseCase(),
+        _operationalFilter
+    ) { result, isOp ->
+        val fountains = result.getOrDefault(emptyList())
+        val filtered = if (isOp == null) {
+            fountains
+        } else {
+            fountains.filter { it.operational == isOp }
+        }
+        filtered.groupBy { it.category.id }
+
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap()
+    )
+
+    // --- ESTADO DEL FORMULARIO ---
+    var name by mutableStateOf("")
+    var description by mutableStateOf("")
+    var selectedImageUri by mutableStateOf<Uri?>(null)
+    var currentImageUrl by mutableStateOf("")
+    var isUploading by mutableStateOf(false)
+    var uploadProgress by mutableIntStateOf(0)
+    var errorMessage by mutableStateOf<String?>(null)
+    var categoryToEdit by mutableStateOf<Category?>(null)
+
+    init {
+        loadUserData()
+        viewModelScope.launch {
+            getCategoriesUseCase().collect { _allCategories.value = it }
+        }
+    }
+
+    private fun loadUserData() {
+        viewModelScope.launch {
+            val uid = authRepository.getCurrentUserUid()
+            currentUserId = uid
+            if (uid != null) {
+                val role = getUserRoleUseCase(uid)
+                isAdmin = (role == UserRole.ADMIN)
+            }
+        }
+    }
+
+    // --- ACCIONES ---
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
-    fun addCategory(category: Category) {
-        viewModelScope.launch { categoryRepository.createCategory(category) }
+    fun toggleOperationalFilter(currentIsOnlyAveriadas: Boolean) {
+        _operationalFilter.value = if (currentIsOnlyAveriadas) null else false
     }
 
-    fun updateCategory(category: Category) {
-        viewModelScope.launch { categoryRepository.updateCategory(category) }
+    fun onEditCategory(category: Category) {
+        categoryToEdit = category
+        name = category.name
+        description = category.description
+        currentImageUrl = category.imageUrl
+        selectedImageUri = null
     }
 
-    fun deleteCategory(id: String) {
-        viewModelScope.launch { categoryRepository.deleteCategory(id) }
+    fun resetForm() {
+        name = ""; description = ""; selectedImageUri = null
+        currentImageUrl = ""; categoryToEdit = null
+        uploadProgress = 0; errorMessage = null
+    }
+
+    fun clearError() {
+        errorMessage = null
+    }
+
+    fun saveCategory(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            isUploading = true
+            errorMessage = null
+            try {
+                var finalUrl = currentImageUrl
+
+                selectedImageUri?.let { uri ->
+                    cloudinaryService.uploadImageWithProgress(uri).collect { progress ->
+                        if (progress is UploadProgress.InProgress) {
+                            uploadProgress = progress.percentage
+                        }
+                    }
+                    val uploadResult = cloudinaryService.uploadImage(uri)
+                    finalUrl = uploadResult.getOrThrow()
+                }
+
+                val categoryData = Category(
+                    id = categoryToEdit?.id ?: "",
+                    name = name,
+                    description = description,
+                    imageUrl = finalUrl
+                )
+
+                if (categoryToEdit != null) {
+                    updateCategoryUseCase(categoryData)
+                } else {
+                    createCategoryUseCase(categoryData)
+                }
+
+                onSuccess()
+                resetForm()
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "Error desconocido al guardar"
+            } finally {
+                isUploading = false
+            }
+        }
+    }
+
+    // --- GESTIÓN DE BORRADO ---
+
+    fun canDeleteCategory(categoryId: String): Boolean {
+        // Obtenemos el mapa actual de fuentes por categoría
+        val fountainsInCat = fountainsByCategory.value[categoryId] ?: emptyList()
+        return fountainsInCat.isEmpty()
+    }
+    // ... (dentro de la clase CategoryViewModel)
+
+    fun updateSelectedImage(uri: Uri?) {
+        selectedImageUri = uri
+    }
+
+    fun clearSelectedImage() {
+        selectedImageUri = null
+        currentImageUrl = ""
+    }
+
+// ... (el resto del código se mantiene igual)
+
+
+    fun deleteCategory(id: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                // Comprobación de seguridad: Si tiene fuentes, NO borramos y avisamos
+                if (!canDeleteCategory(id)) {
+                    errorMessage =
+                        "No se puede eliminar la categoría porque todavía tiene fuentes asociadas. Primero borra o mueve las fuentes."
+                    return@launch
+                }
+
+                // Si está vacía, procedemos al borrado
+                deleteCategoryUseCase(id)
+                onSuccess()
+            } catch (e: Exception) {
+                errorMessage = "Error al eliminar: ${e.message}"
+            }
+        }
     }
 }

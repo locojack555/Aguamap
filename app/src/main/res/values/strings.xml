@@ -12,6 +12,23 @@
     <string name="error_password_special">La contraseña debe contener al menos un carácter especial.</string>
     <string name="error_password_uppercase">La contraseña debe contener al menos una letra mayúscula.</string>
     <string name="recovery_password">Recuperar contraseña</string>
+    <string name="category_new_title">Nueva Categoría</string>
+    <string name="category_edit_title">Editar Categoría</string>
+    <string name="category_close">Cerrar</string>
+    <string name="category_no_fountains">No hay fuentes disponibles</string>
+    <string name="category_only_broken">Solo Averiadas</string>
+    <string name="error_title">Atención</string>
+    <string name="category_accept">Aceptar</string>
+    <string name="category_save">Guardar</string>
+    <string name="category_cancel">Cancelar</string>
+    <string name="category_form_select_image">Seleccionar imagen</string>
+    <string name="category_form_name">Nombre</string>
+    <string name="category_form_description">Descripción</string>
+    <string name="category_item_count">%d fuentes</string>
+    <string name="delete_category_title">Confirmar borrado</string>
+    <string name="delete_category_msg">¿Estás seguro de que quieres borrar la categoría \"%s\"? Esta acción no se puede deshacer.</string>
+    <string name="error_category_not_empty">No se puede eliminar: existen fuentes vinculadas a esta categoría.</string>
+    <string name="category_form_image_changed">Imagen cambiada</string>
     <string name="error_email_not_verified">Correo no verificado</string>
     <string name="text_recovery_password">¿Olvidaste tu contraseña?</string>
     <string name="text_forgot_password">Te enviamos un enlace para recuperar tu contraseña</string>
@@ -45,9 +62,24 @@
     <string name="en">English</string>
     <string name="ca">Català</string>
     <string name="category">Categorias</string>
+    <string name="voted_label">Votado</string>
+    <string name="report_sent_success">Reporte enviado al administrador. ¡Gracias!</string>
+    <string name="edit_fountain_title">Editar Fuente (Admin)</string>
+    <string name="fountain_name_label">Nombre de la fuente</string>
+    <string name="save_changes">Guardar Cambios</string>
+    <string name="mark_operational">Marcar como OPERATIVA</string>
+    <string name="mark_broken">Marcar como AVERIADA</string>
     <string name="game">Juego</string>
     <string name="ranking">Ranking</string>
     <string name="profile">Perfil</string>
+    <string name="report_confirm_existence">¡La fuente SÍ existe!</string>
+    <string name="report_confirm_existence_hint">Pulsa aquí si la fuente existe y el reporte es un error.</string>
+    <string name="report_already_voted_not_exists">Ya has reportado que no existe</string>
+    <string name="report_other_reason">Otro motivo (Nombre mal, etc.)</string>
+    <string name="report_other_title">Reportar otro problema</string>
+    <string name="report_other_hint">Explica brevemente qué ocurre (ej: El nombre es incorrecto):</string>
+    <string name="report_other_placeholder">Escribe aquí...</string>
+    <string name="report_other_send">Enviar reporte</string>
     <string name="login">Entrar</string>
     <string name="info">Datos</string>
     <string name="all_categories">Todas</string>
@@ -86,7 +118,6 @@
     <string name="ranking_silver">Plata</string>
     <string name="ranking_bronze">Bronce</string>
 
-    <!-- Pantalla GameScreen (Errores y Estados) -->
     <string name="game_error_daily_limit">Ya has jugado hoy. Vuelve mañana.</string>
     <string name="game_error_unexpected">Ocurrió un error inesperado</string>
     <string name="game_error_login_required">Inicia sesión para jugar</string>
@@ -95,7 +126,6 @@
     <string name="game_error_no_fountains">No hay fuentes disponibles</string>
     <string name="game_error_generic">Error: %1$s</string>
 
-    <!-- Pantalla GameInstructionsScreen -->
     <string name="game_instructions_title_app">AguaQuest</string>
     <string name="game_instructions_subtitle">¿Dónde está esta fuente?</string>
     <string name="game_instructions_play_learn_title">¡Juega y aprende!</string>
@@ -105,11 +135,9 @@
     <string name="game_instructions_rule_three">• Máximo 1000 puntos</string>
     <string name="game_instructions_start_button">Empezar Juego</string>
 
-    <!-- Pantalla GamePlayScreen -->
     <string name="game_play_confirm_button">¡CONFIRMAR UBICACIÓN!</string>
     <string name="game_play_hint_text">Toca el mapa para marcar</string>
 
-    <!-- Pantalla GameResultScreen -->
     <string name="game_result_lost_title">¡HAS PERDIDO!</string>
     <string name="game_result_lost_message">Se te acabó el tiempo sin marcar una ubicación</string>
     <string name="game_result_lost_points">No has conseguido puntos</string>
@@ -119,9 +147,89 @@
     <string name="game_result_daily_message">Ya has jugado hoy. Vuelve mañana para una nueva partida</string>
     <string name="game_result_points">Puntos</string>
 
-    <!-- Pantalla LoadingPartida -->
     <string name="game_loading_message">PREPARANDO PARTIDA...</string>
 
-    <!-- Pantalla ErrorScreen -->
     <string name="game_error_retry_button">REINTENTAR</string>
+    <string name="back">Atrás</string>
+    <string name="delete">Borrar</string>
+    <string name="description_title">Descripción</string>
+    <string name="no_description">Sin descripción disponible.</string>
+    <string name="distancia_label">Distancia</string>
+    <string name="estado_label">Estado</string>
+    <string name="funcionando">Funcionando</string>
+    <string name="averiada">Averiada</string>
+    <string name="fecha_alta_label">Fecha de alta</string>
+    <string name="coordenadas_label">Coordenadas</string>
+    <string name="edit_fountain_admin">Editar fuente (Admin)</string>
+    <string name="confirm_button">Confirmar</string>
+    <string name="report_button">Reportar</string>
+    <string name="ratings_title">Valoraciones (%1$d)</string>
+    <string name="add_comment">Añadir</string>
+    <string name="first_comment_prompt">¡Sé el primero en comentar!</string>
+
+    <string name="report_dialog_title">Reportar incidencia</string>
+    <string name="report_dialog_text">¿Qué problema has encontrado en esta fuente?</string>
+    <string name="report_not_exists">No existe</string>
+    <string name="report_broken">Está averiada</string>
+    <string name="report_fixed">Ya funciona</string>
+    <string name="delete_fountain_title">Borrar fuente</string>
+    <string name="delete_fountain_text">Esta acción no se puede deshacer.</string>
+    <string name="delete_confirm">Eliminar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete_comment_title">Eliminar valoración</string>
+    <string name="delete_fountain_confirm_text">¿Estás seguro de que deseas eliminar esta fuente permanentemente? Esta acción no se puede deshacer.</string>
+    <string name="delete_comment_text">¿Estás seguro de que deseas eliminar esta valoración? Esta acción es permanente.</string>
+
+    <string name="comment_censored">[Contenido eliminado por moderación]</string>
+    <string name="edit">Editar</string>
+    <string name="censor">Censurar</string>
+    <string name="pending_validation">Pendiente de validación</string>
+    <string name="reported_non_existent">Reportada como inexistente</string>
+    <string name="validation_count_singular">1 persona ha reportado esto.</string>
+    <string name="validation_count_plural">%1$d de %2$d personas han reportado esto.</string>
+
+    <string name="dialog_add_comment_title">Añadir valoración</string>
+    <string name="dialog_add_comment_prompt">Puntúa la fuente:</string>
+    <string name="dialog_add_comment_label">Tu comentario (opcional)</string>
+    <string name="dialog_add_comment_publish">Publicar</string>
+    <string name="dialog_add_comment_cancel">Cancelar</string>
+
+    <string name="add_fountain_subtitle">Ayuda a la comunidad añadiendo una nueva fuente</string>
+    <string name="fountain_name_placeholder">Ej: Fuente de la Plaza Mayor</string>
+    <string name="fountain_description_placeholder">Cuéntanos detalles sobre su estado...</string>
+    <string name="fountain_is_operational_title">¿Funciona actualmente?</string>
+    <string name="fountain_status_ok">La fuente tiene agua</string>
+    <string name="fountain_status_error">La fuente está averiada</string>
+    <string name="edit_comment">Editar comentario</string>
+
+    <string name="categories_title">Categorías</string>
+    <string name="search_placeholder">Buscar (* o ? permitidos)...</string>
+    <string name="best_rated">Mejor valoradas</string>
+    <string name="worst_rated">Peor valoradas</string>
+    <string name="new_category">Nueva Categoría</string>
+    <string name="delete_category">Borrar Categoría</string>
+    <string name="expand_info">Ampliar información</string>
+    <string name="fountains">fuentes</string>
+    <string name="bebible">Bebible</string>
+    <string name="ornamental">Ornamental</string>
+    <string name="historica">Histórica</string>
+    <!-- Textos para AddFountainScreen -->
+    <string name="add_fountain_photo_label">Foto de la fuente</string>
+    <string name="add_fountain_select_photo">Subir o hacer foto</string>
+    <string name="add_fountain_remove_image">Quitar imagen</string>
+    <string name="add_fountain_preview">Vista previa</string>
+    <string name="add_fountain_upload_progress">Subiendo imagen: %1$d%%</string>
+    <string name="add_fountain_uploading">Subiendo...</string>
+    <string name="add_fountain_error">Error: %1$s</string>
+    <string name="add_fountain_upload_error">Error al subir imagen: %1$s</string>
+
+    <!-- Textos para ImagePickerHelper -->
+    <string name="image_picker_title">Seleccionar foto</string>
+    <string name="image_picker_gallery">Galería</string>
+    <string name="image_picker_camera">Cámara</string>
+    <string name="image_picker_gallery_description">Galería</string>
+    <string name="image_picker_camera_description">Cámara</string>
+
+    <string name="game_result_click_red_marker">Haz clic en el marcador rojo para ver los detalles de la fuente</string>
+    <string name="game_result_you_won">¡HAS GANADO!</string>
 </resources>

@@ -3,9 +3,8 @@ package cat.copernic.aguamap1.presentation.initial
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.repository.AuthRepository
-import cat.copernic.aguamap1.presentation.navigation.RootScreen
+import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -31,7 +30,7 @@ class InitialViewModel @Inject constructor(
     //Función para verificar la sesión y redirige a la pantalla correspondiente
     private fun checkSession() {
         viewModelScope.launch {
-            delay(1000)
+            //delay(1000)
             if (repository.isUserLoggedIn()) {
                 val uid = repository.getCurrentUserUid()
                 val exists = if (uid != null) repository.checkIfUserExists(uid) else false
