@@ -2,6 +2,7 @@ package cat.copernic.aguamap1.domain.repository
 
 import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.domain.model.Report
 import cat.copernic.aguamap1.domain.model.UserStats
 import kotlinx.coroutines.flow.Flow
 
@@ -77,6 +78,6 @@ interface FountainRepository {
      */
     suspend fun getUserCommentsCount(userId: String): Int
 
-    fun observeUserStats(userId: String): Flow<UserStats?>
     suspend fun reportComment(fountainId: String, commentId: String, userId: String): Result<Unit>
+
 }

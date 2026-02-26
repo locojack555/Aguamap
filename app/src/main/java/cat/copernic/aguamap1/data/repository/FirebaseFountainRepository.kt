@@ -2,9 +2,11 @@ package cat.copernic.aguamap1.data.repository
 
 import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.domain.model.Report
 import cat.copernic.aguamap1.domain.model.UserStats
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.FountainRepository
+import com.google.firebase.database.core.Repo
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -289,31 +291,5 @@ class FirebaseFountainRepository @Inject constructor(
         } catch (e: Exception) {
             0
         }
-    }
-
-    override fun observeUserStats(userId: String): Flow<UserStats?> = callbackFlow {
-        val docRef = db.collection("userStats").document(userId)
-
-        val subscription = docRef.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-
-            if (snapshot != null && snapshot.exists()) {
-                val stats = UserStats(
-                    userId = snapshot.getString("userId") ?: "",
-                    userName = snapshot.getString("userName") ?: "",
-                    fountainsCount = snapshot.getLong("fountainsCount")?.toInt() ?: 0,
-                    commentsCount = snapshot.getLong("commentsCount")?.toInt() ?: 0,
-                    lastUpdated = snapshot.getTimestamp("lastUpdated")
-                )
-                trySend(stats)
-            } else {
-                trySend(null)
-            }
-        }
-
-        awaitClose { subscription.remove() }
     }
 }

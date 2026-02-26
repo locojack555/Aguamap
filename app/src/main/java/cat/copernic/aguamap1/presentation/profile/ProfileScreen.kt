@@ -38,7 +38,8 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     navigateToLogin: () -> Unit = {},
     navigateToEditProfile: () -> Unit = {},
-    navigateToSettings: () -> Unit = {}
+    navigateToSettings: () -> Unit = {},
+    navigateToModeration: () -> Unit = {}
 ) {
     val estadoScroll = rememberScrollState()
     val profileState by viewModel.profileState.collectAsState()
@@ -79,7 +80,9 @@ fun ProfileScreen(
 
                 // SECCIÓN ADMIN
                 if (isAdmin) {
-                    SeccionPanelAdmin()
+                    SeccionPanelAdmin(
+                        navigateToModeration = navigateToModeration   // ← NUEVO
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
@@ -198,8 +201,6 @@ fun TarjetaEstadistica(valor: String, etiqueta: String, icono: ImageVector) {
         }
     }
 }
-
-// Reemplaza SeccionPanelAdmin en ProfileScreen.kt por este:
 
 @Composable
 fun SeccionPanelAdmin(

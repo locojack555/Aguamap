@@ -27,6 +27,7 @@ import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
 import cat.copernic.aguamap1.presentation.music.SoundManager
 import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import cat.copernic.aguamap1.presentation.profile.EditProfileScreen
+import cat.copernic.aguamap1.presentation.profile.ModerationScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileViewModel
 import cat.copernic.aguamap1.presentation.profile.SettingsScreen
@@ -185,6 +186,9 @@ fun NavigationGraph(
                     },
                     navigateToSettings = {
                         navController.navigate("settings")
+                    },
+                    navigateToModeration = {                         // ← NUEVO
+                        navController.navigate("moderation")
                     }
                 )
             }
@@ -210,6 +214,12 @@ fun NavigationGraph(
             composable("settings") {
                 SettingsScreen(
                     onClose = { navController.popBackStack() }
+                )
+            }
+
+            composable("moderation") {
+                ModerationScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

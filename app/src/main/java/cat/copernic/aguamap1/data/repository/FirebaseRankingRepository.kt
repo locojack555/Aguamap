@@ -158,31 +158,4 @@ class FirebaseRankingRepository @Inject constructor(
             null
         }
     }
-
-    override fun observeUserHistoricRanking(userId: String): Flow<UserRanking?> = callbackFlow {
-        val docRef = db.collection("historicRanking").document(userId)
-
-        val subscription = docRef.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-
-            if (snapshot != null && snapshot.exists()) {
-                val ranking = UserRanking(
-                    position = 0,
-                    name = snapshot.getString("userName") ?: "Jugador",
-                    points = snapshot.getLong("totalScore")?.toInt() ?: 0,
-                    discovered = snapshot.getLong("totalDiscovered")?.toInt() ?: 0,
-                    games = snapshot.getLong("gamesCount")?.toInt() ?: 0,
-                    isCurrentUser = true
-                )
-                trySend(ranking)
-            } else {
-                trySend(null)
-            }
-        }
-
-        awaitClose { subscription.remove() }
-    }
 }
