@@ -2,50 +2,14 @@ package cat.copernic.aguamap1.presentation.fountain.detailFountain
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -70,16 +34,7 @@ import cat.copernic.aguamap1.presentation.fountain.detailFountain.components.Inf
 import cat.copernic.aguamap1.presentation.fountain.detailFountain.components.MainReportDialog
 import cat.copernic.aguamap1.presentation.fountain.detailFountain.components.OtherReportDialog
 import cat.copernic.aguamap1.presentation.fountain.detailFountain.components.ValidationCard
-import cat.copernic.aguamap1.ui.theme.Blanco
-import cat.copernic.aguamap1.ui.theme.BlancoTranslucido
-import cat.copernic.aguamap1.ui.theme.Blue10
-import cat.copernic.aguamap1.ui.theme.GrisClaro
-import cat.copernic.aguamap1.ui.theme.Naranja
-import cat.copernic.aguamap1.ui.theme.Negro
-import cat.copernic.aguamap1.ui.theme.NegroMuySuave
-import cat.copernic.aguamap1.ui.theme.NegroSuave
-import cat.copernic.aguamap1.ui.theme.Rojo
-import cat.copernic.aguamap1.ui.theme.Verde
+import cat.copernic.aguamap1.ui.theme.*
 import coil.compose.AsyncImage
 import java.util.Locale
 
@@ -87,13 +42,14 @@ import java.util.Locale
 fun DetailFountainScreen(
     fountain: Fountain,
     viewModel: DetailFountainViewModel,
-    addFountainViewModel: AddFountainViewModel = hiltViewModel(),
+    addFountainViewModel: AddFountainViewModel, // ViewModel compartido para editar
     commentsViewModel: FountainCommentsViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onDelete: () -> Unit,
     onConfirm: () -> Unit,
     onReportAveria: () -> Unit,
-    onReportNoExiste: () -> Unit
+    onReportNoExiste: () -> Unit,
+    onEdit: () -> Unit // Mantenemos el callback por si necesitas lógica extra en el NavGraph
 ) {
     val context = LocalContext.current
     var showReportDialog by remember { mutableStateOf(false) }
@@ -109,7 +65,6 @@ fun DetailFountainScreen(
     val hasVotedPositive = currentUserId != null && fountain.votedByPositive.contains(currentUserId)
     val hasVotedNegative = currentUserId != null && fountain.votedByNegative.contains(currentUserId)
 
-    // Lógica de permisos
     val isOwner = currentUserId != null && fountain.createdBy == currentUserId
     val isAdmin = viewModel.isAdmin
     val isPending = fountain.status == StateFountain.PENDING
@@ -121,29 +76,20 @@ fun DetailFountainScreen(
 
     LaunchedEffect(commentsViewModel.reportSuccess) {
         if (commentsViewModel.reportSuccess) {
-            android.widget.Toast.makeText(
-                context,
-                R.string.report_sent_success,
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
+            android.widget.Toast.makeText(context, R.string.report_sent_success, android.widget.Toast.LENGTH_SHORT).show()
             commentsViewModel.clearReportSuccess()
         }
     }
 
-    BackHandler { commentsViewModel.stopObserving(); onBack() }
+    BackHandler {
+        commentsViewModel.stopObserving()
+        onBack()
+    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = Blanco) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            // --- CABECERA CON IMAGEN ---
-            Box(
-                modifier = Modifier
-                    .height(280.dp)
-                    .fillMaxWidth()
-            ) {
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            // --- CABECERA ---
+            Box(modifier = Modifier.height(280.dp).fillMaxWidth()) {
                 AsyncImage(
                     model = fountain.imageUrl,
                     contentDescription = null,
@@ -152,214 +98,100 @@ fun DetailFountainScreen(
                     modifier = Modifier.fillMaxSize()
                 )
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     IconButton(
-                        onClick = { commentsViewModel.stopObserving(); onBack() },
+                        onClick = {
+                            commentsViewModel.stopObserving()
+                            onBack()
+                        },
                         modifier = Modifier.background(BlancoTranslucido, RoundedCornerShape(12.dp))
                     ) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                            tint = Negro
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back), tint = Negro)
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // BOTÓN EDITAR: Se muestra si es ADMIN o si es DUEÑO y está PENDIENTE
+                        // --- BOTÓN EDITAR ---
                         if (isAdmin || (isOwner && isPending)) {
                             IconButton(
-                                onClick = {
-                                    addFountainViewModel.openAddFountain(
-                                        fountain.latitude,
-                                        fountain.longitude,
-                                        fountain
-                                    )
-                                },
-                                modifier = Modifier.background(
-                                    BlancoTranslucido,
-                                    RoundedCornerShape(12.dp)
-                                )
+                                onClick = { onEdit() }, // Ejecuta la lógica definida en el NavGraph
+                                modifier = Modifier.background(BlancoTranslucido, RoundedCornerShape(12.dp))
                             ) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = "Editar",
-                                    tint = Blue10
-                                )
+                                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Blue10)
                             }
                         }
 
-                        // BOTÓN BORRAR: Solo se muestra si es ADMIN
                         if (isAdmin) {
                             IconButton(
                                 onClick = { showDeleteConfirm = true },
-                                modifier = Modifier.background(
-                                    BlancoTranslucido,
-                                    RoundedCornerShape(12.dp)
-                                )
+                                modifier = Modifier.background(BlancoTranslucido, RoundedCornerShape(12.dp))
                             ) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = stringResource(R.string.delete),
-                                    tint = Rojo
-                                )
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), tint = Rojo)
                             }
                         }
                     }
                 }
             }
 
-            // --- CUERPO DE INFORMACIÓN ---
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 20.dp)
-                    .fillMaxWidth()
-            ) {
-                // Título y Categoría
+            // --- CONTENIDO ---
+            Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp).fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        fountain.name,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.weight(1f),
-                        color = Negro
-                    )
+                    Text(fountain.name, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), color = Negro)
                     Surface(color = Verde, shape = RoundedCornerShape(8.dp)) {
-                        Text(
-                            fountain.category.name,
-                            color = Blanco,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(fountain.category.name, color = Blanco, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
-                // Valoración Media
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
                     Icon(Icons.Default.Star, null, tint = Naranja, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(
-                        String.format(Locale.US, "%.1f", fountain.ratingAverage),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Negro
-                    )
+                    Text(String.format(Locale.US, "%.1f", fountain.ratingAverage), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Negro)
                     Text(" / 5.0", fontSize = 14.sp, color = NegroSuave)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Avisos de Validación
+                // Validaciones
                 if (fountain.status == StateFountain.PENDING && fountain.positiveVotes < 3) {
-                    ValidationCard(
-                        stringResource(R.string.pending_validation),
-                        fountain.positiveVotes,
-                        3,
-                        Naranja,
-                        Icons.Default.HourglassEmpty
-                    )
+                    ValidationCard(stringResource(R.string.pending_validation), fountain.positiveVotes, 3, Naranja, Icons.Default.HourglassEmpty)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 if (fountain.negativeVotes > 0) {
-                    ValidationCard(
-                        stringResource(R.string.reported_non_existent),
-                        fountain.negativeVotes,
-                        3,
-                        Rojo,
-                        Icons.Default.Warning
-                    )
+                    ValidationCard(stringResource(R.string.reported_non_existent), fountain.negativeVotes, 3, Rojo, Icons.Default.Warning)
                     Spacer(modifier = Modifier.height(20.dp))
                 }
 
-                // Descripción
-                Text(
-                    stringResource(R.string.description_title),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Negro
-                )
-                Text(
-                    fountain.description.ifBlank { stringResource(R.string.no_description) },
-                    color = NegroSuave,
-                    fontSize = 15.sp,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+                Text(stringResource(R.string.description_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Negro)
+                Text(fountain.description.ifBlank { stringResource(R.string.no_description) }, color = NegroSuave, fontSize = 15.sp, modifier = Modifier.padding(top = 4.dp))
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Detalles Técnicos
-                InfoRow(
-                    Icons.Default.LocationOn,
-                    stringResource(R.string.distancia_label),
-                    viewModel.getDistanceText(fountain.distanceFromUser),
-                    Blue10
-                )
-                InfoRow(
-                    Icons.Default.Build,
-                    stringResource(R.string.estado_label),
-                    if (isOpRealtime) stringResource(R.string.funcionando) else stringResource(R.string.averiada),
-                    if (isOpRealtime) Verde else Rojo
-                )
-                InfoRow(
-                    Icons.Default.CalendarMonth,
-                    stringResource(R.string.fecha_alta_label),
-                    viewModel.getFormattedDate(fountain.dateCreated),
-                    NegroSuave
-                )
-                InfoRow(
-                    Icons.Default.Map,
-                    stringResource(R.string.coordenadas_label),
-                    viewModel.getFormattedCoordinates(fountain.latitude, fountain.longitude),
-                    NegroSuave
-                )
+                InfoRow(Icons.Default.LocationOn, stringResource(R.string.distancia_label), viewModel.getDistanceText(fountain.distanceFromUser), Blue10)
+                InfoRow(Icons.Default.Build, stringResource(R.string.estado_label), if (isOpRealtime) stringResource(R.string.funcionando) else stringResource(R.string.averiada), if (isOpRealtime) Verde else Rojo)
+                InfoRow(Icons.Default.CalendarMonth, stringResource(R.string.fecha_alta_label), viewModel.getFormattedDate(fountain.dateCreated), NegroSuave)
+                InfoRow(Icons.Default.Map, stringResource(R.string.coordenadas_label), viewModel.getFormattedCoordinates(fountain.latitude, fountain.longitude), NegroSuave)
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Botones de Acción
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                // Botones de acción
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (fountain.positiveVotes < 3) {
                         Button(
                             onClick = onConfirm,
                             enabled = !hasVotedPositive,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Blue10,
-                                disabledContainerColor = GrisClaro
-                            ),
+                            modifier = Modifier.weight(1f).height(52.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Blue10, disabledContainerColor = GrisClaro),
                             shape = RoundedCornerShape(14.dp)
                         ) {
-                            Icon(
-                                if (hasVotedPositive) Icons.Default.Check else Icons.Default.CheckCircle,
-                                null,
-                                modifier = Modifier.size(18.dp),
-                                tint = Blanco
-                            )
+                            Icon(if (hasVotedPositive) Icons.Default.Check else Icons.Default.CheckCircle, null, modifier = Modifier.size(18.dp), tint = Blanco)
                             Spacer(Modifier.width(8.dp))
-                            Text(
-                                if (hasVotedPositive) stringResource(R.string.voted_label) else stringResource(
-                                    R.string.confirm_button
-                                ), fontSize = 14.sp, color = Blanco
-                            )
+                            Text(if (hasVotedPositive) stringResource(R.string.voted_label) else stringResource(R.string.confirm_button), fontSize = 14.sp, color = Blanco)
                         }
                     }
                     Button(
                         onClick = { showReportDialog = true },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp),
+                        modifier = Modifier.weight(1f).height(52.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Rojo),
                         shape = RoundedCornerShape(14.dp)
                     ) {
@@ -371,37 +203,16 @@ fun DetailFountainScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Sección de Comentarios
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        stringResource(R.string.ratings_title, commentsViewModel.comments.size),
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 22.sp,
-                        modifier = Modifier.weight(1f),
-                        color = Negro
-                    )
+                // Comentarios
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.ratings_title, commentsViewModel.comments.size), fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, modifier = Modifier.weight(1f), color = Negro)
                     TextButton(onClick = { showAddCommentDialog = true }) {
-                        Text(
-                            stringResource(R.string.add_comment),
-                            color = Blue10,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(stringResource(R.string.add_comment), color = Blue10, fontWeight = FontWeight.Bold)
                     }
                 }
 
                 if (commentsViewModel.comments.isEmpty()) {
-                    Text(
-                        stringResource(R.string.first_comment_prompt),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 40.dp),
-                        color = NegroMuySuave,
-                        fontStyle = FontStyle.Italic
-                    )
+                    Text(stringResource(R.string.first_comment_prompt), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp), color = NegroMuySuave, fontStyle = FontStyle.Italic)
                 } else {
                     commentsViewModel.comments.forEach { comment ->
                         CommentItem(
@@ -411,12 +222,7 @@ fun DetailFountainScreen(
                             onCensor = { commentsViewModel.censorComment(fountain.id, comment.id) },
                             onDelete = { commentToDelete = comment },
                             onEdit = { editingComment = comment },
-                            onReport = {
-                                commentsViewModel.onReportComment(
-                                    fountain.id,
-                                    comment.id
-                                )
-                            }
+                            onReport = { commentsViewModel.onReportComment(fountain.id, comment.id) }
                         )
                     }
                 }
@@ -425,35 +231,13 @@ fun DetailFountainScreen(
         }
     }
 
-    // --- GESTIÓN DE DIÁLOGOS ---
-
+    // --- DIÁLOGOS ---
     if (showAddCommentDialog) {
-        AddCommentDialog(
-            isEditing = false,
-            onDismiss = { showAddCommentDialog = false },
-            onConfirm = { r, t ->
-                commentsViewModel.addComment(
-                    fountain,
-                    r,
-                    t
-                ); showAddCommentDialog = false
-            })
+        AddCommentDialog(isEditing = false, onDismiss = { showAddCommentDialog = false }, onConfirm = { r, t -> commentsViewModel.addComment(fountain, r, t); showAddCommentDialog = false })
     }
 
     editingComment?.let { comment ->
-        AddCommentDialog(
-            initialRating = comment.rating,
-            initialText = comment.comment,
-            isEditing = true,
-            onDismiss = { editingComment = null },
-            onConfirm = { r, t ->
-                commentsViewModel.editComment(
-                    fountain,
-                    comment,
-                    r,
-                    t
-                ); editingComment = null
-            })
+        AddCommentDialog(initialRating = comment.rating, initialText = comment.comment, isEditing = true, onDismiss = { editingComment = null }, onConfirm = { r, t -> commentsViewModel.editComment(fountain, comment, r, t); editingComment = null })
     }
 
     if (showReportDialog) {
@@ -464,21 +248,14 @@ fun DetailFountainScreen(
             onDismiss = { showReportDialog = false },
             onConfirmExistence = { viewModel.confirmExistence { showReportDialog = false } },
             onReportNoExiste = { onReportNoExiste(); showReportDialog = false },
-            onReportAveria = {
-                viewModel.toggleOperationalStatus { showReportDialog = false }
-            },
+            onReportAveria = { viewModel.toggleOperationalStatus { showReportDialog = false } },
             onShowOther = { showOtherReportDialog = true; showReportDialog = false }
         )
     }
 
     if (showOtherReportDialog) {
-        OtherReportDialog(
-            otherReportText,
-            { otherReportText = it },
-            { showOtherReportDialog = false }) {
-            viewModel.reportOtherIssue(otherReportText) {
-                showOtherReportDialog = false; otherReportText = ""
-            }
+        OtherReportDialog(otherReportText, { otherReportText = it }, { showOtherReportDialog = false }) {
+            viewModel.reportOtherIssue(otherReportText) { showOtherReportDialog = false; otherReportText = "" }
         }
     }
 
@@ -487,22 +264,9 @@ fun DetailFountainScreen(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text(stringResource(R.string.delete_fountain_title)) },
             text = { Text(stringResource(R.string.delete_fountain_confirm_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDelete(); showDeleteConfirm = false
-                }) {
-                    Text(
-                        stringResource(R.string.delete_confirm),
-                        color = Rojo,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            })
+            confirmButton = { TextButton(onClick = { onDelete(); showDeleteConfirm = false }) { Text(stringResource(R.string.delete_confirm), color = Rojo, fontWeight = FontWeight.Bold) } },
+            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) } }
+        )
     }
 
     commentToDelete?.let { comment ->
@@ -510,24 +274,8 @@ fun DetailFountainScreen(
             onDismissRequest = { commentToDelete = null },
             title = { Text(stringResource(R.string.delete_comment_title)) },
             text = { Text(stringResource(R.string.delete_comment_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    commentsViewModel.deleteComment(
-                        fountain,
-                        comment
-                    ); commentToDelete = null
-                }) {
-                    Text(
-                        stringResource(R.string.delete_confirm),
-                        color = Rojo,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    commentToDelete = null
-                }) { Text(stringResource(R.string.cancel)) }
-            })
+            confirmButton = { TextButton(onClick = { commentsViewModel.deleteComment(fountain, comment); commentToDelete = null }) { Text(stringResource(R.string.delete_confirm), color = Rojo, fontWeight = FontWeight.Bold) } },
+            dismissButton = { TextButton(onClick = { commentToDelete = null }) { Text(stringResource(R.string.cancel)) } }
+        )
     }
 }

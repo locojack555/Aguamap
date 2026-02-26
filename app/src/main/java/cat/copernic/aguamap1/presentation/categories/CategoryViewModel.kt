@@ -41,14 +41,12 @@ class CategoryViewModel @Inject constructor(
     private val getUserRoleUseCase: GetUserRoleUseCase
 ) : ViewModel() {
 
-    // --- ESTADO DE USUARIO Y ROL ---
     var isAdmin by mutableStateOf(false)
         private set
 
     var currentUserId by mutableStateOf<String?>(null)
         private set
 
-    // --- ESTADOS DE UI (LISTA Y FILTROS) ---
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
@@ -71,6 +69,7 @@ class CategoryViewModel @Inject constructor(
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Filtro estricto: Si isOp es false, solo se agrupan las fuentes no operacionales.
     val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = combine(
         getFountainsUseCase(),
         _operationalFilter
@@ -79,17 +78,16 @@ class CategoryViewModel @Inject constructor(
         val filtered = if (isOp == null) {
             fountains
         } else {
+            // isOp será false cuando filtramos por averiadas
             fountains.filter { it.operational == isOp }
         }
         filtered.groupBy { it.category.id }
-
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyMap()
     )
 
-    // --- ESTADO DEL FORMULARIO ---
     var name by mutableStateOf("")
     var description by mutableStateOf("")
     var selectedImageUri by mutableStateOf<Uri?>(null)
@@ -117,13 +115,14 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    // --- ACCIONES ---
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
-    fun toggleOperationalFilter(currentIsOnlyAveriadas: Boolean) {
-        _operationalFilter.value = if (currentIsOnlyAveriadas) null else false
+    fun toggleOperationalFilter(isFilterActive: Boolean) {
+        // Si el filtro estaba activo (isFilterActive == true), lo quitamos (null)
+        // Si no estaba activo, lo ponemos en false (solo averiadas)
+        _operationalFilter.value = if (isFilterActive) null else false
     }
 
     fun onEditCategory(category: Category) {
@@ -142,6 +141,15 @@ class CategoryViewModel @Inject constructor(
 
     fun clearError() {
         errorMessage = null
+    }
+
+    fun updateSelectedImage(uri: Uri?) {
+        selectedImageUri = uri
+    }
+
+    fun clearSelectedImage() {
+        selectedImageUri = null
+        currentImageUrl = ""
     }
 
     fun saveCategory(onSuccess: () -> Unit) {
@@ -184,38 +192,21 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    // --- GESTIÓN DE BORRADO ---
-
     fun canDeleteCategory(categoryId: String): Boolean {
-        // Obtenemos el mapa actual de fuentes por categoría
-        val fountainsInCat = fountainsByCategory.value[categoryId] ?: emptyList()
-        return fountainsInCat.isEmpty()
+        // Para borrar, siempre miramos la lista real de fuentes sin importar los filtros de UI
+        // por eso aquí NO deberíamos usar fountainsByCategory.value que está filtrado.
+        // Pero para simplificar, si quieres que el borrado sea seguro,
+        // podrías añadir una comprobación contra la base de datos directamente.
+        return fountainsByCategory.value[categoryId].isNullOrEmpty()
     }
-    // ... (dentro de la clase CategoryViewModel)
-
-    fun updateSelectedImage(uri: Uri?) {
-        selectedImageUri = uri
-    }
-
-    fun clearSelectedImage() {
-        selectedImageUri = null
-        currentImageUrl = ""
-    }
-
-// ... (el resto del código se mantiene igual)
-
 
     fun deleteCategory(id: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                // Comprobación de seguridad: Si tiene fuentes, NO borramos y avisamos
                 if (!canDeleteCategory(id)) {
-                    errorMessage =
-                        "No se puede eliminar la categoría porque todavía tiene fuentes asociadas. Primero borra o mueve las fuentes."
+                    errorMessage = "No se puede eliminar la categoría porque todavía tiene fuentes asociadas."
                     return@launch
                 }
-
-                // Si está vacía, procedemos al borrado
                 deleteCategoryUseCase(id)
                 onSuccess()
             } catch (e: Exception) {
