@@ -6,6 +6,5 @@ data class ReportedComment(
     val commentId: String = "",
     val reason: String = "",
     val timestamp: Long = 0L,
-    val comment: Comment? = null,
-    val isResolved: Boolean = false
+    val comment: Comment? = null
 )

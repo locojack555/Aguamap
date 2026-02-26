@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.domain.model.ReportedComment
 import cat.copernic.aguamap1.domain.repository.FountainRepository
+import cat.copernic.aguamap1.domain.usecase.comments.CensorCommentUseCase
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ModerationViewModel @Inject constructor(
     private val db: FirebaseFirestore,
-    private val fountainRepository: FountainRepository
+    private val fountainRepository: FountainRepository,
+    private val censorCommentUseCase: CensorCommentUseCase
 ) : ViewModel() {
 
     private val _reportedComments = MutableStateFlow<List<ReportedComment>>(emptyList())
@@ -54,8 +56,7 @@ class ModerationViewModel @Inject constructor(
                         fountainId = fountainId,
                         commentId = commentId,
                         reason = doc.getString("reason") ?: "",
-                        timestamp = doc.getLong("timestamp") ?: 0L,
-                        isResolved = doc.getBoolean("isResolved") ?: false
+                        timestamp = doc.getLong("timestamp") ?: 0L
                     )
                 }
 
@@ -76,9 +77,7 @@ class ModerationViewModel @Inject constructor(
                     }
                 }
 
-                // Unresolved first, then sorted by timestamp descending
-                _reportedComments.value = enrichedItems
-                    .sortedWith(compareBy<ReportedComment> { it.isResolved }.thenByDescending { it.timestamp })
+                _reportedComments.value = enrichedItems.sortedByDescending { it.timestamp }
 
             } catch (e: Exception) {
                 _errorMessage.value = "Error al cargar los reportes: ${e.message}"
@@ -88,23 +87,39 @@ class ModerationViewModel @Inject constructor(
         }
     }
 
+    // Elimina el comentario y borra el reporte
     fun deleteComment(item: ReportedComment) {
         viewModelScope.launch {
             try {
                 fountainRepository.deleteComment(item.fountainId, item.commentId)
-                markReportResolved(item.reportId)
-                _successMessage.value = "Comentario eliminado correctamente"
+                deleteReport(item.reportId)
+                _successMessage.value = "Comentario eliminado"
                 loadReportedComments()
             } catch (e: Exception) {
-                _errorMessage.value = "Error al eliminar el comentario: ${e.message}"
+                _errorMessage.value = "Error al eliminar: ${e.message}"
             }
         }
     }
 
+    // Censura el comentario y borra el reporte
+    fun censorComment(item: ReportedComment) {
+        viewModelScope.launch {
+            try {
+                censorCommentUseCase(item.fountainId, item.commentId)
+                deleteReport(item.reportId)
+                _successMessage.value = "Comentario censurado"
+                loadReportedComments()
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al censurar: ${e.message}"
+            }
+        }
+    }
+
+    // Solo borra el reporte, el comentario queda intacto
     fun dismissReport(item: ReportedComment) {
         viewModelScope.launch {
             try {
-                // Remove the reported flag from the comment
+                // Quitar el flag isReported del comentario
                 db.collection("fountains")
                     .document(item.fountainId)
                     .collection("comments")
@@ -112,19 +127,19 @@ class ModerationViewModel @Inject constructor(
                     .update("isReported", false)
                     .await()
 
-                markReportResolved(item.reportId)
+                deleteReport(item.reportId)
                 _successMessage.value = "Reporte descartado"
                 loadReportedComments()
             } catch (e: Exception) {
-                _errorMessage.value = "Error al descartar el reporte: ${e.message}"
+                _errorMessage.value = "Error al descartar: ${e.message}"
             }
         }
     }
 
-    private suspend fun markReportResolved(reportId: String) {
+    private suspend fun deleteReport(reportId: String) {
         db.collection("reports_comments")
             .document(reportId)
-            .update("isResolved", true)
+            .delete()
             .await()
     }
 

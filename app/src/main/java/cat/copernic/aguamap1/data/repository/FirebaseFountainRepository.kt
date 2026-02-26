@@ -213,7 +213,7 @@ class FirebaseFountainRepository @Inject constructor(
             )
 
             db.runBatch { batch ->
-                batch.update(commentRef, "isReported", true)
+                batch.update(commentRef, "reported", true)
                 // Añadimos el reporte a una colección independiente que el admin pueda vigilar
                 val newReportRef = db.collection("reports_comments").document()
                 batch.set(newReportRef, reportData)
