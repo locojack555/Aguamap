@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,16 +61,16 @@ fun ProfileScreen(
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
 
                 // SECCIÓN CUENTA
-                SeccionPerfil(titulo = "Cuenta") {
+                SeccionPerfil(titulo = stringResource(id = R.string.profile_account_subtitle)) {
                     ElementoOpcionPerfil(
                         icono = Icons.Default.Edit,
-                        etiqueta = "Editar perfil",
+                        etiqueta = stringResource(id = R.string.profile_label_edit_profile),
                         onClick = navigateToEditProfile
                     )
                     DivisorPerfil()
                     ElementoOpcionPerfil(
                         icono = Icons.Default.Settings,
-                        etiqueta = "Configuración",
+                        etiqueta = stringResource(id = R.string.profile_label_config),
                         onClick = navigateToSettings
                     )
                 }
@@ -172,9 +173,9 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                TarjetaEstadistica(profileState.fountainsCount.toString(), "Fuentes", Icons.Default.LocationOn)
-                TarjetaEstadistica(profileState.ratingsCount.toString(), "Valoraciones", Icons.Default.StarOutline)
-                TarjetaEstadistica(profileState.points.toString(), "Puntos", Icons.Outlined.EmojiEvents)
+                TarjetaEstadistica(profileState.fountainsCount.toString(), stringResource(id = R.string.profile_stat_fountains), Icons.Default.LocationOn)
+                TarjetaEstadistica(profileState.ratingsCount.toString(), stringResource(id = R.string.profile_stat_ratings), Icons.Default.StarOutline)
+                TarjetaEstadistica(profileState.points.toString(), stringResource(id = R.string.profile_stat_points), Icons.Outlined.EmojiEvents)
             }
         }
     }
@@ -198,10 +199,17 @@ fun TarjetaEstadistica(valor: String, etiqueta: String, icono: ImageVector) {
     }
 }
 
+// Reemplaza SeccionPanelAdmin en ProfileScreen.kt por este:
+
 @Composable
-fun SeccionPanelAdmin() {
+fun SeccionPanelAdmin(
+    pendingReportsCount: Int = 0,
+    navigateToModeration: () -> Unit = {}
+) {
     Card(
-        modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFFFD54F).copy(alpha = 0.5f), RoundedCornerShape(16.dp)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color(0xFFFFD54F).copy(alpha = 0.5f), RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFDE7)),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(0.5.dp)
@@ -210,21 +218,33 @@ fun SeccionPanelAdmin() {
             Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Shield, contentDescription = null, tint = Color(0xFFFBC02D), modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Panel de Administrador", fontWeight = FontWeight.Bold, color = Color(0xFF5D4037), fontSize = 15.sp)
+                Text(stringResource(id = R.string.profile_admin_panel_title), fontWeight = FontWeight.Bold, color = Color(0xFF5D4037), fontSize = 15.sp)
             }
+
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navigateToModeration() }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Gestionar fuentes", modifier = Modifier.weight(1f), fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                Surface(color = Color(0xFFFFF59D), shape = RoundedCornerShape(8.dp)) {
-                    Text("2 pendiente de validación", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 11.sp, color = Color(0xFF7F6D00))
+                Icon(Icons.Default.Flag, contentDescription = null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(16.dp))
+                Text(stringResource(id = R.string.profile_admin_mod_comments), modifier = Modifier.weight(1f), fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                if (pendingReportsCount > 0) {
+                    Surface(color = Color(0xFFFFEBEE), shape = RoundedCornerShape(8.dp)) {
+                        Text(
+                            "$pendingReportsCount pendiente${if (pendingReportsCount != 1) "s" else ""}",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontSize = 11.sp,
+                            color = Color(0xFFE53935),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
                 }
-                Spacer(Modifier.width(8.dp))
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
             }
-            DivisorPerfil()
-            ElementoOpcionPerfil(icono = Icons.Default.EditNote, etiqueta = "Gestionar categorías")
         }
     }
 }
@@ -241,7 +261,7 @@ fun BotonCerrarSesion(onClick: () -> Unit) {
         Row(modifier = Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null, tint = Color.Red)
             Spacer(Modifier.width(16.dp))
-            Text("Cerrar Sesión", color = Color.Red, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(stringResource(id = R.string.profile_btn_logout), color = Color.Red, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
 }

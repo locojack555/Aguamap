@@ -233,4 +233,22 @@
     <string name="location_source_title">Origen de la ubicació</string>
     <string name="location_gps">Utilitzant GPS automàtic</string>
     <string name="location_manual">Coordenades manuals</string>
+
+    <string name="profile_account_subtitle">Compte</string>
+    <string name="profile_label_edit_profile">Editar perfil</string>
+    <string name="profile_label_config">Configuració</string>
+    <string name="profile_stat_fountains">Fonts</string>
+    <string name="profile_stat_ratings">Valoracions</string>
+    <string name="profile_stat_points">Punts</string>
+    <string name="profile_admin_panel_title">Panel d\'Administrador</string>
+    <string name="profile_admin_mod_comments">Moderació de comentaris</string>
+    <string name="profile_btn_logout">Tancar Sesió</string>
+    <string name="edit_profile_title">Editar perfil</string>
+    <string name="edit_profile_name">Nom</string>
+    <string name="edit_profile_save">Guardar"></string>
+    <string name="config_profile_title">Configuració</string>
+    <string name="config_profile_subtitle">Idioma</string>
+    <string name="config_profile_es">Espanyol</string>
+    <string name="config_profile_ca">Català</string>
+    <string name="config_profile_en">anglès</string>
 </resources>

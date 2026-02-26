@@ -235,4 +235,22 @@
     <string name="location_source_title">Location source</string>
     <string name="location_gps">Using automatic GPS</string>
     <string name="location_manual">Manual coordinates</string>
+
+    <string name="profile_account_subtitle">Account</string>
+    <string name="profile_label_edit_profile">Edit profile</string>
+    <string name="profile_label_config">Configuration</string>
+    <string name="profile_stat_fountains">Fountains</string>
+    <string name="profile_stat_ratings">Ratings</string>
+    <string name="profile_stat_points">Points</string>
+    <string name="profile_admin_panel_title">Admin Panel</string>
+    <string name="profile_admin_mod_comments">Comment moderation</string>
+    <string name="profile_btn_logout">Log Out</string>
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="edit_profile_name">Name</string>
+    <string name="edit_profile_save">Save"></string>
+    <string name="config_profile_title">Configuration</string>
+    <string name="config_profile_subtitle">Language</string>
+    <string name="config_profile_es">Spanish</string>
+    <string name="config_profile_ca">Catalan</string>
+    <string name="config_profile_en">English</string>
 </resources>
