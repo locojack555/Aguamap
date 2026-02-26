@@ -14,9 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainScreen
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
-import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
-import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainScreen
-import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.maps.components.MapFloatingButtons
 import cat.copernic.aguamap1.presentation.maps.components.MapLegend
 import cat.copernic.aguamap1.presentation.maps.components.MapTopBar
@@ -33,25 +30,19 @@ import org.osmdroid.views.MapView
 @Composable
 fun MapScreen(
     mapViewModel: MapViewModel = hiltViewModel(),
-    detailFountainViewModel: DetailFountainViewModel = hiltViewModel(),
     addViewModel: AddFountainViewModel = hiltViewModel(),
-    commentsViewModel: FountainCommentsViewModel = hiltViewModel(),
+    onFountainClick: (cat.copernic.aguamap1.domain.model.Fountain) -> Unit, // Callback para el NavHost
     isHome: Boolean
 ) {
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
     val isMapView by mapViewModel.isMapView.collectAsState()
     val isAdding = addViewModel.isAdding
-    val selectedFountain = detailFountainViewModel.selectedFountain
-    // Si categories es un StateFlow, usa collectAsState
-    // val categories by mapViewModel.categories.collectAsState()
-
-    // Si categories es un mutableStateOf, úsalo directamente
-    val categories = mapViewModel.categories // Asumiendo que es un State<List<Category>>
+    val categories = mapViewModel.categories
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
-            // Capa Superior: Pantalla Agregar
+            // 1. Capa Superior: Pantalla Agregar (Si decides no navegar para agregar)
             isAdding && mapViewModel.isLocationAvailable -> {
                 AddFountainScreen(
                     latitude = mapViewModel.userLat!!,
@@ -65,36 +56,17 @@ fun MapScreen(
                 )
             }
 
-            // Capa Superior: Detalle de Fuente
-            selectedFountain != null -> {
-                DetailFountainScreen(
-                    fountain = selectedFountain,
-                    viewModel = detailFountainViewModel,
-                    commentsViewModel = commentsViewModel,
-                    onBack = { detailFountainViewModel.clearSelection() },
-                    onDelete = {
-                        detailFountainViewModel.deleteFountain { mapViewModel.loadFountains() }
-                    },
-                    onConfirm = {
-                        detailFountainViewModel.confirmFountain { mapViewModel.loadFountains() }
-                    },
-                    onReportAveria = {
-                        detailFountainViewModel.toggleOperationalStatus { mapViewModel.loadFountains() }
-                    },
-                    onReportNoExiste = {
-                        detailFountainViewModel.reportNonExistent { mapViewModel.loadFountains() }
-                    }
-                )
-            }
-
-            // Capa Base: Mapa o Lista
+            // 2. Capa Base: Mapa o Lista (Solo se muestran si tenemos permiso)
             locationPermissionState.status.isGranted -> {
                 if (isMapView) {
                     OSMMapContent(
                         viewModel = mapViewModel,
                         isHome = isHome,
                         onMapLoad = { mapViewRef = it },
-                        onFountainClick = { detailFountainViewModel.selectFountain(it) }
+                        onFountainClick = { fountain ->
+                            // IMPORTANTE: Llamamos al callback que activará la navegación
+                            onFountainClick(fountain)
+                        }
                     )
                     MapLegend(
                         categories = categories,
@@ -103,11 +75,13 @@ fun MapScreen(
                 } else {
                     ListScreen(
                         viewModel = mapViewModel,
-                        onFountainClick = { detailFountainViewModel.selectFountain(it) }
+                        onFountainClick = { fountain ->
+                            onFountainClick(fountain)
+                        }
                     )
                 }
 
-                // UI flotante
+                // UI flotante (Botones de zoom, GPS y Añadir)
                 MapFloatingButtons(
                     mapViewRef = mapViewRef,
                     addViewModel = addViewModel,
@@ -124,13 +98,10 @@ fun MapScreen(
                 }
             }
 
+            // 3. Caso sin permisos
             else -> {
                 PermissionRequestUI {
-                    if (locationPermissionState.status.shouldShowRationale) {
-                        locationPermissionState.launchPermissionRequest()
-                    } else {
-                        locationPermissionState.launchPermissionRequest()
-                    }
+                    locationPermissionState.launchPermissionRequest()
                 }
             }
         }
