@@ -8,9 +8,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.domain.model.StateFountain
 import cat.copernic.aguamap1.domain.usecase.category.GetCategoriesUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetDistanceFountainsUseCaseUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.ProcessFountainVoteUseCase
 import cat.copernic.aguamap1.domain.usecase.validation.generateSearchRegex
 import cat.copernic.aguamap1.presentation.util.FilterState
 import cat.copernic.aguamap1.presentation.util.SortOption
@@ -26,7 +28,8 @@ import javax.inject.Inject
 class MapViewModel @Inject constructor(
     private val getFountainsUseCase: GetFountainsUseCase,
     private val getDistanceUseCase: GetDistanceFountainsUseCaseUseCase,
-    private val getCategoriesUseCase: GetCategoriesUseCase
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val processFountainVoteUseCase: ProcessFountainVoteUseCase // Inyectado para que las acciones desde el mapa funcionen
 ) : ViewModel() {
 
     var latitude by mutableDoubleStateOf(41.5632)
@@ -54,6 +57,10 @@ class MapViewModel @Inject constructor(
     var filterState by mutableStateOf(FilterState())
         private set
     var categories by mutableStateOf<List<Category>>(emptyList())
+        private set
+
+    // --- NUEVO: ESTADO PARA LA FUENTE SELECCIONADA ---
+    var selectedFountainForDetail by mutableStateOf<Fountain?>(null)
         private set
 
     init {
@@ -152,15 +159,10 @@ class MapViewModel @Inject constructor(
 
         // --- 3. ORDENACIÓN (Bidireccional) ---
         val sorted = when (filterState.sortBy) {
-            // Distancia: Ascendente (Más cerca) / Descendente (Más lejos)
             SortOption.DISTANCE_ASC -> filtered.sortedBy { it.distanceFromUser ?: Double.MAX_VALUE }
             SortOption.DISTANCE_DESC -> filtered.sortedByDescending { it.distanceFromUser ?: 0.0 }
-
-            // Valoración: Descendente (Mejor valoradas) / Ascendente (Peor valoradas)
             SortOption.RATING_DESC -> filtered.sortedByDescending { it.ratingAverage }
             SortOption.RATING_ASC -> filtered.sortedBy { it.ratingAverage }
-
-            // Fecha: Descendente (Nuevas primero) / Ascendente (Antiguas primero)
             SortOption.DATE_DESC -> filtered.sortedByDescending { it.dateCreated }
             SortOption.DATE_ASC -> filtered.sortedBy { it.dateCreated }
         }
@@ -176,5 +178,30 @@ class MapViewModel @Inject constructor(
         latitude = lat
         longitude = lng
         zoomLevel = zoom
+    }
+
+    // --- NUEVAS FUNCIONES PARA NAVEGACIÓN Y DETALLE ---
+
+    fun selectFountain(fountain: Fountain) {
+        selectedFountainForDetail = fountain
+    }
+
+    fun clearSelectedFountain() {
+        selectedFountainForDetail = null
+    }
+
+    /**
+     * Esta función permite actualizar la lista local de fuentes cuando algo cambia en el detalle
+     * (como un voto o un cambio de estado) sin necesidad de hacer una nueva petición a Firebase.
+     */
+    fun updateSingleFountainInList(updatedFountain: Fountain) {
+        allFountainsList = allFountainsList.map {
+            if (it.id == updatedFountain.id) updatedFountain else it
+        }
+        // Actualizamos el detalle actual si es el mismo
+        if (selectedFountainForDetail?.id == updatedFountain.id) {
+            selectedFountainForDetail = updatedFountain
+        }
+        applyFilterAndSort()
     }
 }

@@ -24,9 +24,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
-import cat.copernic.aguamap1.presentation.fountain.comments.FountainCommentsViewModel
-import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainScreen
-import cat.copernic.aguamap1.presentation.fountain.detailFountain.DetailFountainViewModel
 import cat.copernic.aguamap1.presentation.game.components.ErrorScreen
 import cat.copernic.aguamap1.presentation.game.components.LoadingPartida
 import cat.copernic.aguamap1.presentation.game.screens.GameInstructionsScreen
@@ -44,9 +41,8 @@ import org.osmdroid.util.GeoPoint
 @Composable
 fun GameScreen(
     viewModel: GameViewModel = hiltViewModel(),
-    detailFountainViewModel: DetailFountainViewModel = hiltViewModel(), // AÑADIDO
-    commentsViewModel: FountainCommentsViewModel = hiltViewModel(), // AÑADIDO
-    onBackToHome: () -> Unit
+    onBackToHome: () -> Unit,
+    onFountainClick: (Fountain) -> Unit // Callback para navegar al detalle oficial
 ) {
     val gameState by viewModel.gameState.collectAsState()
     val currentFountain by viewModel.currentFountain.collectAsState()
@@ -57,9 +53,6 @@ fun GameScreen(
     val error by viewModel.error.collectAsState()
     val userGuessPos by viewModel.userGuessPos.collectAsState()
     val hasLost by viewModel.hasLost.collectAsState()
-
-    // Estado para controlar si se muestran los detalles de una fuente
-    var showFountainDetails by remember { mutableStateOf<Fountain?>(null) }
 
     // Estado para la ubicación del usuario
     var currentUserLat by remember { mutableDoubleStateOf(0.0) }
@@ -94,13 +87,14 @@ fun GameScreen(
         }
     }
 
-    // INICIAR JUEGO
+    // Lógica de inicio de partida
     LaunchedEffect(isLocationReady) {
         if (isLocationReady && gameState == GameViewModel.GameState.Initial) {
             viewModel.checkCanPlay(currentUserLat, currentUserLng)
         }
     }
 
+    // Limpieza al salir de la pantalla
     DisposableEffect(Unit) {
         onDispose {
             viewModel.onBackToHomePressed()
@@ -121,99 +115,73 @@ fun GameScreen(
                 }
             }
         } else {
-            // Si hay una fuente seleccionada para ver detalles, mostramos DetailFountainScreen
-            if (showFountainDetails != null) {
-                DetailFountainScreen(
-                    fountain = showFountainDetails!!,
-                    viewModel = detailFountainViewModel,
-                    commentsViewModel = commentsViewModel,
-                    onBack = { showFountainDetails = null },
-                    onDelete = {
-                        // Aquí puedes manejar lo que pasa cuando se elimina
-                        showFountainDetails = null
-                    },
-                    onConfirm = {
-                        // Aquí puedes manejar la confirmación
-                    },
-                    onReportAveria = {
-                        // Aquí puedes manejar el reporte de avería
-                    },
-                    onReportNoExiste = {
-                        // Aquí puedes manejar el reporte de no existencia
+            // Control de estados del juego
+            when (gameState) {
+                GameViewModel.GameState.Initial -> {
+                    LoadingPartida()
+                }
+
+                GameViewModel.GameState.Instructions -> {
+                    GameInstructionsScreen(onStart = { viewModel.onStartGameClicked() })
+                }
+
+                GameViewModel.GameState.Playing -> {
+                    currentFountain?.let {
+                        GamePlayScreen(
+                            fountain = it,
+                            remainingTime = remainingTime,
+                            userLocation = if (isLocationReady) GeoPoint(
+                                currentUserLat,
+                                currentUserLng
+                            ) else null,
+                            onGuess = { lat, lng -> viewModel.setUserGuess(lat, lng) },
+                            onFinish = { viewModel.finishGame() }
+                        )
+                    }
+                }
+
+                GameViewModel.GameState.Finished -> {
+                    currentFountain?.let {
+                        GameResultScreen(
+                            fountain = it,
+                            score = score,
+                            distance = distance,
+                            userGuessPos = userGuessPos?.let { pos ->
+                                GeoPoint(pos.first, pos.second)
+                            },
+                            hasLost = hasLost,
+                            onBackToHome = {
+                                viewModel.onBackToHomePressed()
+                                onBackToHome()
+                            },
+                            onFountainClick = { fountain ->
+                                // Navegamos usando el callback que va al NavigationGraph
+                                onFountainClick(fountain)
+                            }
+                        )
+                    }
+                }
+
+                GameViewModel.GameState.DailyLimitReached -> ErrorScreen(
+                    message = error ?: stringResource(R.string.game_error_daily_limit),
+                    onRetry = null,
+                    onBack = {
+                        viewModel.onBackToHomePressed()
+                        onBackToHome()
                     }
                 )
-            } else {
-                // Mostrar el juego normalmente
-                when (gameState) {
-                    GameViewModel.GameState.Initial -> {
-                        if (!isLocationReady) {
-                            LoadingPartida()
-                        } else {
-                            LoadingPartida()
-                        }
+
+                else -> ErrorScreen(
+                    message = error ?: stringResource(R.string.game_error_unexpected),
+                    onRetry = { viewModel.retryGame() },
+                    onBack = {
+                        viewModel.onBackToHomePressed()
+                        onBackToHome()
                     }
-
-                    GameViewModel.GameState.Instructions -> {
-                        GameInstructionsScreen(onStart = { viewModel.onStartGameClicked() })
-                    }
-
-                    GameViewModel.GameState.Playing -> {
-                        currentFountain?.let {
-                            GamePlayScreen(
-                                fountain = it,
-                                remainingTime = remainingTime,
-                                userLocation = if (isLocationReady) GeoPoint(
-                                    currentUserLat,
-                                    currentUserLng
-                                ) else null,
-                                onGuess = { lat, lng -> viewModel.setUserGuess(lat, lng) },
-                                onFinish = { viewModel.finishGame() }
-                            )
-                        }
-                    }
-
-                    GameViewModel.GameState.Finished -> {
-                        currentFountain?.let {
-                            GameResultScreen(
-                                fountain = it,
-                                score = score,
-                                distance = distance,
-                                userGuessPos = userGuessPos?.let { pos ->
-                                    GeoPoint(pos.first, pos.second)
-                                },
-                                hasLost = hasLost,
-                                onBackToHome = {
-                                    viewModel.onBackToHomePressed()
-                                    onBackToHome()
-                                },
-                                onFountainClick = { fountain ->
-                                    // Aquí mostramos los detalles de la fuente
-                                    showFountainDetails = fountain
-                                }
-                            )
-                        }
-                    }
-
-                    GameViewModel.GameState.DailyLimitReached -> ErrorScreen(
-                        message = error ?: stringResource(R.string.game_error_daily_limit),
-                        onRetry = null,
-                        onBack = {
-                            viewModel.onBackToHomePressed()
-                            onBackToHome()
-                        }
-                    )
-
-                    else -> ErrorScreen(
-                        message = error ?: stringResource(R.string.game_error_unexpected),
-                        onRetry = { viewModel.retryGame() },
-                        onBack = {
-                            viewModel.onBackToHomePressed()
-                            onBackToHome()
-                        }
-                    )
-                }
+                )
             }
 
+            // Overlay de carga global
             if (isLoading) {
                 Box(
                     Modifier
