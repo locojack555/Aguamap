@@ -29,42 +29,45 @@ import org.osmdroid.views.MapView
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapScreen(
-    mapViewModel: MapViewModel = hiltViewModel(),
+    // CAMBIO: Ahora recibimos el viewModel como parámetro
+    // para usar el que viene del NavigationGraph
+    viewModel: MapViewModel,
     addViewModel: AddFountainViewModel = hiltViewModel(),
-    onFountainClick: (cat.copernic.aguamap1.domain.model.Fountain) -> Unit, // Callback para el NavHost
+    onFountainClick: (cat.copernic.aguamap1.domain.model.Fountain) -> Unit,
     isHome: Boolean
 ) {
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
-    val isMapView by mapViewModel.isMapView.collectAsState()
+
+    // USAMOS EL viewModel QUE RECIBIMOS POR PARÁMETRO
+    val isMapView by viewModel.isMapView.collectAsState()
     val isAdding = addViewModel.isAdding
-    val categories = mapViewModel.categories
+    val categories = viewModel.categories
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
-            // 1. Capa Superior: Pantalla Agregar (Si decides no navegar para agregar)
-            isAdding && mapViewModel.isLocationAvailable -> {
+            // 1. Capa Superior: Pantalla Agregar
+            isAdding && viewModel.isLocationAvailable -> {
                 AddFountainScreen(
-                    latitude = mapViewModel.userLat!!,
-                    longitude = mapViewModel.userLng!!,
+                    latitude = viewModel.userLat!!,
+                    longitude = viewModel.userLng!!,
                     viewModel = addViewModel,
                     onDismiss = { addViewModel.closeAddFountain() },
                     onFountainCreated = {
                         addViewModel.closeAddFountain()
-                        mapViewModel.loadFountains()
+                        viewModel.loadFountains()
                     }
                 )
             }
 
-            // 2. Capa Base: Mapa o Lista (Solo se muestran si tenemos permiso)
+            // 2. Capa Base: Mapa o Lista
             locationPermissionState.status.isGranted -> {
                 if (isMapView) {
                     OSMMapContent(
-                        viewModel = mapViewModel,
+                        viewModel = viewModel, // Usamos el compartido
                         isHome = isHome,
                         onMapLoad = { mapViewRef = it },
                         onFountainClick = { fountain ->
-                            // IMPORTANTE: Llamamos al callback que activará la navegación
                             onFountainClick(fountain)
                         }
                     )
@@ -74,18 +77,18 @@ fun MapScreen(
                     )
                 } else {
                     ListScreen(
-                        viewModel = mapViewModel,
+                        viewModel = viewModel, // Usamos el compartido
                         onFountainClick = { fountain ->
                             onFountainClick(fountain)
                         }
                     )
                 }
 
-                // UI flotante (Botones de zoom, GPS y Añadir)
+                // UI flotante
                 MapFloatingButtons(
                     mapViewRef = mapViewRef,
                     addViewModel = addViewModel,
-                    mapViewModel = mapViewModel,
+                    mapViewModel = viewModel, // Usamos el compartido
                     isMapView = isMapView,
                     modifier = Modifier.align(Alignment.BottomEnd)
                 )
@@ -93,7 +96,7 @@ fun MapScreen(
                 if (isHome) {
                     MapTopBar(
                         isMapView = isMapView,
-                        onToggleView = { mapViewModel.toggleView() }
+                        onToggleView = { viewModel.toggleView() }
                     )
                 }
             }

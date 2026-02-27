@@ -42,11 +42,13 @@ fun NavigationGraph(
     soundManager: SoundManager
 ) {
     val context = LocalContext.current
+
+    // USAMOS EL MISMO VIEWMODEL PARA TODO EL GRAFO DE NAVEGACIÓN
+    // Al estar declarado aquí, sobrevive a los cambios de pantalla del NavHost
     val mapViewModel: MapViewModel = hiltViewModel()
     val addFountainViewModel: AddFountainViewModel = hiltViewModel()
 
-    // --- OBTENCIÓN DE UBICACIÓN DESDE EL MAPVIEWMODEL ---
-    // Extraemos la latitud y longitud que el MapViewModel ya está gestionando
+    // Extraemos la ubicación como estados reactivos de Compose
     val currentLatitude = mapViewModel.userLat
     val currentLongitude = mapViewModel.userLng
 
@@ -70,6 +72,8 @@ fun NavigationGraph(
             composable(BottomNavItem.Map.route) {
                 MapScreen(
                     isHome = true,
+                    // Pasamos el ViewModel compartido para asegurar que es la misma instancia
+                    viewModel = mapViewModel,
                     onFountainClick = { fountain ->
                         mapViewModel.selectFountain(fountain)
                         navController.navigate("fountain_detail")
@@ -137,18 +141,20 @@ fun NavigationGraph(
 
             // --- CATEGORÍAS ---
             composable(BottomNavItem.Categories.route) {
+                // El log ahora debería mostrar la ubicación real si ya pasó por el mapa
+                LaunchedEffect(currentLatitude) {
+                    android.util.Log.d("NAV_FLOW", "Enviando a Categorías -> Lat: $currentLatitude, Lng: $currentLongitude")
+                }
+
                 CategoriesScreen(
-                    userLat = currentLatitude,  // Ahora pasamos la variable extraída arriba
-                    userLng = currentLongitude, // Ahora pasamos la variable extraída arriba
+                    userLat = currentLatitude,
+                    userLng = currentLongitude,
                     onFountainClick = { fountain ->
-                        // Sincronizamos con el MapViewModel para que el detalle sepa qué mostrar
                         mapViewModel.selectFountain(fountain)
                         navController.navigate("fountain_detail")
                     }
                 )
             }
-
-            // ... (Resto de rutas: Game, Ranking, Profile se mantienen igual)
 
             // --- JUEGO ---
             composable(BottomNavItem.Game.route) {
@@ -171,7 +177,6 @@ fun NavigationGraph(
                 )
             }
 
-            // ... (Rutas de Profile, Settings, etc.)
             composable(BottomNavItem.Ranking.route) { RankingScreen() }
 
             composable(BottomNavItem.Profile.route) {
@@ -189,6 +194,7 @@ fun NavigationGraph(
                     navigateToFountainReports = { navController.navigate("fountain_reports") }
                 )
             }
+
             composable("edit_profile") { backStackEntry ->
                 val parentEntry = remember(backStackEntry) { navController.getBackStackEntry(BottomNavItem.Profile.route) }
                 val profileViewModel: ProfileViewModel = hiltViewModel(parentEntry)
@@ -203,6 +209,7 @@ fun NavigationGraph(
                     }
                 )
             }
+
             composable("settings") { SettingsScreen(onClose = { navController.popBackStack() }) }
             composable("moderation") { ModerationScreen(onBack = { navController.popBackStack() }) }
 
