@@ -13,7 +13,7 @@ interface FountainRepository {
     /**
      * Escucha en tiempo real la lista de fuentes.
      */
-    fun fetchSources(): Flow<Result<List<Fountain>>>
+    fun fetchSources(lat: Double?, lng: Double?): Flow<Result<List<Fountain>>>
 
     /**
      * Crea una nueva fuente en la colección principal.

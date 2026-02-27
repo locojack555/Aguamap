@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Comment
@@ -143,6 +145,18 @@ fun DetailFountainScreen(
                     }
                 }
 
+                // Debajo de la fila de estrellas/rating
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                    Icon(Icons.Default.Person, null, tint = NegroMuySuave, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = "Añadida por: ${viewModel.creatorName ?: "Cargando..."}",
+                        fontSize = 12.sp,
+                        color = NegroMuySuave,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
+
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
                     Icon(Icons.Default.Star, null, tint = Naranja, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(4.dp))
@@ -174,6 +188,75 @@ fun DetailFountainScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
+                // --- TÍTULO DE SECCIÓN MAPA ---
+                Text(
+                    text = stringResource(R.string.map),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Negro,
+                    modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)
+                )
+
+// --- CONTENEDOR DEL MAPA (BOSQUEJO) ---
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = GrisClaro,
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, NegroMinimal)
+                ) {
+                    // Usamos un Box para poner una capa invisible encima del mapa
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            // Esta línea captura cualquier toque y no lo pasa al mapa de abajo
+                            .pointerInput(Unit) { }
+                    ) {
+                        AndroidView(
+                            factory = { context ->
+                                org.osmdroid.views.MapView(context).apply {
+                                    // Configuraciones internas de OSM
+                                    setMultiTouchControls(false)
+                                    setBuiltInZoomControls(false)
+                                    isClickable = false
+                                    setOnTouchListener { _, _ -> true }
+
+                                    // IMPORTANTE: Desactivar gestos explícitos si la versión lo permite
+                                    // Pero con el pointerInput de arriba ya debería bastar.
+
+                                    controller.setZoom(17.5)
+                                    val startPoint = org.osmdroid.util.GeoPoint(fountain.latitude, fountain.longitude)
+                                    controller.setCenter(startPoint)
+
+                                    val marker = org.osmdroid.views.overlay.Marker(this)
+                                    marker.position = startPoint
+                                    marker.setAnchor(
+                                        org.osmdroid.views.overlay.Marker.ANCHOR_CENTER,
+                                        org.osmdroid.views.overlay.Marker.ANCHOR_CENTER
+                                    )
+
+                                    val originalDrawable = context.getDrawable(R.drawable.pin_lleno)
+                                    val smallIcon = originalDrawable?.let { drawable ->
+                                        val bitmap = (drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
+                                            ?: (drawable as? androidx.core.graphics.drawable.RoundedBitmapDrawable)?.bitmap
+                                        bitmap?.let { btm ->
+                                            val resizedBitmap = android.graphics.Bitmap.createScaledBitmap(btm, 140, 140, true)
+                                            android.graphics.drawable.BitmapDrawable(context.resources, resizedBitmap)
+                                        }
+                                    }
+
+                                    marker.icon = smallIcon ?: context.getDrawable(R.drawable.pin_lleno)
+                                    marker.infoWindow = null
+                                    overlays.add(marker)
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
                 // Botones de acción
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (fountain.positiveVotes < 3) {

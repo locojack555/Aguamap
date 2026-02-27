@@ -20,4 +20,5 @@ interface AuthRepository {
     suspend fun refreshUser()
     suspend fun signOut()
     suspend fun isEmailVerified(): Boolean
+    suspend fun getUserNameById(uid: String): Result<String>
 }

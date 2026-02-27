@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,12 +42,13 @@ class CategoryViewModel @Inject constructor(
     private val getUserRoleUseCase: GetUserRoleUseCase
 ) : ViewModel() {
 
+    // --- ESTADO DE USUARIO ---
     var isAdmin by mutableStateOf(false)
         private set
-
     var currentUserId by mutableStateOf<String?>(null)
         private set
 
+    // --- FILTROS Y BÚSQUEDA ---
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
@@ -55,6 +57,33 @@ class CategoryViewModel @Inject constructor(
 
     private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
 
+    // --- OPTIMIZACIÓN DE UBICACIÓN Y FIREBASE ---
+    private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
+    private var lastFetchedLocation: Pair<Double, Double>? = null
+    private val MIN_DISTANCE_TO_REFETCH = 3000.0 // 2 Kilómetros
+
+    /**
+     * Actualiza la ubicación pero solo dispara una nueva consulta a Firebase
+     * si el usuario se ha movido más de 2km para ahorrar lecturas.
+     */
+    fun setLocation(lat: Double, lng: Double) {
+        val lastLoc = lastFetchedLocation
+        if (lastLoc == null) {
+            _userLocation.value = lat to lng
+            lastFetchedLocation = lat to lng
+        } else {
+            val distance = FloatArray(1)
+            android.location.Location.distanceBetween(
+                lastLoc.first, lastLoc.second, lat, lng, distance
+            )
+            if (distance[0] > MIN_DISTANCE_TO_REFETCH) {
+                _userLocation.value = lat to lng
+                lastFetchedLocation = lat to lng
+            }
+        }
+    }
+
+    // --- FLUJOS DE DATOS ---
     val categories: StateFlow<List<Category>> =
         combine(_allCategories, _searchQuery) { list, query ->
             if (query.isBlank()) {
@@ -69,25 +98,28 @@ class CategoryViewModel @Inject constructor(
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Filtro estricto: Si isOp es false, solo se agrupan las fuentes no operacionales.
-    val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = combine(
-        getFountainsUseCase(),
-        _operationalFilter
-    ) { result, isOp ->
-        val fountains = result.getOrDefault(emptyList())
-        val filtered = if (isOp == null) {
-            fountains
-        } else {
-            // isOp será false cuando filtramos por averiadas
-            fountains.filter { it.operational == isOp }
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = _userLocation
+        .flatMapLatest { location ->
+            // Solo descarga fuentes en radio de 15km (definido en repositorio)
+            getFountainsUseCase(location?.first, location?.second)
         }
-        filtered.groupBy { it.category.id }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyMap()
-    )
+        .combine(_operationalFilter) { result, isOp ->
+            val fountains = result.getOrDefault(emptyList())
+            val filtered = if (isOp == null) {
+                fountains
+            } else {
+                fountains.filter { it.operational == isOp }
+            }
+            filtered.groupBy { it.category.id }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyMap()
+        )
 
+    // --- ESTADO DEL FORMULARIO ---
     var name by mutableStateOf("")
     var description by mutableStateOf("")
     var selectedImageUri by mutableStateOf<Uri?>(null)
@@ -120,8 +152,6 @@ class CategoryViewModel @Inject constructor(
     }
 
     fun toggleOperationalFilter(isFilterActive: Boolean) {
-        // Si el filtro estaba activo (isFilterActive == true), lo quitamos (null)
-        // Si no estaba activo, lo ponemos en false (solo averiadas)
         _operationalFilter.value = if (isFilterActive) null else false
     }
 
@@ -158,7 +188,6 @@ class CategoryViewModel @Inject constructor(
             errorMessage = null
             try {
                 var finalUrl = currentImageUrl
-
                 selectedImageUri?.let { uri ->
                     cloudinaryService.uploadImageWithProgress(uri).collect { progress ->
                         if (progress is UploadProgress.InProgress) {
@@ -181,7 +210,6 @@ class CategoryViewModel @Inject constructor(
                 } else {
                     createCategoryUseCase(categoryData)
                 }
-
                 onSuccess()
                 resetForm()
             } catch (e: Exception) {
@@ -193,10 +221,6 @@ class CategoryViewModel @Inject constructor(
     }
 
     fun canDeleteCategory(categoryId: String): Boolean {
-        // Para borrar, siempre miramos la lista real de fuentes sin importar los filtros de UI
-        // por eso aquí NO deberíamos usar fountainsByCategory.value que está filtrado.
-        // Pero para simplificar, si quieres que el borrado sea seguro,
-        // podrías añadir una comprobación contra la base de datos directamente.
         return fountainsByCategory.value[categoryId].isNullOrEmpty()
     }
 
@@ -204,7 +228,7 @@ class CategoryViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (!canDeleteCategory(id)) {
-                    errorMessage = "No se puede eliminar la categoría porque todavía tiene fuentes asociadas."
+                    errorMessage = "No se puede eliminar la categoría porque todavía tiene fuentes asociadas en tu zona."
                     return@launch
                 }
                 deleteCategoryUseCase(id)

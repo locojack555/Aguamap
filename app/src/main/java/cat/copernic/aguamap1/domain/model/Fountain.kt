@@ -8,6 +8,7 @@ data class Fountain(
     val name: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
+    val geohash: String = "",
     val operational: Boolean = true,
     val category: Category = Category(),
     val votedByPositive: List<String> = emptyList(),
@@ -21,6 +22,7 @@ data class Fountain(
     val createdBy: String = "",
     val positiveVotes: Int = 0,
     val negativeVotes: Int = 0,
+
     @get:Exclude
     val comments: List<Comment> = emptyList(),
     @get:Exclude

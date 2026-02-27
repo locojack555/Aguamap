@@ -43,6 +43,11 @@ fun NavigationGraph(
     val mapViewModel: MapViewModel = hiltViewModel()
     val addFountainViewModel: AddFountainViewModel = hiltViewModel()
 
+    // --- OBTENCIÓN DE UBICACIÓN DESDE EL MAPVIEWMODEL ---
+    // Extraemos la latitud y longitud que el MapViewModel ya está gestionando
+    val currentLatitude = mapViewModel.userLat
+    val currentLongitude = mapViewModel.userLng
+
     val currentRoute by navController.currentBackStackEntryFlow.collectAsStateWithLifecycle(
         initialValue = navController.currentBackStackEntry?.destination?.route
     )
@@ -53,9 +58,7 @@ fun NavigationGraph(
         }
     }
 
-    // Usamos un Box para asegurar que AddFountainScreen se dibuje ENCIMA de NavHost
     Box(modifier = Modifier.fillMaxSize()) {
-
         NavHost(
             navController = navController,
             startDestination = BottomNavItem.Map.route,
@@ -104,11 +107,7 @@ fun NavigationGraph(
                                 detailViewModel.selectedFountain?.let { updated ->
                                     mapViewModel.updateSingleFountainInList(updated)
                                 }
-                                Toast.makeText(
-                                    context,
-                                    "Fuente confirmada correctamente",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(context, "Fuente confirmada", Toast.LENGTH_SHORT).show()
                             }
                         },
                         onDelete = {
@@ -137,19 +136,22 @@ fun NavigationGraph(
             // --- CATEGORÍAS ---
             composable(BottomNavItem.Categories.route) {
                 CategoriesScreen(
+                    userLat = currentLatitude,  // Ahora pasamos la variable extraída arriba
+                    userLng = currentLongitude, // Ahora pasamos la variable extraída arriba
                     onFountainClick = { fountain ->
+                        // Sincronizamos con el MapViewModel para que el detalle sepa qué mostrar
                         mapViewModel.selectFountain(fountain)
                         navController.navigate("fountain_detail")
                     }
                 )
             }
 
+            // ... (Resto de rutas: Game, Ranking, Profile se mantienen igual)
+
             // --- JUEGO ---
             composable(BottomNavItem.Game.route) {
                 val gameKey = remember { "game_${System.currentTimeMillis()}" }
                 val gameViewModel: GameViewModel = hiltViewModel(key = gameKey)
-
-
                 GameScreen(
                     viewModel = gameViewModel,
                     onBackToHome = {
@@ -167,10 +169,8 @@ fun NavigationGraph(
                 )
             }
 
-            composable(BottomNavItem.Ranking.route) {
-                RankingScreen()
-            }
-
+            // ... (Rutas de Profile, Settings, etc.)
+            composable(BottomNavItem.Ranking.route) { RankingScreen() }
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen(
                     navigateToLogin = {
@@ -178,28 +178,17 @@ fun NavigationGraph(
                         soundManager.stopAllSounds()
                         rootNavController.navigate(RootScreen.Login.route) {
                             popUpTo(RootScreen.Home.route) { inclusive = true }
-                            launchSingleTop = true
                         }
                     },
-                    navigateToEditProfile = {
-                        navController.navigate("edit_profile")
-                    },
-                    navigateToSettings = {
-                        navController.navigate("settings")
-                    },
-                    navigateToModeration = {                         // ← NUEVO
-                        navController.navigate("moderation")
-                    }
+                    navigateToEditProfile = { navController.navigate("edit_profile") },
+                    navigateToSettings = { navController.navigate("settings") },
+                    navigateToModeration = { navController.navigate("moderation") }
                 )
             }
-
             composable("edit_profile") { backStackEntry ->
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry(BottomNavItem.Profile.route)
-                }
+                val parentEntry = remember(backStackEntry) { navController.getBackStackEntry(BottomNavItem.Profile.route) }
                 val profileViewModel: ProfileViewModel = hiltViewModel(parentEntry)
                 val profileState by profileViewModel.profileState.collectAsStateWithLifecycle()
-
                 EditProfileScreen(
                     initialNombre = profileState.userName,
                     viewModel = profileViewModel,
@@ -210,34 +199,19 @@ fun NavigationGraph(
                     }
                 )
             }
-
-            composable("settings") {
-                SettingsScreen(
-                    onClose = { navController.popBackStack() }
-                )
-            }
-
-            composable("moderation") {
-                ModerationScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
+            composable("settings") { SettingsScreen(onClose = { navController.popBackStack() }) }
+            composable("moderation") { ModerationScreen(onBack = { navController.popBackStack() }) }
         }
-        // --- SOLUCIÓN: LA PANTALLA SE DECLARA DESPUÉS DEL NAVHOST PARA QUE QUEDE ENCIMA ---
+
+        // --- PANTALLA ADD FOUNTAIN ---
         if (addFountainViewModel.isAdding) {
             AddFountainScreen(
                 onDismiss = { addFountainViewModel.closeAddFountain() },
                 latitude = addFountainViewModel.selectedLocationForNewFountain?.latitude ?: 0.0,
-                longitude = addFountainViewModel.selectedLocationForNewFountain?.longitude
-                    ?: 0.0,
+                longitude = addFountainViewModel.selectedLocationForNewFountain?.longitude ?: 0.0,
                 viewModel = addFountainViewModel,
                 onFountainCreated = {
                     mapViewModel.loadFountains()
-                    // Si estamos en detalle, refrescamos la fuente actual para ver los cambios
-                    mapViewModel.selectedFountainForDetail?.let {
-                        // Aquí podrías llamar a detailViewModel.refresh si tuvieras acceso,
-                        // pero al cerrar y volver a entrar ya se verá.
-                    }
                 }
             )
         }

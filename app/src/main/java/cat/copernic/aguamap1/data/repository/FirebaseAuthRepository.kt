@@ -120,6 +120,16 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    override suspend fun getUserNameById(uid: String): Result<String> {
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            val name = document.getString("nom") ?: "Usuario desconocido"
+            Result.success(name)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getCurrentUserEmail(): String? {
         // Reutilizamos tu función existente para obtener el UID
         val uid = getCurrentUserUid() ?: return null

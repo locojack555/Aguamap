@@ -75,8 +75,12 @@ class MapViewModel @Inject constructor(
     }
 
     fun loadFountains() {
+        // Si no tenemos ubicación, no pedimos nada para ahorrar lecturas
+        if (userLat == null || userLng == null) return
+
         viewModelScope.launch {
-            getFountainsUseCase().collect { result ->
+            // Pasamos los parámetros al UseCase modificado
+            getFountainsUseCase(userLat, userLng).collect { result ->
                 result.onSuccess { list ->
                     allFountainsList = list
                     updateDistances()
@@ -88,13 +92,17 @@ class MapViewModel @Inject constructor(
     fun onFirstLocationFound(lat: Double, lng: Double) {
         userLat = lat
         userLng = lng
+
+        // --- CLAVE: Lanzamos la carga ahora que sabemos dónde está el usuario ---
+        loadFountains()
+
         if (isFirstLocationUpdate) {
             latitude = lat
             longitude = lng
             zoomLevel = 17.0
             isFirstLocationUpdate = false
         }
-        updateDistances()
+        // Ya no hace falta llamar a updateDistances aquí porque loadFountains lo hace al terminar
     }
 
     private fun updateDistances() {

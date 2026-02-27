@@ -13,6 +13,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,8 +37,16 @@ import cat.copernic.aguamap1.ui.theme.Rojo
 fun CategoriesScreen(
     viewModel: CategoryViewModel = hiltViewModel(),
     // Añadimos el callback de navegación para conectar con el NavHost
+    userLat: Double?,
+    userLng: Double?,
     onFountainClick: (Fountain) -> Unit
 ) {
+
+    LaunchedEffect(userLat, userLng) {
+        if (userLat != null && userLng != null) {
+            viewModel.setLocation(userLat, userLng)
+        }
+    }
     val isAdmin = viewModel.isAdmin
     val categories by viewModel.categories.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -127,9 +136,13 @@ fun CategoriesScreen(
             onDeleteCategory = {
                 val categoryId = selectedCategory!!.id
                 showDetailDialog = false
-                if (viewModel.canDeleteCategory(categoryId)) {
+
+                if (viewModel.fountainsByCategory.value[categoryId].isNullOrEmpty()) {
+                    // Si está vacía, pedimos confirmación para borrar
                     showDeleteConfirmation = true
                 } else {
+                    // Si tiene fuentes, ejecutamos delete para que el ViewModel
+                    // dispare el mensaje de error: "No se puede eliminar..."
                     viewModel.deleteCategory(categoryId) {}
                 }
             },
