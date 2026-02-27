@@ -44,15 +44,12 @@ fun ModerationScreen(
         successMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearMessages() }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .background(Color(0xFFF1F3F4))
         ) {
-
             // ── Header ──────────────────────────────────────────────────────────
             Box(
                 modifier = Modifier
@@ -101,8 +98,8 @@ fun ModerationScreen(
                 isRefreshing = isLoading,
                 onRefresh = { viewModel.loadReportedComments() },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF1F3F4))
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
                 if (!isLoading && reportedComments.isEmpty()) {
                     EmptyModerationState()
@@ -124,6 +121,12 @@ fun ModerationScreen(
                 }
             }
         }
+
+        // Snackbar - Ahora dentro del Box pero fuera del flujo normal
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 

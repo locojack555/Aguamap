@@ -47,15 +47,12 @@ fun FountainReportsScreen(
         successMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearMessages() }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .background(Color(0xFFF1F3F4))
         ) {
-
             // ── Header ──────────────────────────────────────────────────────────
             Box(
                 modifier = Modifier
@@ -104,8 +101,8 @@ fun FountainReportsScreen(
                 isRefreshing = isLoading,
                 onRefresh = { viewModel.loadReports() },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF1F3F4))
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
                 if (!isLoading && reports.isEmpty()) {
                     EmptyFountainReportsState()
@@ -117,7 +114,6 @@ fun FountainReportsScreen(
                         items(reports, key = { it.id }) { report ->
                             FountainReportCard(
                                 report = report,
-                                // Nombre resuelto; mientras carga muestra "..."
                                 reporterName = userNames[report.userId] ?: "...",
                                 onResolve = { viewModel.resolveReport(report.id) },
                                 onGoToFountain = { onGoToFountain(report.fountainId) }
@@ -128,6 +124,12 @@ fun FountainReportsScreen(
                 }
             }
         }
+
+        // Snackbar
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -136,7 +138,7 @@ fun FountainReportsScreen(
 @Composable
 private fun FountainReportCard(
     report: Report,
-    reporterName: String,           // ← nombre resuelto en vez de uid
+    reporterName: String,
     onResolve: () -> Unit,
     onGoToFountain: () -> Unit
 ) {
@@ -253,7 +255,7 @@ private fun FountainReportCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // Reportado por  ← ahora muestra el nombre, no el uid
+            // Reportado por
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
