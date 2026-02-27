@@ -27,6 +27,8 @@ import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
 import cat.copernic.aguamap1.presentation.music.SoundManager
 import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
 import cat.copernic.aguamap1.presentation.profile.EditProfileScreen
+import cat.copernic.aguamap1.presentation.profile.FountainReportsScreen
+import cat.copernic.aguamap1.presentation.profile.FountainReportsViewModel
 import cat.copernic.aguamap1.presentation.profile.ModerationScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileViewModel
@@ -171,6 +173,7 @@ fun NavigationGraph(
 
             // ... (Rutas de Profile, Settings, etc.)
             composable(BottomNavItem.Ranking.route) { RankingScreen() }
+
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen(
                     navigateToLogin = {
@@ -182,7 +185,8 @@ fun NavigationGraph(
                     },
                     navigateToEditProfile = { navController.navigate("edit_profile") },
                     navigateToSettings = { navController.navigate("settings") },
-                    navigateToModeration = { navController.navigate("moderation") }
+                    navigateToModeration = { navController.navigate("moderation") },
+                    navigateToFountainReports = { navController.navigate("fountain_reports") }
                 )
             }
             composable("edit_profile") { backStackEntry ->
@@ -201,6 +205,25 @@ fun NavigationGraph(
             }
             composable("settings") { SettingsScreen(onClose = { navController.popBackStack() }) }
             composable("moderation") { ModerationScreen(onBack = { navController.popBackStack() }) }
+
+            composable("fountain_reports") {
+                val context = LocalContext.current
+                val reportsViewModel: FountainReportsViewModel = hiltViewModel()
+
+                FountainReportsScreen(
+                    onBack = { navController.popBackStack() },
+                    onGoToFountain = { fountainId ->
+                        reportsViewModel.getFountainById(fountainId) { fountain ->
+                            if (fountain != null) {
+                                mapViewModel.selectFountain(fountain) // ← usa el de arriba
+                                navController.navigate("fountain_detail")
+                            } else {
+                                Toast.makeText(context, "Error: No se encontró la fuente", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                )
+            }
         }
 
         // --- PANTALLA ADD FOUNTAIN ---

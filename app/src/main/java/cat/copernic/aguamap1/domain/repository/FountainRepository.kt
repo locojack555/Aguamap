@@ -16,6 +16,11 @@ interface FountainRepository {
     fun fetchSources(lat: Double?, lng: Double?): Flow<Result<List<Fountain>>>
 
     /**
+     * Busca la fuente por su id.
+     */
+    suspend fun getFountainById(fountainId: String): Result<Fountain>
+
+    /**
      * Crea una nueva fuente en la colección principal.
      */
     suspend fun createFountain(fountain: Fountain): Result<Unit>

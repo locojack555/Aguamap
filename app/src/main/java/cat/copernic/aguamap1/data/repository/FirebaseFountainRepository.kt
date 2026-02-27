@@ -74,6 +74,25 @@ class FirebaseFountainRepository @Inject constructor(
         }
     }
 
+    override suspend fun getFountainById(fountainId: String): Result<Fountain> {
+        return try {
+            val document = db.collection("fountains")
+                .document(fountainId)
+                .get()
+                .await()
+
+            val fountain = document.toObject(Fountain::class.java)?.copy(id = document.id)
+
+            if (fountain != null) {
+                Result.success(fountain)
+            } else {
+                Result.failure(Exception("Fuente no encontrada"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun createFountain(fountain: Fountain): Result<Unit> {
         return try {
             // 1. Calcular el GeoHash a partir de la latitud y longitud

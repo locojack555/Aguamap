@@ -112,7 +112,7 @@
     <string name="ranking_title_year">Classificació del any</string>
     <string name="ranking_title">Ranking</string>
     <string name="ranking_subtitle">Millors jugadors</string>
-    <string name="ranking_stats">%1$d descobertes    %2$d partides</string>
+    <string name="ranking_stats">%2$d partides</string>
     <string name="ranking_total_points">Els teus punts totals</string>
     <string name="ranking_gold">Or</string>
     <string name="ranking_silver">Plata</string>

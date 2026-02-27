@@ -112,7 +112,7 @@
     <string name="ranking_title_year">Classification of the year</string>
     <string name="ranking_title">Ranking</string>
     <string name="ranking_subtitle">Best Players</string>
-    <string name="ranking_stats">%1$d discovered    %2$d partides</string>
+    <string name="ranking_stats">%2$d partides</string>
     <string name="ranking_total_points">Your total points</string>
     <string name="ranking_gold">Gold</string>
     <string name="ranking_silver">Silver</string>

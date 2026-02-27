@@ -212,4 +212,6 @@ class MapViewModel @Inject constructor(
         }
         applyFilterAndSort()
     }
+
+    fun getFountainById(id: String): Fountain? = allFountainsList.find { it.id == id }
 }

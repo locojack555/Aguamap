@@ -39,7 +39,8 @@ fun ProfileScreen(
     navigateToLogin: () -> Unit = {},
     navigateToEditProfile: () -> Unit = {},
     navigateToSettings: () -> Unit = {},
-    navigateToModeration: () -> Unit = {}
+    navigateToModeration: () -> Unit = {},
+    navigateToFountainReports: () -> Unit = {}  // ← NUEVO
 ) {
     val estadoScroll = rememberScrollState()
     val profileState by viewModel.profileState.collectAsState()
@@ -81,7 +82,8 @@ fun ProfileScreen(
                 // SECCIÓN ADMIN
                 if (isAdmin) {
                     SeccionPanelAdmin(
-                        navigateToModeration = navigateToModeration   // ← NUEVO
+                        navigateToModeration = navigateToModeration,
+                        navigateToFountainReports = navigateToFountainReports  // ← NUEVO
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -205,7 +207,8 @@ fun TarjetaEstadistica(valor: String, etiqueta: String, icono: ImageVector) {
 @Composable
 fun SeccionPanelAdmin(
     pendingReportsCount: Int = 0,
-    navigateToModeration: () -> Unit = {}
+    navigateToModeration: () -> Unit = {},
+    navigateToFountainReports: () -> Unit = {}  // ← NUEVO
 ) {
     Card(
         modifier = Modifier
@@ -222,6 +225,7 @@ fun SeccionPanelAdmin(
                 Text(stringResource(id = R.string.profile_admin_panel_title), fontWeight = FontWeight.Bold, color = Color(0xFF5D4037), fontSize = 15.sp)
             }
 
+            // Fila moderación de comentarios
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -232,6 +236,32 @@ fun SeccionPanelAdmin(
                 Icon(Icons.Default.Flag, contentDescription = null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(16.dp))
                 Text(stringResource(id = R.string.profile_admin_mod_comments), modifier = Modifier.weight(1f), fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                if (pendingReportsCount > 0) {
+                    Surface(color = Color(0xFFFFEBEE), shape = RoundedCornerShape(8.dp)) {
+                        Text(
+                            "$pendingReportsCount pendiente${if (pendingReportsCount != 1) "s" else ""}",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontSize = 11.sp,
+                            color = Color(0xFFE53935),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                }
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
+            }
+
+            // Fila reportes de fuentes  ← clickable conectado
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navigateToFountainReports() }  // ← CONECTADO
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Report, contentDescription = null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(16.dp))
+                Text("Reportes de fuentes", modifier = Modifier.weight(1f), fontSize = 15.sp, fontWeight = FontWeight.Medium)
                 if (pendingReportsCount > 0) {
                     Surface(color = Color(0xFFFFEBEE), shape = RoundedCornerShape(8.dp)) {
                         Text(
