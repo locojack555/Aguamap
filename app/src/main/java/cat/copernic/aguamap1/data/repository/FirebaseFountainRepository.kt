@@ -22,27 +22,76 @@ class FirebaseFountainRepository @Inject constructor(
     private val authRepository: AuthRepository
 ) : FountainRepository {
 
-    override fun fetchSources(): Flow<Result<List<Fountain>>> = callbackFlow {
-        val subscription = db.collection("fountains")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(Result.failure(error))
-                    return@addSnapshotListener
-                }
-                val fountains = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Fountain::class.java)?.copy(id = doc.id)
-                } ?: emptyList()
-                trySend(Result.success(fountains))
+    // Asegúrate de actualizar la interfaz FountainRepository para que acepte lat y lng
+    // Cambiamos callbackFlow por flow { ... } ya que usamos .get() y no listeners en tiempo real
+    override fun fetchSources(lat: Double?, lng: Double?): Flow<Result<List<Fountain>>> = kotlinx.coroutines.flow.flow {
+        // Si no hay ubicación, enviamos lista vacía y terminamos
+        if (lat == null || lng == null) {
+            emit(Result.success(emptyList()))
+            return@flow
+        }
+
+        try {
+            val center = com.firebase.geofire.GeoLocation(lat, lng)
+            val radiusInM = 15000.0 // Radio de 15km
+
+            // 1. Obtener rangos de Geohash
+            val bounds = com.firebase.geofire.GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
+            val tasks = mutableListOf<com.google.android.gms.tasks.Task<com.google.firebase.firestore.QuerySnapshot>>()
+
+            for (b in bounds) {
+                val q = db.collection("fountains")
+                    .orderBy("geohash")
+                    .startAt(b.startHash)
+                    .endAt(b.endHash)
+                tasks.add(q.get())
             }
-        awaitClose { subscription.remove() }
+
+            // 2. Esperar a que TODAS las peticiones terminen de forma síncrona/suspendida
+            val snapshots = com.google.android.gms.tasks.Tasks.whenAllSuccess<com.google.firebase.firestore.QuerySnapshot>(tasks).await()
+
+            val allFountains = mutableListOf<Fountain>()
+            for (snapshot in snapshots) {
+                for (doc in snapshot.documents) {
+                    val fountain = doc.toObject(Fountain::class.java)?.copy(id = doc.id)
+                    if (fountain != null) {
+                        val docLocation = com.firebase.geofire.GeoLocation(fountain.latitude, fountain.longitude)
+                        val distanceInM = com.firebase.geofire.GeoFireUtils.getDistanceBetween(docLocation, center)
+
+                        // Filtro circular de precisión
+                        if (distanceInM <= radiusInM) {
+                            allFountains.add(fountain)
+                        }
+                    }
+                }
+            }
+
+            // 3. Emitir el resultado final
+            emit(Result.success(allFountains))
+
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
     }
 
     override suspend fun createFountain(fountain: Fountain): Result<Unit> {
         return try {
+            // 1. Calcular el GeoHash a partir de la latitud y longitud
+            val hash = com.firebase.geofire.GeoFireUtils.getGeoHashForLocation(
+                com.firebase.geofire.GeoLocation(fountain.latitude, fountain.longitude)
+            )
+
             val newDocRef = db.collection("fountains").document()
-            val fountainWithId = fountain.copy(id = newDocRef.id)
+
+            // 2. Incluimos el Geohash en el objeto antes de subirlo
+            val fountainWithId = fountain.copy(
+                id = newDocRef.id,
+                geohash = hash // Guardamos el hash para que sea indexable
+            )
+
             newDocRef.set(fountainWithId).await()
 
+            // 3. Actualizar estadísticas del usuario
             val userName = authRepository.getCurrentUserName() ?: "Usuario"
             updateUserFountainsCount(fountain.createdBy, userName, 1)
 

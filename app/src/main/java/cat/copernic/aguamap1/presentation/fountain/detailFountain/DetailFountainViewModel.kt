@@ -47,6 +47,9 @@ class DetailFountainViewModel @Inject constructor(
     var currentUserId by mutableStateOf<String?>(null)
         private set
 
+    var creatorName by mutableStateOf<String?>(null)
+        private set
+
     // --- ESTADO DE LA FUENTE ---
     var selectedFountain by mutableStateOf<Fountain?>(null)
         private set
@@ -82,6 +85,7 @@ class DetailFountainViewModel @Inject constructor(
     fun selectFountain(fountain: Fountain) {
         selectedFountain = fountain
         _fountainIdFlow.value = fountain.id
+        fetchCreatorName(fountain.createdBy) // Carga el nombre al seleccionar
     }
 
     fun refreshFountain(updatedFountain: Fountain) {
@@ -143,6 +147,18 @@ class DetailFountainViewModel @Inject constructor(
 
         // Si es el creador Y la fuente está PENDIENTE, puede
         return f.createdBy == userId && f.status == StateFountain.PENDING
+    }
+
+    // --- ESTADO ADICIONAL ---
+
+
+    private fun fetchCreatorName(uid: String) {
+        viewModelScope.launch {
+            // Asumiendo que añadiste la función al repositorio
+            authRepository.getUserNameById(uid)
+                .onSuccess { creatorName = it }
+                .onFailure { creatorName = "Desconocido" }
+        }
     }
 
     fun confirmFountain(onSuccess: () -> Unit) {

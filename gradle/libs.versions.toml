@@ -5,6 +5,7 @@ agp = "9.0.0"
 cloudinaryAndroid = "3.1.2"
 coreKtx = "1.17.0"
 coreSplashscreen = "1.2.0"
+geofireAndroidCommon = "3.2.0"
 hiltAndroid = "2.59.1"
 hiltNavigationCompose = "1.3.0"
 ksp = "2.0.21-1.0.25"
@@ -38,6 +39,7 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 cloudinary-android = { module = "com.cloudinary:cloudinary-android", version.ref = "cloudinaryAndroid" }
 firebase-database-ktx = { module = "com.google.firebase:firebase-database-ktx" }
+geofire-android-common = { module = "com.firebase:geofire-android-common", version.ref = "geofireAndroidCommon" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

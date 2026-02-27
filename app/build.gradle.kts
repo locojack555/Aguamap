@@ -48,6 +48,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.geofire.android.common)
     implementation(platform(libs.firebase.bom))
     //implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)

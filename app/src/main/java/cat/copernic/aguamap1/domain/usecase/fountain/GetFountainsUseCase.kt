@@ -9,8 +9,8 @@ import javax.inject.Inject
 class GetFountainsUseCase @Inject constructor(private val repository: FountainRepository) {
 
     // Para la lista de fuentes del mapa
-    operator fun invoke(): Flow<Result<List<Fountain>>> {
-        return repository.fetchSources()
+    operator fun invoke(lat: Double?, lng: Double?): Flow<Result<List<Fountain>>> {
+        return repository.fetchSources(lat, lng)
     }
 
     // NUEVO: Para obtener los comentarios de una fuente específica
