@@ -242,13 +242,35 @@
     <string name="profile_stat_points">Punts</string>
     <string name="profile_admin_panel_title">Panel d\'Administrador</string>
     <string name="profile_admin_mod_comments">Moderació de comentaris</string>
+    <string name="profile_admin_mod_fountains">Reports de fonts</string>
     <string name="profile_btn_logout">Tancar Sesió</string>
     <string name="edit_profile_title">Editar perfil</string>
     <string name="edit_profile_name">Nom</string>
     <string name="edit_profile_save">Guardar"></string>
+
     <string name="config_profile_title">Configuració</string>
     <string name="config_profile_subtitle">Idioma</string>
     <string name="config_profile_es">Espanyol</string>
     <string name="config_profile_ca">Català</string>
     <string name="config_profile_en">anglès</string>
+    <string name="config_profile_close_desc">Tancar</string>
+
+    <string name="mod_comments_title">Moderació"></string>
+    <string name="mod_comments_subtitle">%2$d reports pendents</string>
+    <string name="mod_comments_reported">Reportat</string>
+    <string name="mod_comments_reason">Motiu: %1$s</string>
+    <string name="mod_comments_discard">Descartar</string>
+    <string name="mod_comments_censor">Censurar"></string>
+    <string name="mod_comments_remove">Eliminar</string>
+    <string name="mod_comments_no_text">(Sense text)</string>
+    <string name="mod_comments_no_available">Comentari no disponible</string>
+
+    <string name="mod_fountains_report">Report</string>
+    <string name="mod_fountains_report_subtitle">Font reportada</string>
+    <string name="mod_fountains_reported_by">Reportat per</string>
+    <string name="mod_fountains_see_fountain">Ver font</string>
+    <string name="mod_fountains_resolved">Resolta</string>
+
+    <string name="content_description_return">Tornar enrere</string>
+    <string name="content_description_reload">Recargar</string>
 </resources>

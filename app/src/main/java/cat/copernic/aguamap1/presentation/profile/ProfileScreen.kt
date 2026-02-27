@@ -40,7 +40,7 @@ fun ProfileScreen(
     navigateToEditProfile: () -> Unit = {},
     navigateToSettings: () -> Unit = {},
     navigateToModeration: () -> Unit = {},
-    navigateToFountainReports: () -> Unit = {}  // ← NUEVO
+    navigateToFountainReports: () -> Unit = {}
 ) {
     val estadoScroll = rememberScrollState()
     val profileState by viewModel.profileState.collectAsState()
@@ -83,7 +83,7 @@ fun ProfileScreen(
                 if (isAdmin) {
                     SeccionPanelAdmin(
                         navigateToModeration = navigateToModeration,
-                        navigateToFountainReports = navigateToFountainReports  // ← NUEVO
+                        navigateToFountainReports = navigateToFountainReports
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -206,9 +206,8 @@ fun TarjetaEstadistica(valor: String, etiqueta: String, icono: ImageVector) {
 
 @Composable
 fun SeccionPanelAdmin(
-    pendingReportsCount: Int = 0,
     navigateToModeration: () -> Unit = {},
-    navigateToFountainReports: () -> Unit = {}  // ← NUEVO
+    navigateToFountainReports: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -236,18 +235,6 @@ fun SeccionPanelAdmin(
                 Icon(Icons.Default.Flag, contentDescription = null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(16.dp))
                 Text(stringResource(id = R.string.profile_admin_mod_comments), modifier = Modifier.weight(1f), fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                if (pendingReportsCount > 0) {
-                    Surface(color = Color(0xFFFFEBEE), shape = RoundedCornerShape(8.dp)) {
-                        Text(
-                            "$pendingReportsCount pendiente${if (pendingReportsCount != 1) "s" else ""}",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            fontSize = 11.sp,
-                            color = Color(0xFFE53935),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                }
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
             }
 
@@ -255,25 +242,13 @@ fun SeccionPanelAdmin(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { navigateToFountainReports() }  // ← CONECTADO
+                    .clickable { navigateToFountainReports() }
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.Report, contentDescription = null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(16.dp))
-                Text("Reportes de fuentes", modifier = Modifier.weight(1f), fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                if (pendingReportsCount > 0) {
-                    Surface(color = Color(0xFFFFEBEE), shape = RoundedCornerShape(8.dp)) {
-                        Text(
-                            "$pendingReportsCount pendiente${if (pendingReportsCount != 1) "s" else ""}",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            fontSize = 11.sp,
-                            color = Color(0xFFE53935),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                }
+                Text(stringResource(id = R.string.profile_admin_mod_fountains), modifier = Modifier.weight(1f), fontSize = 15.sp, fontWeight = FontWeight.Medium)
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
             }
         }
@@ -306,7 +281,7 @@ fun SeccionPerfil(titulo: String, contenido: @Composable ColumnScope.() -> Unit)
 }
 
 @Composable
-fun ElementoOpcionPerfil(icono: ImageVector, etiqueta: String, indicador: String? = null, onClick: () -> Unit = {}) {
+fun ElementoOpcionPerfil(icono: ImageVector, etiqueta: String, onClick: () -> Unit = {}) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -314,12 +289,6 @@ fun ElementoOpcionPerfil(icono: ImageVector, etiqueta: String, indicador: String
         Icon(icono, null, tint = Color(0xFF424242), modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(16.dp))
         Text(etiqueta, modifier = Modifier.weight(1f), fontSize = 15.sp, color = Color.Black, fontWeight = FontWeight.Medium)
-        if (indicador != null) {
-            Surface(color = Color(0xFFECEFF1), shape = CircleShape) {
-                Text(indicador, modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
-            }
-            Spacer(Modifier.width(8.dp))
-        }
         Icon(Icons.Default.ChevronRight, null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
     }
 }

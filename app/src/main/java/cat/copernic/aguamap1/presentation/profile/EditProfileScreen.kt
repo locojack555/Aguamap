@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.presentation.profile
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,10 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cat.copernic.aguamap1.R
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
@@ -45,12 +49,11 @@ fun EditProfileScreen(
 
     Scaffold(
         bottomBar = {}
-    ) { paddingValues ->
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .background(Color(0xFFF8F9FA))
                     .verticalScroll(rememberScrollState())
             ) {
@@ -71,11 +74,11 @@ fun EditProfileScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
+                            Icon(Icons.Default.Close, contentDescription = stringResource(id = R.string.config_profile_close_desc), tint = Color.White)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Editar perfil",
+                            text = stringResource(id = R.string.edit_profile_title),
                             color = Color.White,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold
@@ -87,7 +90,7 @@ fun EditProfileScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     SeccionCampoEdicion(
-                        titulo = "Nombre",
+                        titulo = stringResource(id = R.string.edit_profile_name),
                         valor = nombre,
                         onValueChange = { nombre = it },
                         enabled = !isLoading
@@ -120,7 +123,7 @@ fun EditProfileScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text("Guardar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(id = R.string.edit_profile_save), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }

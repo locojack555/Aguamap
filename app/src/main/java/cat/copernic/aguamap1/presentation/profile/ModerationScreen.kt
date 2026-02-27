@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.presentation.profile
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -23,8 +25,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.SimpleDateFormat
+import cat.copernic.aguamap1.R
 import java.util.*
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModerationScreen(
@@ -46,11 +50,10 @@ fun ModerationScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
         ) {
 
             // ── Header ──────────────────────────────────────────────────────────
@@ -73,25 +76,25 @@ fun ModerationScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(id = R.string.content_description_return),
                             tint = Color.White
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Moderación",
+                            stringResource(id = R.string.mod_comments_title),
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "${reportedComments.size} reporte${if (reportedComments.size != 1) "s" else ""} pendiente${if (reportedComments.size != 1) "s" else ""}",
+                            stringResource(id = R.string.mod_comments_subtitle, reportedComments.size),
                             color = Color.White.copy(alpha = 0.8f),
                             fontSize = 13.sp
                         )
                     }
                     IconButton(onClick = { viewModel.loadReportedComments() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Recargar", tint = Color.White)
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(id = R.string.content_description_reload), tint = Color.White)
                     }
                 }
             }
@@ -197,7 +200,7 @@ private fun ReportedCommentCard(
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
-                            "Reportado",
+                            stringResource(id = R.string.mod_comments_reported),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFFE53935)
@@ -230,7 +233,7 @@ private fun ReportedCommentCard(
                                 .padding(top = 1.dp)
                         )
                         Text(
-                            "Motivo: ${item.reason}",
+                            stringResource(id = R.string.mod_comments_reason, item.reason),
                             fontSize = 12.sp,
                             color = Color(0xFF5D4037)
                         )
@@ -286,7 +289,7 @@ private fun ReportedCommentCard(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    item.comment.comment.ifBlank { "(Sin texto)" },
+                    item.comment.comment.ifBlank { stringResource(id = R.string.mod_comments_no_text) },
                     fontSize = 14.sp,
                     color = Color(0xFF424242),
                     maxLines = 5,
@@ -299,7 +302,7 @@ private fun ReportedCommentCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Icon(Icons.Default.HideSource, contentDescription = null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
-                    Text("Comentario no disponible", fontSize = 13.sp, color = Color(0xFFBDBDBD))
+                    Text(stringResource(id = R.string.mod_comments_no_available), fontSize = 13.sp, color = Color(0xFFBDBDBD))
                 }
             }
 
@@ -318,7 +321,7 @@ private fun ReportedCommentCard(
             ) {
                 Icon(Icons.Default.ThumbUp, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Descartar reporte", fontSize = 13.sp)
+                Text(stringResource(id = R.string.mod_comments_discard), fontSize = 13.sp)
             }
 
             Spacer(Modifier.height(8.dp))
@@ -337,7 +340,7 @@ private fun ReportedCommentCard(
                 ) {
                     Icon(Icons.Default.VisibilityOff, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Censurar", fontSize = 13.sp)
+                    Text(stringResource(id = R.string.mod_comments_censor), fontSize = 13.sp)
                 }
 
                 Button(
@@ -348,7 +351,7 @@ private fun ReportedCommentCard(
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Eliminar", fontSize = 13.sp)
+                    Text(stringResource(id = R.string.mod_comments_remove), fontSize = 13.sp)
                 }
             }
         }

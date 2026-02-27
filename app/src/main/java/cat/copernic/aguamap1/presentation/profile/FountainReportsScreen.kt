@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.presentation.profile
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,6 +27,7 @@ import cat.copernic.aguamap1.domain.model.Report
 import java.text.SimpleDateFormat
 import java.util.*
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FountainReportsScreen(
@@ -49,11 +51,10 @@ fun FountainReportsScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
         ) {
 
             // ── Header ──────────────────────────────────────────────────────────

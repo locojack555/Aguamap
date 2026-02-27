@@ -245,32 +245,38 @@
     <string name="profile_stat_points">Puntos</string>
     <string name="profile_admin_panel_title">Panel de Administrador</string>
     <string name="profile_admin_mod_comments">Moderación de comentarios</string>
+    <string name="profile_admin_mod_fountains">Reportes de fuentes</string>
     <string name="profile_btn_logout">Cerrar Sesión</string>
     <string name="edit_profile_title">Editar perfil</string>
     <string name="edit_profile_name">Nombre</string>
     <string name="edit_profile_save">Guardar"></string>
+
     <string name="config_profile_title">Configuración</string>
     <string name="config_profile_subtitle">Idioma</string>
     <string name="config_profile_es">Español</string>
     <string name="config_profile_ca">Catalán</string>
     <string name="config_profile_en">Inglés</string>
+    <string name="config_profile_close_desc">Cerrar</string>
+
+    <string name="mod_comments_title">Moderación"></string>
+    <string name="mod_comments_subtitle">%2$d reportes pendientes</string>
+    <string name="mod_comments_reported">Reportado</string>
+    <string name="mod_comments_reason">Motivo: %1$s</string>
+    <string name="mod_comments_discard">Descartar</string>
+    <string name="mod_comments_censor">Censurar"</string>
+    <string name="mod_comments_remove">Eliminar</string>
+    <string name="mod_comments_no_text">(Sin texto)</string>
+    <string name="mod_comments_no_available">Comentario no disponible</string>
+
+
+    <string name="mod_fountains_report">Reporte</string>
+    <string name="mod_fountains_report_subtitle">Fuente reportada</string>
+    <string name="mod_fountains_reported_by">Reportado por</string>
+    <string name="mod_fountains_see_fountain">Ver fuente</string>
+    <string name="mod_fountains_resolved">Resuelta</string>
+    <string name="content_description_return">Volver</string>
+    <string name="content_description_reload">Recargar</string>
     <!--<string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
     <string name=""></string>
     <string name=""></string>-->
 </resources>

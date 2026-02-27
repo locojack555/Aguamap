@@ -244,6 +244,7 @@
     <string name="profile_stat_points">Points</string>
     <string name="profile_admin_panel_title">Admin Panel</string>
     <string name="profile_admin_mod_comments">Comment moderation</string>
+    <string name="profile_admin_mod_fountains">Fountain reports</string>
     <string name="profile_btn_logout">Log Out</string>
     <string name="edit_profile_title">Edit Profile</string>
     <string name="edit_profile_name">Name</string>
@@ -253,4 +254,24 @@
     <string name="config_profile_es">Spanish</string>
     <string name="config_profile_ca">Catalan</string>
     <string name="config_profile_en">English</string>
+    <string name="config_profile_close_desc">Close</string>
+
+    <string name="mod_comments_title">Moderation"></string>
+    <string name="mod_comments_subtitle">%2$d pending reports</string>
+    <string name="mod_comments_reported">Reported</string>
+    <string name="mod_comments_reason">Reason: %1$s</string>
+    <string name="mod_comments_discard">Discard</string>
+    <string name="mod_comments_censor">Censor"></string>
+    <string name="mod_comments_remove">Remove</string>
+    <string name="mod_comments_no_text">(No text)</string>
+    <string name="mod_comments_no_available">Comment not available</string>
+
+    <string name="mod_fountains_report">Report</string>
+    <string name="mod_fountains_report_subtitle">Fountain reported</string>
+    <string name="mod_fountains_reported_by">Reported by</string>
+    <string name="mod_fountains_see_fountain">See fountain</string>
+    <string name="mod_fountains_resolved">Resolved</string>
+
+    <string name="content_description_return">Return</string>
+    <string name="content_description_reload">Reload</string>
 </resources>

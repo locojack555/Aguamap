@@ -91,13 +91,13 @@ fun SettingsScreen(
                 IconButton(onClick = onClose) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Cerrar",
+                        contentDescription = stringResource(id = R.string.config_profile_close_desc),
                         tint = Color.White
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Configuración",
+                    text = stringResource(id = R.string.config_profile_title),
                     color = Color.White,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
@@ -115,7 +115,7 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Idioma",
+                        text = stringResource(id = R.string.config_profile_subtitle),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF757575),
@@ -147,9 +147,9 @@ fun AguaMapLanguageSelector(
     )
 
     val languages = listOf(
-        "es" to "Español",
-        "ca" to "Catalán",
-        "en" to "Inglés"
+        "es" to stringResource(id = R.string.config_profile_es),
+        "ca" to stringResource(id = R.string.config_profile_en),
+        "en" to stringResource(id = R.string.config_profile_en)
     )
 
     val selectedLabel = languages.firstOrNull { it.first == selectedLanguage }?.second ?: "Español"

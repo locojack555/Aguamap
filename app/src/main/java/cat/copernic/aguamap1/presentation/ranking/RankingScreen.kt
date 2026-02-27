@@ -251,7 +251,6 @@ fun RankingItem(player: UserRanking) {
                 Text(
                     text = stringResource(
                         id = R.string.ranking_stats,
-                        player.discovered,
                         player.games
                     ),
                     fontSize = 14.sp,
