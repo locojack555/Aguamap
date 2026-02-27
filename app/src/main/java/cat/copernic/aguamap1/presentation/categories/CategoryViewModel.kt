@@ -19,6 +19,7 @@ import cat.copernic.aguamap1.domain.usecase.category.DeleteCategoryUseCase
 import cat.copernic.aguamap1.domain.usecase.category.GetCategoriesUseCase
 import cat.copernic.aguamap1.domain.usecase.category.UpdateCategoryUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.GetDistanceFountainsUseCaseUseCase
 import cat.copernic.aguamap1.domain.usecase.validation.generateSearchRegex
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,8 @@ class CategoryViewModel @Inject constructor(
     private val updateCategoryUseCase: UpdateCategoryUseCase,
     private val deleteCategoryUseCase: DeleteCategoryUseCase,
     private val getFountainsUseCase: GetFountainsUseCase,
+    // CORRECCIÓN: Inyectamos el calculador de distancia
+    private val getDistanceUseCase: GetDistanceFountainsUseCaseUseCase,
     private val cloudinaryService: CloudinaryService,
     private val authRepository: AuthRepository,
     private val getUserRoleUseCase: GetUserRoleUseCase
@@ -57,18 +60,15 @@ class CategoryViewModel @Inject constructor(
 
     private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
 
-    // --- OPTIMIZACIÓN DE UBICACIÓN Y FIREBASE ---
+    // --- OPTIMIZACIÓN DE UBICACIÓN ---
     private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
     private var lastFetchedLocation: Pair<Double, Double>? = null
-    private val MIN_DISTANCE_TO_REFETCH = 3000.0 // 2 Kilómetros
+    private val MIN_DISTANCE_TO_REFETCH = 2000.0
 
-    /**
-     * Actualiza la ubicación pero solo dispara una nueva consulta a Firebase
-     * si el usuario se ha movido más de 2km para ahorrar lecturas.
-     */
     fun setLocation(lat: Double, lng: Double) {
         val lastLoc = lastFetchedLocation
         if (lastLoc == null) {
+            android.util.Log.d("CONTEO", "📍 Primera ubicación recibida: $lat, $lng")
             _userLocation.value = lat to lng
             lastFetchedLocation = lat to lng
         } else {
@@ -77,6 +77,7 @@ class CategoryViewModel @Inject constructor(
                 lastLoc.first, lastLoc.second, lat, lng, distance
             )
             if (distance[0] > MIN_DISTANCE_TO_REFETCH) {
+                android.util.Log.d("CONTEO", "🔄 Re-calculando por movimiento: ${distance[0]}m")
                 _userLocation.value = lat to lng
                 lastFetchedLocation = lat to lng
             }
@@ -101,17 +102,36 @@ class CategoryViewModel @Inject constructor(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = _userLocation
         .flatMapLatest { location ->
-            // Solo descarga fuentes en radio de 15km (definido en repositorio)
-            getFountainsUseCase(location?.first, location?.second)
+            if (location == null) {
+                kotlinx.coroutines.flow.flowOf(Result.success(emptyList<Fountain>()))
+            } else {
+                getFountainsUseCase(location.first, location.second)
+            }
         }
         .combine(_operationalFilter) { result, isOp ->
             val fountains = result.getOrDefault(emptyList())
-            val filtered = if (isOp == null) {
-                fountains
+            val location = _userLocation.value
+
+            // CORRECCIÓN CLAVE: Calculamos la distancia aquí para que la lista de la categoría la tenga
+            val fountainsWithDistance = if (location != null) {
+                fountains.map { fountain ->
+                    fountain.copy(
+                        distanceFromUser = getDistanceUseCase(
+                            location.first,
+                            location.second,
+                            fountain.latitude,
+                            fountain.longitude
+                        )
+                    )
+                }
             } else {
-                fountains.filter { it.operational == isOp }
+                fountains
             }
-            filtered.groupBy { it.category.id }
+
+            val filtered = if (isOp == null) fountainsWithDistance else fountainsWithDistance.filter { it.operational == isOp }
+
+            // Agrupamos por ID normalizado
+            filtered.groupBy { it.category.id.trim() }
         }
         .stateIn(
             scope = viewModelScope,
@@ -119,7 +139,7 @@ class CategoryViewModel @Inject constructor(
             initialValue = emptyMap()
         )
 
-    // --- ESTADO DEL FORMULARIO ---
+    // --- ESTADO DEL FORMULARIO Y MÉTODOS (SIN CAMBIOS) ---
     var name by mutableStateOf("")
     var description by mutableStateOf("")
     var selectedImageUri by mutableStateOf<Uri?>(null)
@@ -147,9 +167,7 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
+    fun updateSearchQuery(query: String) = run { _searchQuery.value = query }
 
     fun toggleOperationalFilter(isFilterActive: Boolean) {
         _operationalFilter.value = if (isFilterActive) null else false
@@ -169,13 +187,9 @@ class CategoryViewModel @Inject constructor(
         uploadProgress = 0; errorMessage = null
     }
 
-    fun clearError() {
-        errorMessage = null
-    }
+    fun clearError() = run { errorMessage = null }
 
-    fun updateSelectedImage(uri: Uri?) {
-        selectedImageUri = uri
-    }
+    fun updateSelectedImage(uri: Uri?) = run { selectedImageUri = uri }
 
     fun clearSelectedImage() {
         selectedImageUri = null
@@ -205,15 +219,13 @@ class CategoryViewModel @Inject constructor(
                     imageUrl = finalUrl
                 )
 
-                if (categoryToEdit != null) {
-                    updateCategoryUseCase(categoryData)
-                } else {
-                    createCategoryUseCase(categoryData)
-                }
+                if (categoryToEdit != null) updateCategoryUseCase(categoryData)
+                else createCategoryUseCase(categoryData)
+
                 onSuccess()
                 resetForm()
             } catch (e: Exception) {
-                errorMessage = e.message ?: "Error desconocido al guardar"
+                errorMessage = e.message ?: "Error al guardar"
             } finally {
                 isUploading = false
             }
@@ -228,7 +240,7 @@ class CategoryViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (!canDeleteCategory(id)) {
-                    errorMessage = "No se puede eliminar la categoría porque todavía tiene fuentes asociadas en tu zona."
+                    errorMessage = "No se puede eliminar: tiene fuentes asociadas en tu zona."
                     return@launch
                 }
                 deleteCategoryUseCase(id)

@@ -43,6 +43,7 @@ fun CategoriesScreen(
 ) {
 
     LaunchedEffect(userLat, userLng) {
+        android.util.Log.d("NAV_DEBUG", "Coordenadas recibidas: Lat=$userLat, Lng=$userLng")
         if (userLat != null && userLng != null) {
             viewModel.setLocation(userLat, userLng)
         }

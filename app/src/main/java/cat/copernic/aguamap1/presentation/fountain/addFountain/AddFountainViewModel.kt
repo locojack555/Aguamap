@@ -187,39 +187,38 @@ class AddFountainViewModel @Inject constructor(
      * Guarda la fuente: Crea una nueva o actualiza la existente si fountainToEdit != null.
      */
     fun saveFountain(onSuccess: () -> Unit) {
+        // 1. Validamos la ubicación antes de lanzar la corrutina
         val location = if (useGpsLocation) {
             selectedLocationForNewFountain
         } else {
-            try {
-                val lat = manualLatitude.toDoubleOrNull()
-                val lng = manualLongitude.toDoubleOrNull()
-                if (lat != null && lng != null) {
-                    GeoPoint(lat, lng)
-                } else {
-                    null
-                }
-            } catch (e: Exception) {
-                null
-            }
+            val lat = manualLatitude.toDoubleOrNull()
+            val lng = manualLongitude.toDoubleOrNull()
+            if (lat != null && lng != null) GeoPoint(lat, lng) else null
         }
 
         if (location == null) {
-            errorMessage = if (useGpsLocation)
-                "No se ha podido obtener la ubicación GPS"
-            else
-                "Coordenadas manuales inválidas"
+            errorMessage = if (useGpsLocation) "No se ha podido obtener la ubicación GPS"
+            else "Coordenadas manuales inválidas"
             return
         }
 
+        // 2. Validamos que haya una categoría seleccionada
         val category = selectedCategory ?: return
 
         viewModelScope.launch {
+            // 3. Verificación de seguridad del ID (Dentro del launch)
+            if (category.id.isBlank()) {
+                errorMessage = "Error interno: La categoría seleccionada no tiene un ID válido."
+                return@launch
+            }
+
             isUploading = true
             errorMessage = null
 
             try {
                 var imageUrl = currentImageUrl
 
+                // Subida de imagen a Cloudinary
                 if (selectedImageUri != null) {
                     cloudinaryService.uploadImageWithProgress(selectedImageUri!!)
                         .collect { progress ->
@@ -237,7 +236,7 @@ class AddFountainViewModel @Inject constructor(
                     val updatedFields = mutableMapOf<String, Any>(
                         "name" to name,
                         "description" to description,
-                        "category" to category,
+                        "category" to category, // Enviamos el objeto categoría completo (con ID corregido)
                         "operational" to isOperational,
                         "imageUrl" to imageUrl,
                         "latitude" to location.latitude,
