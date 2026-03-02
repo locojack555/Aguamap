@@ -409,13 +409,13 @@ private fun EmptyModerationState() {
                 }
             }
             Text(
-                "Sin reportes pendientes",
+                stringResource(id = R.string.mod_comments_no_comments),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF424242)
             )
             Text(
-                "Todo está limpio por aquí",
+                stringResource(id = R.string.mod_comments_all_clean),
                 fontSize = 14.sp,
                 color = Color(0xFF9E9E9E)
             )

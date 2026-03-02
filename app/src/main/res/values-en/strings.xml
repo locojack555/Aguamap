@@ -265,6 +265,8 @@
     <string name="mod_comments_remove">Remove</string>
     <string name="mod_comments_no_text">(No text)</string>
     <string name="mod_comments_no_available">Comment not available</string>
+    <string name="mod_comments_no_comments">No pending reports</string>
+    <string name="mod_comments_all_clean">All clean here</string>
 
     <string name="mod_fountains_report">Report</string>
     <string name="mod_fountains_report_subtitle">Fountain reported</string>
@@ -274,4 +276,5 @@
 
     <string name="content_description_return">Return</string>
     <string name="content_description_reload">Reload</string>
+    <string name="profile_error_loading_data">Error loading data: %s</string>
 </resources>

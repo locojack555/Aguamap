@@ -264,6 +264,8 @@
     <string name="mod_comments_remove">Eliminar</string>
     <string name="mod_comments_no_text">(Sense text)</string>
     <string name="mod_comments_no_available">Comentari no disponible</string>
+    <string name="mod_comments_no_comments">Sense reports pendents</string>
+    <string name="mod_comments_all_clean">Tot està net per aquí</string>
 
     <string name="mod_fountains_report">Report</string>
     <string name="mod_fountains_report_subtitle">Font reportada</string>
@@ -273,4 +275,5 @@
 
     <string name="content_description_return">Tornar enrere</string>
     <string name="content_description_reload">Recargar</string>
+    <string name="profile_error_loading_data">Error en carregar les dades: %s</string>
 </resources>

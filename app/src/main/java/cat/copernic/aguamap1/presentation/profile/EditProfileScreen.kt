@@ -100,9 +100,7 @@ fun EditProfileScreen(
 
                     Button(
                         onClick = {
-                            viewModel.updateProfile(nombre) {
-                                onSaveComplete()
-                            }
+                            viewModel.updateProfile(nombre)
                         },
                         modifier = Modifier
                             .fillMaxWidth()

@@ -66,14 +66,14 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                _error.value = "Error al cargar datos: ${e.message}"
+                _error.value = e.message
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun updateProfile(nombre: String, onComplete: () -> Unit) {
+    fun updateProfile(nombre: String) {
         viewModelScope.launch {
             _isSaving.value = true
             _error.value = null
@@ -93,7 +93,10 @@ class ProfileViewModel @Inject constructor(
 
                 // Actualizar displayName en Auth si cambió
                 if (nombre != currentName) {
-                    authRepository.updateUserName(nombre)
+                    val authResult = authRepository.updateUserName(nombre)
+                    if (authResult.isFailure) {
+                        throw authResult.exceptionOrNull() ?: Exception("Error al actualizar nombre en Firestore")
+                    }
                 }
 
                 loadUserData()

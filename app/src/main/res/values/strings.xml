@@ -267,6 +267,10 @@
     <string name="mod_comments_remove">Eliminar</string>
     <string name="mod_comments_no_text">(Sin texto)</string>
     <string name="mod_comments_no_available">Comentario no disponible</string>
+    <string name="mod_comments_no_comments">Sin reportes pendientes</string>
+    <string name="mod_comments_all_clean">Todo está limpio por aquí</string>
+
+
 
 
     <string name="mod_fountains_report">Reporte</string>
@@ -274,8 +278,10 @@
     <string name="mod_fountains_reported_by">Reportado por</string>
     <string name="mod_fountains_see_fountain">Ver fuente</string>
     <string name="mod_fountains_resolved">Resuelta</string>
+
     <string name="content_description_return">Volver</string>
     <string name="content_description_reload">Recargar</string>
+    <string name="profile_error_loading_data">Error al cargar datos: %s</string>
     <!--<string name=""></string>
     <string name=""></string>
     <string name=""></string>-->
