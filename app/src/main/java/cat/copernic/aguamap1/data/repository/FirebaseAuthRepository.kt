@@ -13,6 +13,7 @@ class FirebaseAuthRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : AuthRepository {
 
+
     override fun isUserLoggedIn(): Boolean {
         return auth.currentUser != null
     }
@@ -197,5 +198,25 @@ class FirebaseAuthRepository @Inject constructor(
     override suspend fun isEmailVerified(): Boolean {
         auth.currentUser?.reload()?.await()
         return auth.currentUser?.isEmailVerified ?: false
+    }
+
+    override suspend fun updateUserProfilePicture(userId: String, imageUrl: String): Result<Unit> {
+        return try {
+            val userRef = firestore.collection("users").document(userId)
+            userRef.update("profilePictureUrl", imageUrl).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getCurrentUserProfilePicture(): String? {
+        val uid = getCurrentUserUid() ?: return null
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            document.getString("profilePictureUrl")
+        } catch (e: Exception) {
+            null
+        }
     }
 }

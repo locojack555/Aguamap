@@ -1,6 +1,5 @@
 package cat.copernic.aguamap1.presentation.profile
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,7 +26,6 @@ import cat.copernic.aguamap1.domain.model.Report
 import java.text.SimpleDateFormat
 import java.util.*
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FountainReportsScreen(
@@ -49,14 +47,12 @@ fun FountainReportsScreen(
         successMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearMessages() }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFFF1F3F4))
         ) {
-
             // ── Header ──────────────────────────────────────────────────────────
             Box(
                 modifier = Modifier
@@ -105,8 +101,8 @@ fun FountainReportsScreen(
                 isRefreshing = isLoading,
                 onRefresh = { viewModel.loadReports() },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF1F3F4))
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
                 if (!isLoading && reports.isEmpty()) {
                     EmptyFountainReportsState()
@@ -129,6 +125,12 @@ fun FountainReportsScreen(
                 }
             }
         }
+
+        // Snackbar
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -137,7 +139,7 @@ fun FountainReportsScreen(
 @Composable
 private fun FountainReportCard(
     report: Report,
-    reporterName: String,           // ← nombre resuelto en vez de uid
+    reporterName: String,
     onResolve: () -> Unit,
     onGoToFountain: () -> Unit
 ) {
@@ -254,7 +256,7 @@ private fun FountainReportCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // Reportado por  ← ahora muestra el nombre, no el uid
+            // Reportado por
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)

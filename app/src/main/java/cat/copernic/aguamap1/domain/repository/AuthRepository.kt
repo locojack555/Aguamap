@@ -21,4 +21,7 @@ interface AuthRepository {
     suspend fun signOut()
     suspend fun isEmailVerified(): Boolean
     suspend fun getUserNameById(uid: String): Result<String>
+
+    suspend fun updateUserProfilePicture(userId: String, imageUrl: String): Result<Unit>
+    suspend fun getCurrentUserProfilePicture(): String?
 }

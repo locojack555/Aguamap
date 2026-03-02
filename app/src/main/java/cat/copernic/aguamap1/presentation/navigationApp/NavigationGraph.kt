@@ -48,7 +48,8 @@ fun NavigationGraph(
     val mapViewModel: MapViewModel = hiltViewModel()
     val addFountainViewModel: AddFountainViewModel = hiltViewModel()
 
-    // Extraemos la ubicación como estados reactivos de Compose
+    // --- OBTENCIÓN DE UBICACIÓN DESDE EL MAPVIEWMODEL ---
+    // Extraemos la latitud y longitud que el MapViewModel ya está gestionando
     val currentLatitude = mapViewModel.userLat
     val currentLongitude = mapViewModel.userLng
 
@@ -147,14 +148,17 @@ fun NavigationGraph(
                 }
 
                 CategoriesScreen(
-                    userLat = currentLatitude,
-                    userLng = currentLongitude,
+                    userLat = currentLatitude,  // Ahora pasamos la variable extraída arriba
+                    userLng = currentLongitude, // Ahora pasamos la variable extraída arriba
                     onFountainClick = { fountain ->
+                        // Sincronizamos con el MapViewModel para que el detalle sepa qué mostrar
                         mapViewModel.selectFountain(fountain)
                         navController.navigate("fountain_detail")
                     }
                 )
             }
+
+            // ... (Resto de rutas: Game, Ranking, Profile se mantienen igual)
 
             // --- JUEGO ---
             composable(BottomNavItem.Game.route) {
@@ -177,8 +181,8 @@ fun NavigationGraph(
                 )
             }
 
+            // ... (Rutas de Profile, Settings, etc.)
             composable(BottomNavItem.Ranking.route) { RankingScreen() }
-
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen(
                     navigateToLogin = {
@@ -194,14 +198,17 @@ fun NavigationGraph(
                     navigateToFountainReports = { navController.navigate("fountain_reports") }
                 )
             }
-
             composable("edit_profile") { backStackEntry ->
-                val parentEntry = remember(backStackEntry) { navController.getBackStackEntry(BottomNavItem.Profile.route) }
+                // IMPORTANTE: Obtener el mismo ViewModel que usa ProfileScreen
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(BottomNavItem.Profile.route)
+                }
                 val profileViewModel: ProfileViewModel = hiltViewModel(parentEntry)
-                val profileState by profileViewModel.profileState.collectAsStateWithLifecycle()
+
+                // NUEVA VERSIÓN: EditProfileScreen ya no necesita initialNombre
+                // porque obtiene el nombre directamente del profileState
                 EditProfileScreen(
-                    initialNombre = profileState.userName,
-                    viewModel = profileViewModel,
+                    viewModel = profileViewModel,  // Pasamos el mismo ViewModel
                     onBack = { navController.popBackStack() },
                     onSaveComplete = {
                         profileViewModel.loadUserData()

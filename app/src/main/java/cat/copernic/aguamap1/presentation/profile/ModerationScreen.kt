@@ -1,6 +1,5 @@
 package cat.copernic.aguamap1.presentation.profile
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,7 +27,6 @@ import java.text.SimpleDateFormat
 import cat.copernic.aguamap1.R
 import java.util.*
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModerationScreen(
@@ -48,12 +46,11 @@ fun ModerationScreen(
         successMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearMessages() }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFFF1F3F4))
         ) {
 
             // ── Header ──────────────────────────────────────────────────────────
@@ -104,8 +101,8 @@ fun ModerationScreen(
                 isRefreshing = isLoading,
                 onRefresh = { viewModel.loadReportedComments() },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF1F3F4))
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
                 if (!isLoading && reportedComments.isEmpty()) {
                     EmptyModerationState()
@@ -127,6 +124,12 @@ fun ModerationScreen(
                 }
             }
         }
+
+        // Snackbar - Ahora dentro del Box pero fuera del flujo normal
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 

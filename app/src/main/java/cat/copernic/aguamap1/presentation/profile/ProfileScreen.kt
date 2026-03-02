@@ -15,7 +15,6 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -24,12 +23,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import cat.copernic.aguamap1.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +46,6 @@ fun ProfileScreen(
     navigateToModeration: () -> Unit = {},
     navigateToFountainReports: () -> Unit = {}
 ) {
-    val estadoScroll = rememberScrollState()
     val profileState by viewModel.profileState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isAdmin = profileState.userRole.equals("ADMIN", ignoreCase = true)
@@ -52,15 +55,26 @@ fun ProfileScreen(
         onRefresh = { viewModel.loadUserData() },
         modifier = Modifier.fillMaxSize()
     ) {
+        // CON SCROLL
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF1F3F4))
-                .verticalScroll(estadoScroll)
+                .verticalScroll(rememberScrollState())
         ) {
+            // Cabecera
             CabeceraPerfil(profileState, isAdmin)
 
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            // Espacio después de cabecera
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Contenido
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // SECCIÓN CUENTA
                 SeccionPerfil(titulo = stringResource(id = R.string.profile_account_subtitle)) {
@@ -88,12 +102,10 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // BOTÓN CERRAR SESIÓN
                 BotonCerrarSesion(onClick = navigateToLogin)
 
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
@@ -118,15 +130,35 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    tint = Color.White,
+                Box(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
                         .border(3.dp, Color.White.copy(alpha = 0.8f), CircleShape)
-                )
+                        .background(Color.White.copy(alpha = 0.2f))
+                ) {
+                    if (!profileState.profilePictureUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(profileState.profilePictureUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Foto de perfil",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                            error = painterResource(id = R.drawable.ic_placeholder)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.width(20.dp))
 
@@ -138,7 +170,6 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
                         fontWeight = FontWeight.ExtraBold
                     )
 
-                    // Badge de Rol
                     Surface(
                         color = if (isAdmin) Color(0xFFFFC107) else colorResource(id = R.color.azulReal),
                         shape = RoundedCornerShape(16.dp),
@@ -224,7 +255,6 @@ fun SeccionPanelAdmin(
                 Text(stringResource(id = R.string.profile_admin_panel_title), fontWeight = FontWeight.Bold, color = Color(0xFF5D4037), fontSize = 15.sp)
             }
 
-            // Fila moderación de comentarios
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -238,7 +268,6 @@ fun SeccionPanelAdmin(
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFBDBDBD), modifier = Modifier.size(16.dp))
             }
 
-            // Fila reportes de fuentes  ← clickable conectado
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
