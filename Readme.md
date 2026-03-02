@@ -380,9 +380,9 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 
 
 **Release notas**
-- Primer entregable con autenticación funcional.
-- Base de datos configurada y conectada.
-- Navegación básica implementada.
+- Core: Sistema de autenticación robusto integrado con Firebase y base del mapa interactivo.
+- Mecánicas: Motor de juego con geolocalización, cálculo de distancias y sistema de rankings.
+- Global: Interfaz multilingüe en tres idiomas gestionada mediante el Translations Editor.
 
 ---
 
@@ -398,11 +398,11 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 
 *Figuras: Tareas implementadas en Jira durante el Sprint 2.*
 
-**Release notas**
-- Mapa funcional con marcadores de fuentes.
-- Los usuarios pueden crear nuevas fuentes.
-- Filtros básicos operativos.
-- Mejoras en la interfaz de usuario.
+**Release Notes**
+
+- Funcionalidades: Gestión de fuentes por GPS e integración completa de mapas interactivos.
+- Comunidad: Sistema de validación por feedback y filtros avanzados de búsqueda.
+- Control: Panel de moderación exclusivo para administradores y gestión de contenido.
 
 ---
 
@@ -418,11 +418,11 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 
 *Figuras: Tareas implementadas en Jira durante el Sprint 3.*
 
-**Release notas**
-- AguaQuest completamente funcional.
-- Los usuarios pueden valorar y comentar fuentes.
-- Rankings diarios, mensuales y anuales.
-- Perfil de usuario con historial.
+**Release Notes**
+
+- UX: Interfaz 100% responsive, accesible y con gestión global de errores.
+- Calidad: Entrega de memoria técnica, vídeo promocional y carga optimizada.
+- Ajustes: Refactorización de código y pulido final de elementos gráficos.
 
 ---
 
