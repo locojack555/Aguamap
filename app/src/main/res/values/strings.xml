@@ -254,6 +254,7 @@
     <string name="config_profile_es">Español</string>
     <string name="config_profile_ca">Catalán</string>
     <string name="config_profile_en">Inglés</string>
+    <string name="select_language">Seleccionar idioma</string>
     <!--<string name=""></string>
     <string name=""></string>
     <string name=""></string>
