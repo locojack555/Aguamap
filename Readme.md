@@ -374,7 +374,7 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 - Implementación del sistema de autenticación (registro, inicio de sesión y recuperación de contraseña).
 - Diseño de los primeros modelos de datos.
 
-![Tablero de seguimiento](./docs/sprint1.png)
+![Tablero de seguimiento](./assets/images/sprint1.png)
 
 *Figura: Tareas implementadas en Jira durante el Sprint 1.*
 
@@ -393,8 +393,8 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 - Sistema de categorías (listado y filtros básicos).
 - Primeras pruebas de usabilidad.
 
-![Tablero de seguimiento Parte 1](./docs/sprint2_part1.png)
-![Tablero de seguimiento Parte 2](./docs/sprint2_part2.png)
+![Tablero de seguimiento Parte 1](./assets/images/sprint2_parte1.png)
+![Tablero de seguimiento Parte 2](./assets/images/sprint2_parte2.png)
 
 *Figura: Tareas implementadas en Jira durante el Sprint 2.*
 
@@ -413,8 +413,8 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 - Rankings de puntuaciones.
 - Perfil de usuario y estadísticas básicas.
 
-![Tablero de seguimiento Parte 1](./docs/sprint3_part1.png)
-![Tablero de seguimiento Parte 2](./docs/sprint3_part2.png)
+![Tablero de seguimiento Parte 1](./assets/images/sprint3_parte1.png)
+![Tablero de seguimiento Parte 2](./assets/images/sprint3_parte2.png)
 
 *Figura: Tareas implementadas en Jira durante el Sprint 3.*
 
