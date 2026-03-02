@@ -253,4 +253,5 @@
     <string name="config_profile_es">Spanish</string>
     <string name="config_profile_ca">Catalan</string>
     <string name="config_profile_en">English</string>
+    <string name="select_language">Select language</string>
 </resources>

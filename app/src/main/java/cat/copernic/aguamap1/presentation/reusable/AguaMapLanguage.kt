@@ -34,7 +34,7 @@ fun AguaMapLanguage(
         IconButton(onClick = { expanded = true }) {
             Icon(
                 painter = painterResource(id = R.drawable.language_24px),
-                contentDescription = "Seleccionar idioma",
+                stringResource(R.string.select_language),
                 tint = Blanco,
                 modifier = Modifier.size(40.dp)
             )
