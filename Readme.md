@@ -396,7 +396,7 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 ![Tablero de seguimiento Parte 1](./assets/images/sprint2_parte1.png)
 ![Tablero de seguimiento Parte 2](./assets/images/sprint2_parte2.png)
 
-*Figura: Tareas implementadas en Jira durante el Sprint 2.*
+*Figuras: Tareas implementadas en Jira durante el Sprint 2.*
 
 **Release notas**
 - Mapa funcional con marcadores de fuentes.
@@ -416,7 +416,7 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 ![Tablero de seguimiento Parte 1](./assets/images/sprint3_parte1.png)
 ![Tablero de seguimiento Parte 2](./assets/images/sprint3_parte2.png)
 
-*Figura: Tareas implementadas en Jira durante el Sprint 3.*
+*Figuras: Tareas implementadas en Jira durante el Sprint 3.*
 
 **Release notas**
 - AguaQuest completamente funcional.
