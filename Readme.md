@@ -379,7 +379,7 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 *Figura: Tareas implementadas en Jira durante el Sprint 1.*
 
 
-**Release notas**
+**Release Notes**
 - Core: Sistema de autenticación robusto integrado con Firebase y base del mapa interactivo.
 - Mecánicas: Motor de juego con geolocalización, cálculo de distancias y sistema de rankings.
 - Global: Interfaz multilingüe en tres idiomas gestionada mediante el Translations Editor.
