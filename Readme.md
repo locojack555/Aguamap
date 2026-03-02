@@ -369,10 +369,10 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 
 ### SPRINT 1
 **Planificación inicial**
-- Configuración del entorno de desarrollo.
-- Creación de la estructura base del proyecto en Firebase.
-- Implementación del sistema de autenticación (registro, inicio de sesión y recuperación de contraseña).
-- Diseño de los primeros modelos de datos.
+- Infraestructura: Establecimiento de la base técnica del proyecto con Firebase.
+- Autenticación: Implementación del sistema de registro y acceso de usuarios.
+- Localización: Desarrollo de las funcionalidades nucleares de geolocalización.
+- Gamificación: Creación de las mecánicas principales de juego para la aplicación.
 
 ![Tablero de seguimiento](./assets/images/sprint1.png)
 
@@ -388,10 +388,10 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 
 ### SPRINT 2
 **Planificación inicial**
-- Implementación del mapa interactivo con geolocalización.
-- Creación y listado de fuentes.
-- Sistema de categorías (listado y filtros básicos).
-- Primeras pruebas de usabilidad.
+- Categorías: Desarrollo e implementación del sistema completo de categorías.
+- Fuentes: Gestión avanzada de fuentes mediante geolocalización en Firestore.
+- Administración: Implementación del panel de control para la gestión del sistema.
+- Seguridad: Configuración de roles de usuario y reglas de acceso a los datos.
 
 ![Tablero de seguimiento Parte 1](./assets/images/sprint2_parte1.png)
 ![Tablero de seguimiento Parte 2](./assets/images/sprint2_parte2.png)
@@ -408,10 +408,10 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 
 ### SPRINT 3
 **Planificación inicial**
-- Implementación del minijuego AguaQuest.
-- Sistema de valoraciones y comentarios.
-- Rankings de puntuaciones.
-- Perfil de usuario y estadísticas básicas.
+- Robustez: Gestión de excepciones en todos los módulos de la App.
+- Interfaz: Optimización del diseño Responsive y la Accesibilidad.
+- Documentación: Elaboración de la memoria técnica y documentación final.
+- Promoción: Creación del vídeo demo y de la presentación del proyecto.
 
 ![Tablero de seguimiento Parte 1](./assets/images/sprint3_parte1.png)
 ![Tablero de seguimiento Parte 2](./assets/images/sprint3_parte2.png)
