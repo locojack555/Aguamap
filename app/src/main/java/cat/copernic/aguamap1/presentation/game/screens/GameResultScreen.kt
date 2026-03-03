@@ -206,18 +206,6 @@ fun GameResultScreen(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Botón opcional para volver
-                Button(
-                    onClick = onBackToHome,
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(R.string.btn_back_home), color = Blanco)
-                }
             }
         }
     }
