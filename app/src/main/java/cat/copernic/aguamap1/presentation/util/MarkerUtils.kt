@@ -8,43 +8,62 @@ import cat.copernic.aguamap1.ui.theme.Naranja
 import cat.copernic.aguamap1.ui.theme.Rojo
 import kotlin.random.Random
 
+// 1. DEFINIR TUS COLORES PERSONALIZADOS
+val VerdeHoja = Color(0xFF4CAF50)
+val AzulAgua = Color(0xFF2196F3)
+
 /**
- * Genera un color único para una categoría basado en su ID.
+ * 2. CAMBIA ESTO PARA TUS CATEGORÍAS ACTUALES
+ * Sustituye "NombreDeTuCategoria1" por el nombre exacto de tu categoría
  */
-fun getRandomCategoryColor(categoryId: String): Color {
-    val seed = categoryId.hashCode()
-    val random = Random(seed)
-    // Usamos rangos para evitar colores demasiado blancos o negros
-    return Color(
-        red = random.nextFloat().coerceIn(0.2f, 0.8f),
-        green = random.nextFloat().coerceIn(0.2f, 0.8f),
-        blue = random.nextFloat().coerceIn(0.2f, 0.8f),
-        alpha = 1f
-    )
+private val categoryColorMap = mapOf(
+    "Ornamental" to VerdeHoja, // Cámbialo por el nombre real que pusiste
+    "Potable" to AzulAgua    // Cámbialo por el nombre real que pusiste
+)
+
+/**
+ * Obtiene el color de la categoría. Si no coincide con el mapa, genera uno aleatorio.
+ */
+fun getCategoryColor(categoryName: String, categoryId: String): Color {
+    // Busca por nombre en el mapa de arriba
+    return categoryColorMap[categoryName] ?: run {
+        // Fallback: Si no existe el nombre, genera uno aleatorio suave
+        val seed = categoryId.hashCode()
+        val random = Random(seed)
+        Color(
+            red = random.nextFloat().coerceIn(0.3f, 0.7f),
+            green = random.nextFloat().coerceIn(0.3f, 0.7f),
+            blue = random.nextFloat().coerceIn(0.3f, 0.7f),
+            alpha = 1f
+        )
+    }
 }
 
 /**
- * Lógica de prioridad de colores para el Marcador (Int ARGB).
- * Prioridad: Pendiente (Naranja) > Averiada (Rojo) > Categoría (Aleatorio)
+ * Color para el Marcador del Mapa (Int ARGB).
  */
 fun Fountain.getMarkerColor(): Int {
     return when {
         status == StateFountain.PENDING -> Naranja.toArgb()
         !operational -> Rojo.toArgb()
-        else -> getRandomCategoryColor(this.category.id).toArgb()
+        else -> getCategoryColor(this.category.name, this.category.id).toArgb()
     }
 }
 
 /**
- * Lógica de prioridad de colores para la UI de Compose (Color).
+ * Color para la UI de Compose (Color).
  */
 fun Fountain.getStatusColor(): Color {
     return when {
         status == StateFountain.PENDING -> Naranja
         !operational -> Rojo
-        else -> getRandomCategoryColor(this.category.id)
+        else -> getCategoryColor(this.category.name, this.category.id)
     }
 }
+
+/**
+ * Texto de estado.
+ */
 fun Fountain.getStatusText(): String {
     return when {
         !operational -> "Averiada - ${category.name}"

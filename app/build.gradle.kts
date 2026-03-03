@@ -65,6 +65,11 @@ dependencies {
     implementation(libs.firebase.database.ktx)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Para calcular los Geohashes (necesarios para que las fuentes aparezcan en tu mapa)
+    implementation("com.firebase:geofire-android-common:3.2.0")
+
 
 
     implementation(libs.androidx.core.ktx)

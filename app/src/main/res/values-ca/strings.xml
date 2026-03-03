@@ -126,7 +126,7 @@
     <string name="game_error_no_fountains">No hi ha fonts disponibles</string>
     <string name="game_error_generic">Error: %1$s</string>
 
-    <string name="game_instructions_title_app">AguaQuest</string>
+    <string name="game_instructions_title_app">GeoFountain</string>
     <string name="game_instructions_subtitle">On és aquesta font?</string>
     <string name="game_instructions_play_learn_title">Juga i aprèn!</string>
     <string name="game_instructions_play_learn_description">Endevina on es troba la font al mapa i guanya punts</string>

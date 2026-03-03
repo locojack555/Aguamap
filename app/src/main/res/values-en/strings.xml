@@ -126,7 +126,7 @@
     <string name="game_error_no_fountains">No fountains available</string>
     <string name="game_error_generic">Error: %1$s</string>
 
-    <string name="game_instructions_title_app">AguaQuest</string>
+    <string name="game_instructions_title_app">GeoFountain</string>
     <string name="game_instructions_subtitle">Where is this fountain?</string>
     <string name="game_instructions_play_learn_title">Play and learn!</string>
     <string name="game_instructions_play_learn_description">Guess where the fountain is on the map and earn points</string>

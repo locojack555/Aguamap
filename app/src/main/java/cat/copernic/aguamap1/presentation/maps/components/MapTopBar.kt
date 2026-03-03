@@ -58,7 +58,7 @@ import cat.copernic.aguamap1.ui.theme.Negro
 fun MapTopBar(
     isMapView: Boolean,
     onToggleView: () -> Unit,
-    viewModel: MapViewModel = hiltViewModel()
+    viewModel: MapViewModel // Quitamos el = hiltViewModel() para forzar el paso del VM del padre
 ) {
     Surface(
         modifier = Modifier
@@ -93,11 +93,11 @@ fun MapTopBar(
                         Icon(
                             painter = painterResource(R.drawable.filter_alt_24px),
                             contentDescription = stringResource(R.string.filter),
-                            tint = if (viewModel.filterState != FilterState()) Blue10 else Negro.copy(
-                                alpha = 0.7f
-                            )
+                            // El filtro está activo si el estado es distinto al inicial
+                            tint = if (viewModel.filterState != FilterState()) Blue10 else Negro.copy(alpha = 0.7f)
                         )
                     }
+
                     FilterDropDown(
                         expanded = viewModel.showFilterMenu,
                         onDismiss = { viewModel.toggleFilterMenu() },
@@ -106,6 +106,7 @@ fun MapTopBar(
                         onFilterChanged = { viewModel.updateFilters(it) },
                         showSortOptions = !isMapView
                     )
+
                     IconButton(onClick = { onToggleView() }) {
                         Icon(
                             painter = painterResource(

@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.* // Importante para el cálculo de movimiento
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
@@ -32,10 +31,12 @@ class MapViewModel @Inject constructor(
     private val locationProvider: DefaultLocationProvider
 ) : ViewModel() {
 
+    // Coordenadas iniciales (Terrassa)
     var latitude by mutableDoubleStateOf(41.5632)
     var longitude by mutableDoubleStateOf(2.0089)
     var zoomLevel by mutableDoubleStateOf(15.0)
     var isFirstLocationUpdate by mutableStateOf(true)
+
     var uiState by mutableStateOf(MapUiState())
         private set
 
@@ -83,31 +84,30 @@ class MapViewModel @Inject constructor(
     }
 
     fun loadFountains() {
-        if (userLat == null || userLng == null) return
+        val lat = userLat ?: return
+        val lng = userLng ?: return
 
         viewModelScope.launch {
-            getFountainsUseCase(userLat, userLng).collect { result ->
+            getFountainsUseCase(lat, lng).collect { result ->
                 result.onSuccess { list ->
                     allFountainsList = list
-                    updateDistances()
+                    updateDistances() // Esto ya llama internamente a applyFilterAndSort()
                 }
             }
         }
     }
 
-    // --- CORRECCIÓN PARA EVITAR DOBLE CARGA Y COORDENADAS FALSAS ---
     fun onFirstLocationFound(lat: Double, lng: Double) {
-        // ESCUDO 1: Ignoramos la ubicación si es exactamente la de Terrassa por defecto
-        // y no es la primera vez (o si es 0.0), para evitar que el juego falle al arrancar.
-        if (lat == 41.5632 && lng == 2.0089 && !isFirstLocationUpdate) return
+        // Evitar coordenadas nulas o por defecto si ya tenemos una posición real
         if (lat == 0.0) return
+        if (lat == 41.5632 && lng == 2.0089 && !isFirstLocationUpdate) return
 
-        // Si no es la primera vez, comprobamos si el movimiento es significativo (2m)
         if (!isFirstLocationUpdate) {
             val lastLat = userLat ?: 0.0
             val lastLng = userLng ?: 0.0
             val distanceMoved = getDistanceUseCase(lastLat, lastLng, lat, lng)
 
+            // Umbral de 2 metros para no sobrecargar la UI
             if (distanceMoved < 2.0) return
         }
 
@@ -159,6 +159,7 @@ class MapViewModel @Inject constructor(
     private fun applyFilterAndSort() {
         var filtered = allFountainsList
 
+        // 1. Filtro de búsqueda por texto/regex
         if (searchQuery.isNotBlank()) {
             val regex = generateSearchRegex(searchQuery)
             filtered = if (regex != null) {
@@ -168,21 +169,30 @@ class MapViewModel @Inject constructor(
             }
         }
 
+        // 2. Filtro por categoría seleccionada
         filterState.selectedCategory?.let { cat ->
             filtered = filtered.filter { it.category.id == cat.id }
         }
 
+        // 3. Filtro de fuentes operativas
         if (filterState.onlyOperational) {
             filtered = filtered.filter { it.operational }
         }
 
+        // 4. Filtro de Rating y Distancia (CORRECCIÓN KM A METROS)
         filtered = filtered.filter { fountain ->
             val ratingMatch = fountain.ratingAverage >= filterState.minRating
-            val distanceMatch =
-                (fountain.distanceFromUser ?: 0.0) / 1000.0 <= filterState.maxDistanceKm
+
+            // Comparamos metros con (Kilómetros del slider * 1000)
+            val distanceInMeters = fountain.distanceFromUser ?: 0.0
+            val maxAllowedMeters = filterState.maxDistanceKm * 1000.0
+
+            val distanceMatch = distanceInMeters <= maxAllowedMeters
+
             ratingMatch && distanceMatch
         }
 
+        // 5. Ordenación profesional
         val sorted = when (filterState.sortBy) {
             SortOption.DISTANCE_ASC -> filtered.sortedBy { it.distanceFromUser ?: Double.MAX_VALUE }
             SortOption.DISTANCE_DESC -> filtered.sortedByDescending { it.distanceFromUser ?: 0.0 }
