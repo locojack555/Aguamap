@@ -136,7 +136,7 @@ private fun EditProfileHeader(onClose: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
-            .background(Brush.verticalGradient(colors = listOf(AzulClaro, AzulOscuro)))
+            .background(PerfilGradient)
             .statusBarsPadding()
     ) {
         Row(
