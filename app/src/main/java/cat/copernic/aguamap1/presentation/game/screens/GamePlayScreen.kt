@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.presentation.game.components.GameMapView
+import cat.copernic.aguamap1.presentation.util.VerdeHoja
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Rojo
 import cat.copernic.aguamap1.ui.theme.VerdeClaro
@@ -143,7 +144,7 @@ fun GamePlayScreen(
                     .fillMaxWidth(0.8f)
                     .height(60.dp),
                 shape = RoundedCornerShape(30.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = VerdeClaro)
+                colors = ButtonDefaults.buttonColors(containerColor = VerdeHoja)
             ) {
                 Text(
                     text = stringResource(R.string.game_play_confirm_button),

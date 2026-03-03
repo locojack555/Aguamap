@@ -47,6 +47,11 @@ val AzulGradient = Brush.verticalGradient(
     colors = listOf(AzulOscuro, AzulTurquesa)
 )
 
+val PerfilGradient = Brush.verticalGradient(
+    colors = listOf(Color(0xFF00B4DB), Color(0xFF0083B0))
+)
+
+
 // --- 6. COLORES DE COMPATIBILIDAD / ANDROID DEFAULT ---
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)

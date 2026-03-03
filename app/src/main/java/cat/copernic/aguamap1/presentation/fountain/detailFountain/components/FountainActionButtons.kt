@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.GrisClaro
 import cat.copernic.aguamap1.ui.theme.Rojo
@@ -37,7 +38,8 @@ fun FountainActionButtons(
                 modifier = Modifier.weight(1f).height(52.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Blue10,
-                    disabledContainerColor = GrisClaro
+                    disabledContainerColor = GrisClaro,
+                    contentColor = Blanco
                 ),
                 shape = RoundedCornerShape(14.dp)
             ) {

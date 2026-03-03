@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.ProfileState
+import cat.copernic.aguamap1.ui.theme.PerfilGradient
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
@@ -37,10 +38,8 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF00B4DB), Color(0xFF0083B0))
+                PerfilGradient
                 )
-            )
             .padding(top = 48.dp, bottom = 32.dp, start = 24.dp, end = 24.dp),
         contentAlignment = Alignment.Center
     ) {
