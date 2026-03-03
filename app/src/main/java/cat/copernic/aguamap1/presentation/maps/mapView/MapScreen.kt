@@ -94,7 +94,8 @@ fun MapScreen(
                 if (isHome) {
                     MapTopBar(
                         isMapView = isMapView,
-                        onToggleView = { viewModel.toggleView() }
+                        onToggleView = { viewModel.toggleView() },
+                        viewModel = viewModel
                     )
                 }
             }

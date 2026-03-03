@@ -3,6 +3,7 @@ package cat.copernic.aguamap1.presentation.game
 import android.Manifest
 import android.content.Context
 import android.location.LocationManager
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,24 +55,38 @@ fun GameScreen(
     val error by viewModel.error.collectAsState()
     val userGuessPos by viewModel.userGuessPos.collectAsState()
     val hasLost by viewModel.hasLost.collectAsState()
+    val distanceToFountain by viewModel.distanceToFountain.collectAsState()
 
+    val context = LocalContext.current
+
+    // PRIORIDAD: Usamos las coordenadas que vienen del NavGraph (MapViewModel)
     var currentUserLat by remember { mutableDoubleStateOf(userLat) }
     var currentUserLng by remember { mutableDoubleStateOf(userLng) }
 
+    // Bandera para saber si ya tenemos una ubicación válida
     var isLocationReady by remember {
-        mutableStateOf(userLat != 0.0 && userLat != 41.5632)
+        mutableStateOf(userLat != 0.0 && String.format("%.4f", userLat) != "41.5632")
     }
 
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-    val context = LocalContext.current
+    // CORRECCIÓN: Si cambian las coordenadas en el NavGraph, actualizamos aquí
+    LaunchedEffect(userLat, userLng) {
+        if (userLat != 0.0 && String.format("%.4f", userLat) != "41.5632") {
+            currentUserLat = userLat
+            currentUserLng = userLng
+            isLocationReady = true
+            Log.d("GAME_DEBUG", "Ubicación sincronizada desde Nav: $userLat, $userLng")
+        }
+    }
 
     LaunchedEffect(locationPermissionState.status.isGranted) {
-        if (locationPermissionState.status.isGranted) {
+        if (locationPermissionState.status.isGranted && !isLocationReady) {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             try {
+                // Solo pedimos al GPS si el NavGraph no nos dio nada útil
                 val lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                     ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
 
@@ -79,15 +94,18 @@ fun GameScreen(
                     currentUserLat = it.latitude
                     currentUserLng = it.longitude
                     isLocationReady = true
+                    Log.d("GAME_DEBUG", "Ubicación fallback GPS local: ${it.latitude}, ${it.longitude}")
                 }
             } catch (e: SecurityException) {
-                if (currentUserLat != 0.0) isLocationReady = true
+                Log.e("GAME_DEBUG", "Error de permisos", e)
             }
         }
     }
 
+    // Disparar lógica de juego
     LaunchedEffect(isLocationReady) {
         if (isLocationReady && gameState == GameViewModel.GameState.Initial) {
+            Log.d("GAME_DEBUG", "Iniciando checkCanPlay con: $currentUserLat, $currentUserLng")
             viewModel.checkCanPlay(currentUserLat, currentUserLng)
         }
     }
@@ -141,7 +159,7 @@ fun GameScreen(
                                 viewModel.onBackToHomePressed()
                                 onBackToHome()
                             },
-                            onFountainClick = { fountain -> onFountainClick(fountain) }
+                            onFountainClick = { f -> onFountainClick(f) }
                         )
                     }
                 }
@@ -155,16 +173,18 @@ fun GameScreen(
                     }
                 )
 
-                GameViewModel.GameState.TooFar -> ErrorScreen(
-                    message = error ?: stringResource(R.string.game_error_too_far),
-                    onRetry = {
-                        if (isLocationReady) viewModel.retryGame(currentUserLat, currentUserLng)
-                    },
-                    onBack = {
-                        viewModel.onBackToHomePressed()
-                        onBackToHome()
-                    }
-                )
+                GameViewModel.GameState.TooFar -> {
+                    ErrorScreen(
+                        message = "${stringResource(R.string.game_error_too_far)} (Dist: ${distanceToFountain.toInt()}m)",
+                        onRetry = {
+                            if (isLocationReady) viewModel.retryGame(currentUserLat, currentUserLng)
+                        },
+                        onBack = {
+                            viewModel.onBackToHomePressed()
+                            onBackToHome()
+                        }
+                    )
+                }
 
                 else -> ErrorScreen(
                     message = error ?: stringResource(R.string.game_error_unexpected),

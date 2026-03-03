@@ -126,7 +126,7 @@
     <string name="game_error_no_fountains">No hay fuentes disponibles</string>
     <string name="game_error_generic">Error: %1$s</string>
 
-    <string name="game_instructions_title_app">AguaQuest</string>
+    <string name="game_instructions_title_app">GeoFountain</string>
     <string name="game_instructions_subtitle">¿Dónde está esta fuente?</string>
     <string name="game_instructions_play_learn_title">¡Juega y aprende!</string>
     <string name="game_instructions_play_learn_description">Adivina dónde se encuentra la fuente en el mapa y gana puntos</string>

@@ -2,8 +2,6 @@ package cat.copernic.aguamap1.domain.repository
 
 import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.domain.model.Fountain
-import cat.copernic.aguamap1.domain.model.Report
-import cat.copernic.aguamap1.domain.model.UserStats
 import kotlinx.coroutines.flow.Flow
 
 interface FountainRepository {
@@ -11,9 +9,16 @@ interface FountainRepository {
     // --- GESTIÓN DE FUENTES ---
 
     /**
-     * Escucha en tiempo real la lista de fuentes.
+     * Escucha la lista de fuentes.
+     * Si lat/lng son null, debería devolver la colección completa.
      */
     fun fetchSources(lat: Double?, lng: Double?): Flow<Result<List<Fountain>>>
+
+    /**
+     * NUEVO: Obtiene todas las fuentes de forma directa (suspendida).
+     * Vital para la validación del juego sin errores de Flow transparency.
+     */
+    suspend fun getAllFountainsDirect(): Result<List<Fountain>>
 
     /**
      * Busca la fuente por su id.
@@ -26,13 +31,12 @@ interface FountainRepository {
     suspend fun createFountain(fountain: Fountain): Result<Unit>
 
     /**
-     * Actualiza campos específicos de una fuente (Editar, Confirmar, Reportar avería).
-     * @param updates Mapa con los pares campo-valor a modificar.
+     * Actualiza campos específicos de una fuente.
      */
     suspend fun updateFountain(fountainId: String, updates: Map<String, Any>): Result<Unit>
 
     /**
-     * Borra una fuente (Admin o por acumulación de reportes "No existe").
+     * Borra una fuente.
      */
     suspend fun deleteFountain(fountainId: String): Result<Unit>
 
@@ -50,7 +54,7 @@ interface FountainRepository {
     fun fetchComments(fountainId: String): Flow<Result<List<Comment>>>
 
     /**
-     * Actualiza un comentario (Censurar texto por Admin o editar por el usuario).
+     * Actualiza un comentario.
      */
     suspend fun updateComment(
         fountainId: String,
@@ -64,25 +68,29 @@ interface FountainRepository {
     suspend fun deleteComment(fountainId: String, commentId: String): Result<Unit>
 
     /**
-     *
+     * Reporta un comentario para revisión.
+     */
+    suspend fun reportComment(fountainId: String, commentId: String, reason: String): Result<Unit>
+
+    // --- ESTADÍSTICAS DE USUARIO ---
+
+    /**
+     * Actualiza el contador de fuentes creadas por el usuario.
      */
     suspend fun updateUserFountainsCount(userId: String, userName: String, increment: Int): Result<Unit>
 
     /**
-     *
+     * Actualiza el contador de comentarios realizados por el usuario.
      */
     suspend fun updateUserCommentsCount(userId: String, userName: String, increment: Int): Result<Unit>
 
     /**
-     *
+     * Obtiene el número total de fuentes creadas por un usuario.
      */
     suspend fun getUserFountainsCount(userId: String): Int
 
     /**
-     *
+     * Obtiene el número total de comentarios de un usuario.
      */
     suspend fun getUserCommentsCount(userId: String): Int
-
-    suspend fun reportComment(fountainId: String, commentId: String, userId: String): Result<Unit>
-
 }

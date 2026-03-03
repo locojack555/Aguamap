@@ -78,16 +78,5 @@ fun ErrorScreen(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Botón de Volver (Opcional, pero lo tienes en los parámetros)
-        TextButton(onClick = onBack) {
-            Text(
-                text = stringResource(R.string.back), // Multiidioma
-                color = Blue10, // O Blue10
-                fontWeight = FontWeight.Medium
-            )
-        }
     }
 }

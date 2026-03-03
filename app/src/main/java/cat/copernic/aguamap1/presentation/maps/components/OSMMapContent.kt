@@ -40,7 +40,7 @@ import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
 import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
 import cat.copernic.aguamap1.presentation.util.getMarkerColor
-import cat.copernic.aguamap1.presentation.util.getRandomCategoryColor
+import cat.copernic.aguamap1.presentation.util.getCategoryColor // IMPORTANTE: Usamos la nueva función
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Gris
 import cat.copernic.aguamap1.ui.theme.Naranja
@@ -67,7 +67,6 @@ fun OSMMapContent(
     val context = LocalContext.current
     val fountains = viewModel?.uiState?.fountains ?: emptyList()
 
-    // Títulos de marcadores localizados para el filtrado de overlays
     val titleGuess = stringResource(R.string.map_marker_guess)
     val titleReal = stringResource(R.string.map_marker_real_location)
 
@@ -97,7 +96,6 @@ fun OSMMapContent(
             }
         },
         update = { mapView ->
-            // Filtrar overlays usando los strings localizados
             mapView.overlays.removeAll { it is Marker && it.title != titleGuess && it.title != titleReal }
 
             fountains.forEach { fountain ->
@@ -169,7 +167,6 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
             viewModel.onMapMoved(mapCenter.latitude, mapCenter.longitude, zoomLevelDouble)
             return true
         }
-
         override fun onZoom(event: ZoomEvent?): Boolean {
             viewModel.onMapMoved(mapCenter.latitude, mapCenter.longitude, zoomLevelDouble)
             return true
@@ -233,6 +230,8 @@ fun MapFloatingButtons(
     }
 }
 
+// --- SECCIÓN DE LEYENDA CORREGIDA ---
+
 @Composable
 fun MapLegend(
     categories: List<Category>,
@@ -250,9 +249,11 @@ fun MapLegend(
         ) {
             LegendItem(color = Naranja, text = stringResource(R.string.legend_pendiente))
             LegendItem(color = Rojo, text = stringResource(R.string.legend_averiada))
+
+            // Aquí corregimos el color de las categorías
             categories.forEach { category ->
                 LegendItem(
-                    color = getRandomCategoryColor(category.id),
+                    color = getCategoryColor(category.name, category.id), // Cambiado aquí
                     text = category.name
                 )
             }
