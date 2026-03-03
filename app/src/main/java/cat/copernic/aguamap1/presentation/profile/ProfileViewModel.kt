@@ -3,6 +3,7 @@ package cat.copernic.aguamap1.presentation.profile
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.R
 import kotlinx.coroutines.flow.update
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.usecase.profile.GetCurrentUserHistoricStatsUseCase
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
 import cat.copernic.aguamap1.data.cloudinary.UploadProgress
+import cat.copernic.aguamap1.domain.model.ProfileState
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -32,8 +34,9 @@ class ProfileViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    // Cambiado de String? a Int? para usar IDs de recursos (R.string)
+    private val _errorResId = MutableStateFlow<Int?>(null)
+    val errorResId: StateFlow<Int?> = _errorResId.asStateFlow()
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving = _isSaving.asStateFlow()
@@ -57,7 +60,7 @@ class ProfileViewModel @Inject constructor(
     fun loadUserData() {
         viewModelScope.launch {
             _isLoading.value = true
-            _error.value = null
+            _errorResId.value = null
 
             try {
                 val userId = authRepository.getCurrentUserUid() ?: return@launch
@@ -81,7 +84,7 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                _error.value = "Error al cargar datos: ${e.message}"
+                _errorResId.value = R.string.error_loading_user_data
             } finally {
                 _isLoading.value = false
             }
@@ -91,19 +94,17 @@ class ProfileViewModel @Inject constructor(
     fun updateProfile(nombre: String, onComplete: () -> Unit) {
         viewModelScope.launch {
             _isSaving.value = true
-            _error.value = null
+            _errorResId.value = null
 
             try {
                 val userId = authRepository.getCurrentUserUid()
-                    ?: throw Exception("Usuario no autenticado")
+                    ?: throw Exception()
 
                 val currentName = authRepository.getCurrentUserName()
                 val currentEmail = authRepository.getCurrentUserEmail() ?: ""
 
                 val firestoreResult = authRepository.updateUserProfile(userId, nombre, currentEmail)
-                if (firestoreResult.isFailure) {
-                    throw firestoreResult.exceptionOrNull() ?: Exception("Error en Firestore")
-                }
+                if (firestoreResult.isFailure) throw Exception()
 
                 if (nombre != currentName) {
                     authRepository.updateUserName(nombre)
@@ -111,58 +112,38 @@ class ProfileViewModel @Inject constructor(
 
                 loadUserData()
                 _isSuccess.value = true
+                onComplete()
 
             } catch (e: Exception) {
-                _error.value = "Error al actualizar: ${e.message}"
+                _errorResId.value = R.string.error_updating_profile
             } finally {
                 _isSaving.value = false
             }
         }
     }
 
-    // NUEVA FUNCIÓN PARA ELIMINAR FOTO DE PERFIL
     fun deleteProfilePicture(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             _isSaving.value = true
-            _error.value = null
+            _errorResId.value = null
 
             try {
                 val userId = authRepository.getCurrentUserUid()
-                    ?: throw Exception("Usuario no autenticado")
+                    ?: throw Exception()
 
-                // Actualizar en Firestore con URL vacía
                 val result = authRepository.updateUserProfilePicture(userId, "")
-                if (result.isFailure) {
-                    throw result.exceptionOrNull() ?: Exception("Error al eliminar la foto")
-                }
+                if (result.isFailure) throw Exception()
 
-                // Recargar datos
                 loadUserData()
                 _isSuccess.value = true
                 onComplete()
 
             } catch (e: Exception) {
-                _error.value = "Error al eliminar foto: ${e.message}"
+                _errorResId.value = R.string.error_deleting_picture
             } finally {
                 _isSaving.value = false
             }
         }
-    }
-
-    fun resetSuccess() {
-        _isSuccess.value = false
-    }
-
-    fun clearError() {
-        _error.value = null
-    }
-
-    fun updateSelectedImage(uri: Uri?) {
-        _selectedImageUri.value = uri
-    }
-
-    fun clearSelectedImage() {
-        _selectedImageUri.value = null
     }
 
     fun saveProfilePicture(onComplete: () -> Unit) {
@@ -171,7 +152,7 @@ class ProfileViewModel @Inject constructor(
 
         viewModelScope.launch {
             _isUploadingPicture.value = true
-            _error.value = null
+            _errorResId.value = null
             _uploadProgress.value = 0
 
             try {
@@ -181,35 +162,34 @@ class ProfileViewModel @Inject constructor(
                             is UploadProgress.InProgress -> {
                                 _uploadProgress.value = progress.percentage
                             }
-
                             is UploadProgress.Success -> {
                                 val result = authRepository.updateUserProfilePicture(
                                     userId,
                                     progress.imageUrl
                                 )
-                                if (result.isFailure) {
-                                    throw result.exceptionOrNull()
-                                        ?: Exception("Error al guardar la foto")
-                                }
+                                if (result.isFailure) throw Exception()
 
                                 loadUserData()
                                 _isUploadingPicture.value = false
                                 _selectedImageUri.value = null
                                 onComplete()
                             }
-
                             is UploadProgress.Error -> {
-                                _error.value = "Error al subir imagen: ${progress.message}"
+                                _errorResId.value = R.string.error_uploading_image
                                 _isUploadingPicture.value = false
                             }
-
                             else -> {}
                         }
                     }
             } catch (e: Exception) {
-                _error.value = "Error: ${e.message}"
+                _errorResId.value = R.string.error_generic
                 _isUploadingPicture.value = false
             }
         }
     }
+
+    fun resetSuccess() { _isSuccess.value = false }
+    fun clearError() { _errorResId.value = null }
+    fun updateSelectedImage(uri: Uri?) { _selectedImageUri.value = uri }
+    fun clearSelectedImage() { _selectedImageUri.value = null }
 }

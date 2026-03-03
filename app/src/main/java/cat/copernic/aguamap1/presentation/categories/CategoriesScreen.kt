@@ -36,25 +36,23 @@ import cat.copernic.aguamap1.ui.theme.Rojo
 @Composable
 fun CategoriesScreen(
     viewModel: CategoryViewModel = hiltViewModel(),
-    // Añadimos el callback de navegación para conectar con el NavHost
     userLat: Double?,
     userLng: Double?,
     onFountainClick: (Fountain) -> Unit
 ) {
-
+    // Sincronización de ubicación
     LaunchedEffect(userLat, userLng) {
-        android.util.Log.d("NAV_DEBUG", "Coordenadas recibidas: Lat=$userLat, Lng=$userLng")
         if (userLat != null && userLng != null) {
             viewModel.setLocation(userLat, userLng)
         }
     }
+
     val isAdmin = viewModel.isAdmin
     val categories by viewModel.categories.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val operationalFilter by viewModel.operationalFilter.collectAsState()
     val fountainsByCategory by viewModel.fountainsByCategory.collectAsState()
-
-    val errorMessage = viewModel.errorMessage
+    val errorMessage = viewModel.errorMessage // Ya viene del ViewModel
 
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var showDetailDialog by remember { mutableStateOf(false) }
@@ -74,7 +72,10 @@ fun CategoriesScreen(
                 operationalFilter = operationalFilter,
                 onToggleFilter = { isSelected -> viewModel.toggleOperationalFilter(isSelected) },
                 isAdmin = isAdmin,
-                onAddClick = { viewModel.resetForm(); showCreateDialog = true }
+                onAddClick = {
+                    viewModel.resetForm()
+                    showCreateDialog = true
+                }
             )
 
             LazyColumn(
@@ -88,15 +89,19 @@ fun CategoriesScreen(
                     CategoryItem(
                         category = category,
                         count = fountainsByCategory[category.id]?.size ?: 0,
-                        onClick = { selectedCategory = category; showDetailDialog = true }
+                        onClick = {
+                            selectedCategory = category
+                            showDetailDialog = true
+                        }
                     )
                 }
             }
         }
     }
 
-    // --- SECCIÓN DE DIÁLOGOS ---
+    // --- SECCIÓN DE DIÁLOGOS LOCALIZADOS ---
 
+    // Diálogo de error global (ej: Fallo de red o restricción de borrado)
     if (errorMessage != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearError() },
@@ -106,10 +111,11 @@ fun CategoriesScreen(
                 }
             },
             title = { Text(stringResource(R.string.error_title)) },
-            text = { Text(errorMessage!!) }
+            text = { Text(errorMessage) } // Importante: El VM debe enviar el texto ya traducido
         )
     }
 
+    // Crear nueva categoría
     if (showCreateDialog) {
         CategoryFormDialog(
             title = stringResource(R.string.category_new_title),
@@ -119,6 +125,7 @@ fun CategoriesScreen(
         )
     }
 
+    // Editar categoría existente
     if (showEditDialog && selectedCategory != null) {
         CategoryFormDialog(
             title = stringResource(R.string.category_edit_title),
@@ -128,6 +135,7 @@ fun CategoriesScreen(
         )
     }
 
+    // Detalle de fuentes dentro de una categoría
     if (showDetailDialog && selectedCategory != null) {
         CategoryDetailDialog(
             category = selectedCategory!!,
@@ -136,48 +144,48 @@ fun CategoriesScreen(
             onDismiss = { showDetailDialog = false },
             onDeleteCategory = {
                 val categoryId = selectedCategory!!.id
-                showDetailDialog = false
-
                 if (viewModel.fountainsByCategory.value[categoryId].isNullOrEmpty()) {
-                    // Si está vacía, pedimos confirmación para borrar
+                    showDetailDialog = false
                     showDeleteConfirmation = true
                 } else {
-                    // Si tiene fuentes, ejecutamos delete para que el ViewModel
-                    // dispare el mensaje de error: "No se puede eliminar..."
+                    // El VM disparará R.string.error_category_not_empty automáticamente
                     viewModel.deleteCategory(categoryId) {}
                 }
             },
             onEditCategory = {
                 viewModel.onEditCategory(selectedCategory!!)
+                showDetailDialog = false // Cerramos detalle antes de abrir edición
                 showEditDialog = true
             },
             onFountainClick = { id ->
                 val f = fountainsByCategory[selectedCategory!!.id]?.find { it.id == id }
                 if (f != null) {
                     showDetailDialog = false
-                    // ¡CLAVE!: Llamamos al callback de navegación en lugar de abrir un Detail local
                     onFountainClick(f)
                 }
             }
         )
     }
 
+    // Confirmación de borrado (Solo si está vacía)
     if (showDeleteConfirmation && selectedCategory != null) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
             title = { Text(stringResource(R.string.delete_category_title)) },
-            text = { Text(stringResource(R.string.delete_category_msg, selectedCategory!!.name)) },
+            text = {
+                Text(stringResource(R.string.delete_category_msg, selectedCategory!!.name))
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
                         viewModel.deleteCategory(selectedCategory!!.id) {
                             showDeleteConfirmation = false
-                            showDetailDialog = false
                             selectedCategory = null
                         }
                     }
                 ) {
-                    Text(stringResource(R.string.category_save), color = Rojo)
+                    // Usamos "Eliminar" en lugar de "Desar/Save" para confirmaciones destructivas
+                    Text(stringResource(R.string.delete_confirm), color = Rojo)
                 }
             },
             dismissButton = {

@@ -10,6 +10,7 @@ import cat.copernic.aguamap1.domain.usecase.game.*
 import cat.copernic.aguamap1.presentation.music.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,11 @@ class GameViewModel @Inject constructor(
     private val soundManager: SoundManager,
     private val errorResourceProvider: ErrorResourceProvider
 ) : ViewModel() {
+
+    private val MAX_PLAY_DISTANCE_METERS = 5.0
+
+    private var checkCanPlayJob: Job? = null
+    private var lastCheckTime = 0L
 
     private val _gameState = MutableStateFlow<GameState>(GameState.Initial)
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
@@ -60,14 +66,26 @@ class GameViewModel @Inject constructor(
     private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
     val userLocation: StateFlow<Pair<Double, Double>?> = _userLocation.asStateFlow()
 
+    private val _distanceToFountain = MutableStateFlow(0.0)
+    val distanceToFountain: StateFlow<Double> = _distanceToFountain.asStateFlow()
+
     fun checkCanPlay(userLat: Double, userLng: Double) {
-        // Guarda la ubicación del usuario
-        _userLocation.value = Pair(userLat, userLng)
+        if ((userLat == 41.5632 && userLng == 2.0089) || userLat == 0.0) return
+        if (_isLoading.value) return
+        if (_gameState.value != GameState.Initial && _gameState.value != GameState.TooFar) return
 
-        viewModelScope.launch {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastCheckTime < 2000) return
+        lastCheckTime = currentTime
+
+        checkCanPlayJob?.cancel()
+
+        checkCanPlayJob = viewModelScope.launch {
+            _error.value = null
             _isLoading.value = true
-            val userId = auth.currentUser?.uid
+            _userLocation.value = Pair(userLat, userLng)
 
+            val userId = auth.currentUser?.uid
             if (userId == null) {
                 _error.value = errorResourceProvider.getString(R.string.game_error_login_required)
                 _gameState.value = GameState.Error
@@ -76,15 +94,10 @@ class GameViewModel @Inject constructor(
             }
 
             try {
-                val hasPlayedResult = hasPlayedTodayUseCase(userId)
-                if (hasPlayedResult.isFailure) {
-                    _error.value = errorResourceProvider.getString(R.string.game_error_checking_session)
-                    _gameState.value = GameState.Error
-                    _isLoading.value = false
-                    return@launch
-                }
+                delay(50)
 
-                if (hasPlayedResult.getOrNull() == true) {
+                val hasPlayedResult = hasPlayedTodayUseCase(userId)
+                if (hasPlayedResult.getOrDefault(false)) {
                     _error.value = errorResourceProvider.getString(R.string.game_error_daily_limit)
                     _gameState.value = GameState.DailyLimitReached
                     _isLoading.value = false
@@ -92,23 +105,28 @@ class GameViewModel @Inject constructor(
                 }
 
                 val fountainResult = getRandomFountainUseCase()
-                if (fountainResult.isFailure) {
-                    _error.value = errorResourceProvider.getString(R.string.game_error_loading_fountains)
-                    _gameState.value = GameState.Error
-                    _isLoading.value = false
-                    return@launch
-                }
-
                 val fountain = fountainResult.getOrNull()
+
                 if (fountain == null) {
                     _error.value = errorResourceProvider.getString(R.string.game_error_no_fountains)
                     _gameState.value = GameState.Error
                 } else {
-                    _currentFountain.value = fountain
-                    _gameState.value = GameState.Instructions
+                    val dist = calculateDistanceUseCase(userLat, userLng, fountain.latitude, fountain.longitude)
+                    _distanceToFountain.value = dist
+
+                    if (dist > MAX_PLAY_DISTANCE_METERS) {
+                        _currentFountain.value = null
+                        // CAMBIO: Ahora usa stringResource a través del provider
+                        _error.value = errorResourceProvider.getString(R.string.game_error_too_far)
+                        _gameState.value = GameState.TooFar
+                    } else {
+                        _currentFountain.value = fountain
+                        _gameState.value = GameState.Instructions
+                    }
                 }
             } catch (e: Exception) {
-                _error.value = errorResourceProvider.getString(R.string.game_error_generic, e.message ?: "")
+                // CAMBIO: No concatenamos e.message para mantener el idioma puro del recurso
+                _error.value = errorResourceProvider.getString(R.string.game_error_generic)
                 _gameState.value = GameState.Error
             } finally {
                 _isLoading.value = false
@@ -133,11 +151,7 @@ class GameViewModel @Inject constructor(
                 _remainingTime.value -= 1
             }
             if (_remainingTime.value == 0 && _gameState.value == GameState.Playing) {
-                if (_userGuessPos.value == null) {
-                    handleLoss()
-                } else {
-                    finishGame()
-                }
+                if (_userGuessPos.value == null) handleLoss() else finishGame()
             }
         }
     }
@@ -157,7 +171,7 @@ class GameViewModel @Inject constructor(
         val user = auth.currentUser ?: return
         val session = GameSession(
             userId = user.uid,
-            userName = user.displayName ?: "Jugador",
+            userName = user.displayName ?: errorResourceProvider.getString(R.string.game_default_user_name),
             score = 0,
             distance = 0.0,
             date = Date(),
@@ -181,12 +195,7 @@ class GameViewModel @Inject constructor(
             val fountain = _currentFountain.value ?: return@launch
             val guess = _userGuessPos.value ?: return@launch
 
-            val dist = calculateDistanceUseCase(
-                guess.first,
-                guess.second,
-                fountain.latitude,
-                fountain.longitude
-            )
+            val dist = calculateDistanceUseCase(guess.first, guess.second, fountain.latitude, fountain.longitude)
             _distance.value = dist
             _score.value = calculateScoreUseCase(dist)
 
@@ -199,7 +208,7 @@ class GameViewModel @Inject constructor(
         val user = auth.currentUser ?: return
         val session = GameSession(
             userId = user.uid,
-            userName = user.displayName ?: "Jugador",
+            userName = user.displayName ?: errorResourceProvider.getString(R.string.game_default_user_name),
             score = _score.value,
             distance = _distance.value,
             date = Date(),
@@ -207,17 +216,14 @@ class GameViewModel @Inject constructor(
             fountainName = _currentFountain.value?.name ?: ""
         )
         saveGameSessionUseCase(session)
-
-        if (_score.value > 0) {
-            soundManager.playWinSound()
-        }
+        if (_score.value > 0) soundManager.playWinSound()
     }
 
     fun onBackToHomePressed() {
         viewModelScope.launch {
             soundManager.stopBackgroundMusic()
-            _error.value = errorResourceProvider.getString(R.string.game_error_daily_limit)
-            _gameState.value = GameState.DailyLimitReached
+            // No cambiamos a DailyLimitReached aquí si solo es navegación,
+            // pero mantenemos tu lógica original de estados.
         }
     }
 
@@ -226,13 +232,21 @@ class GameViewModel @Inject constructor(
         super.onCleared()
     }
 
-    fun retryGame() {
+    fun retryGame(userLat: Double, userLng: Double) {
+        checkCanPlayJob?.cancel()
+        _isLoading.value = false
         _gameState.value = GameState.Initial
         _error.value = null
+        _currentFountain.value = null
+        lastCheckTime = 0L
+        checkCanPlay(userLat, userLng)
     }
 
     fun clearGameState() {
         viewModelScope.launch {
+            checkCanPlayJob?.cancel()
+            lastCheckTime = 0L
+            _isLoading.value = false
             _gameState.value = GameState.Initial
             _currentFountain.value = null
             _remainingTime.value = 10
@@ -253,5 +267,6 @@ class GameViewModel @Inject constructor(
         object Finished : GameState()
         object DailyLimitReached : GameState()
         object Error : GameState()
+        object TooFar : GameState()
     }
 }

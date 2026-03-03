@@ -34,7 +34,12 @@ fun ValidationCard(title: String, count: Int, target: Int, color: Color, icon: I
         border = BorderStroke(1.dp, color.copy(alpha = 0.15f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = color,
+                modifier = Modifier.size(28.dp)
+            )
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(
@@ -56,13 +61,31 @@ fun ValidationCard(title: String, count: Int, target: Int, color: Color, icon: I
 @Composable
 fun InfoRow(icon: ImageVector, label: String, value: String, valueColor: Color) {
     Row(
-        modifier = Modifier.padding(vertical = 6.dp),
+        modifier = Modifier.padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = NegroMuySuave)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = NegroMuySuave
+        )
         Spacer(Modifier.width(12.dp))
-        // Se asume que el label ya viene del stringResource(R.string...)
-        Text(text = "$label: ", color = NegroSuave, fontSize = 15.sp)
-        Text(text = value, color = valueColor, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+
+        // La etiqueta (Distancia, Estado, etc.) en color suave
+        Text(
+            text = "$label: ",
+            color = NegroSuave,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        // El valor (200m, Funcionando, etc.) con su COLOR ESPECÍFICO
+        Text(
+            text = value,
+            color = valueColor,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }

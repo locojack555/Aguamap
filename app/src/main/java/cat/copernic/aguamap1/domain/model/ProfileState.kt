@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.profile
+package cat.copernic.aguamap1.domain.model
 
 data class ProfileState (
     val userName: String = "",

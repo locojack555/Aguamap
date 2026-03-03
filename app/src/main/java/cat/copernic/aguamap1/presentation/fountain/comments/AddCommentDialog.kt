@@ -41,7 +41,7 @@ import cat.copernic.aguamap1.ui.theme.NegroSuave
 fun AddCommentDialog(
     initialRating: Int = 5,
     initialText: String = "",
-    isEditing: Boolean = false, // <-- NUEVO PARÁMETRO
+    isEditing: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (Int, String) -> Unit
 ) {
@@ -52,6 +52,7 @@ fun AddCommentDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
+                // Localizado: Título dinámico
                 text = if (!isEditing) stringResource(R.string.dialog_add_comment_title)
                 else stringResource(R.string.edit_comment),
                 fontWeight = FontWeight.Bold,
@@ -69,7 +70,7 @@ fun AddCommentDialog(
                     color = NegroSuave
                 )
 
-                // Selector de estrellas
+                // Selector de estrellas con accesibilidad
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically,
@@ -83,7 +84,11 @@ fun AddCommentDialog(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Star,
-                                contentDescription = null,
+                                // ACCESIBILIDAD: Importante para TalkBack
+                                contentDescription = stringResource(
+                                    R.string.star_rating_description,
+                                    currentStarValue
+                                ),
                                 tint = if (currentStarValue <= rating) Naranja else GrisClaro,
                                 modifier = Modifier.size(36.dp)
                             )
@@ -100,15 +105,15 @@ fun AddCommentDialog(
                     minLines = 3,
                     maxLines = 5,
                     shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text(stringResource(R.string.dialog_add_comment_publish)) },
+                    placeholder = {
+                        Text(stringResource(R.string.dialog_add_comment_placeholder))
+                    },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Negro,
                         unfocusedTextColor = Negro,
-                        focusedLabelColor = Negro,
-                        unfocusedLabelColor = Negro,
                         focusedBorderColor = Negro,
                         unfocusedBorderColor = Negro,
-                        cursorColor = Negro
+                        cursorColor = Blue10
                     )
                 )
             }
@@ -116,19 +121,27 @@ fun AddCommentDialog(
         confirmButton = {
             Button(
                 onClick = { onConfirm(rating, text) },
-                enabled = rating > 0,
+                // El botón solo se activa si hay una valoración y el texto no está vacío
+                enabled = rating > 0 && text.isNotBlank(),
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Blue10)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Blue10,
+                    disabledContainerColor = GrisClaro
+                )
             ) {
                 Text(
                     text = if (!isEditing) stringResource(R.string.dialog_add_comment_publish)
-                    else stringResource(R.string.confirm_button)
+                    else stringResource(R.string.confirm_button),
+                    color = Blanco
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_add_comment_cancel), color = NegroSuave)
+                Text(
+                    text = stringResource(R.string.dialog_add_comment_cancel),
+                    color = NegroSuave
+                )
             }
         },
         shape = RoundedCornerShape(20.dp),

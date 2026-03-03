@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val errorResourceProvider: ErrorResourceProvider // Añadido para consistencia
 ) : ViewModel() {
 
     // Estados de la UI
@@ -27,7 +29,9 @@ class LoginViewModel @Inject constructor(
     var isEmailVerifiedError by mutableStateOf(false)
         private set
     var name by mutableStateOf("")
+        private set // Cambiado a private set para control total
     var needsName by mutableStateOf(false)
+        private set
 
     private val _navigateToHome = MutableSharedFlow<Boolean>()
     val navigateToHome = _navigateToHome.asSharedFlow()
@@ -37,6 +41,8 @@ class LoginViewModel @Inject constructor(
         name = ""
         isError = false
         isEmailVerifiedError = false
+        email = ""
+        password = ""
     }
 
     fun onEmailChanged(newValue: String) {
@@ -46,6 +52,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onNameChanged(newValue: String) {
+        // Validación multiidioma: permite letras de cualquier alfabeto y espacios
         if (newValue.all { it.isLetter() || it.isWhitespace() }) {
             name = newValue
         }
@@ -65,11 +72,11 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             val result = repository.login(email, password)
             if (result.isSuccess) {
-                // Si el login es correcto y el email está verificado (lógica del repo),
-                // entonces comprobamos si existe el documento en Firestore.
+                // Comprobamos si el perfil de usuario (Firestore) existe
                 checkUserAndNavigate()
             } else {
                 val exception = result.exceptionOrNull()
+                // La clave "EMAIL_NOT_VERIFIED" debe coincidir con la lógica de tu AuthRepository
                 if (exception?.message == "EMAIL_NOT_VERIFIED") {
                     isEmailVerifiedError = true
                     isError = false
@@ -88,20 +95,24 @@ class LoginViewModel @Inject constructor(
             if (exists) {
                 _navigateToHome.emit(true)
             } else {
-                // Solo pedimos el nombre si NO existe el documento del usuario en Firestore
+                // Si no existe en Firestore (ej: login con Google por primera vez), pedimos nombre
                 needsName = true
             }
         }
     }
 
     fun onCompleteRegistration() {
-        if (name.isBlank()) return
+        // Validación: Nombre y al menos un apellido (2 palabras mínimo)
+        val nameParts = name.trim().split(" ").filter { it.isNotEmpty() }
+        if (nameParts.size < 2) return
+
         viewModelScope.launch {
-            val result = repository.completeRegistration(name)
+            val result = repository.completeRegistration(name.trim())
             if (result.isSuccess) {
                 needsName = false
                 _navigateToHome.emit(true)
             } else {
+                // Si falla el guardado en Firestore
                 isError = true
             }
         }

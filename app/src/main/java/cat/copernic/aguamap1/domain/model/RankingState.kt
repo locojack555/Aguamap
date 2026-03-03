@@ -1,6 +1,4 @@
-package cat.copernic.aguamap1.presentation.ranking
-
-import cat.copernic.aguamap1.domain.model.UserRanking
+package cat.copernic.aguamap1.domain.model
 
 data class RankingState(
     val players: List<UserRanking> = emptyList(),

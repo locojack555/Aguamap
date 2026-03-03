@@ -5,12 +5,8 @@ import cat.copernic.aguamap1.domain.model.RankingPeriod
 import cat.copernic.aguamap1.domain.model.UserRanking
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.RankingRepository
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 import java.util.Date
@@ -31,13 +27,12 @@ class FirebaseRankingRepository @Inject constructor(
             set(Calendar.MILLISECOND, 0)
         }
         val inicioHoy = calendar.time
+        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         val snapshot = db.collection("gameSessions")
             .whereGreaterThanOrEqualTo("date", inicioHoy)
             .get()
             .await()
-
-        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         return snapshot.documents
             .mapNotNull { doc ->
@@ -46,7 +41,7 @@ class FirebaseRankingRepository @Inject constructor(
                         userId = doc.getString("userId") ?: return@mapNotNull null,
                         userName = doc.getString("userName") ?: "",
                         score = doc.getLong("score")?.toInt() ?: 0,
-                        date = doc.getDate("date")?: Date(),
+                        date = doc.getDate("date") ?: Date(),
                         fountainId = doc.getString("fountainId") ?: ""
                     )
                 } catch (e: Exception) {
@@ -65,6 +60,7 @@ class FirebaseRankingRepository @Inject constructor(
                 )
             }
             .sortedByDescending { it.points }
+            .take(10) // Limitamos a los 10 mejores resultados diarios
             .mapIndexed { index, usuario -> usuario.copy(position = index + 1) }
     }
 
@@ -72,16 +68,15 @@ class FirebaseRankingRepository @Inject constructor(
         val calendar = Calendar.getInstance()
         val mes = calendar.get(Calendar.MONTH) + 1
         val año = calendar.get(Calendar.YEAR)
+        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         val snapshot = db.collection("monthlyRanking")
             .whereEqualTo("month", mes)
             .whereEqualTo("year", año)
             .orderBy("totalScore", Query.Direction.DESCENDING)
-            .limit(50)
+            .limit(10) // Limitamos a 10 directamente en la consulta (Ahorro de lecturas)
             .get()
             .await()
-
-        val idUsuarioActual = authRepository.getCurrentUserUid()
 
         return snapshot.documents.mapIndexed { index, doc ->
             UserRanking(
@@ -123,6 +118,7 @@ class FirebaseRankingRepository @Inject constructor(
                 )
             }
             .sortedByDescending { it.points }
+            .take(10) // Limitamos a los 10 mejores resultados anuales
             .mapIndexed { index, usuario -> usuario.copy(position = index + 1) }
     }
 
@@ -136,8 +132,6 @@ class FirebaseRankingRepository @Inject constructor(
 
     override suspend fun getCurrentUserHistoricRanking(userId: String): UserRanking? {
         return try {
-
-
             val doc = db.collection("historicRanking")
                 .document(userId)
                 .get()
@@ -151,9 +145,8 @@ class FirebaseRankingRepository @Inject constructor(
                 points = doc.getLong("totalScore")?.toInt() ?: 0,
                 discovered = doc.getLong("totalDiscovered")?.toInt() ?: 0,
                 games = doc.getLong("gamesCount")?.toInt() ?: 0,
-                isCurrentUser  = userId == userId
+                isCurrentUser = true // Corregido: Si lo recuperamos por su userId, es el actual
             )
-
         } catch (e: Exception) {
             null
         }

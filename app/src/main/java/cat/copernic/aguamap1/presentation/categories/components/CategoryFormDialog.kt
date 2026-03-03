@@ -51,7 +51,6 @@ fun CategoryFormDialog(
 ) {
     val context = LocalContext.current
 
-    // Configuramos el helper igual que en fuentes
     val imagePickerHelper = rememberImagePickerHelper { uri ->
         viewModel.updateSelectedImage(uri)
     }
@@ -77,7 +76,8 @@ fun CategoryFormDialog(
                                 .data(displayImage)
                                 .crossfade(true)
                                 .build(),
-                            contentDescription = null,
+                            // CORREGIDO: Añadida descripción para accesibilidad
+                            contentDescription = stringResource(R.string.add_fountain_preview),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -95,7 +95,8 @@ fun CategoryFormDialog(
                         ) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = null,
+                                // CORREGIDO: Usamos el string de quitar imagen
+                                contentDescription = stringResource(R.string.add_fountain_remove_image),
                                 tint = Rojo,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -114,6 +115,8 @@ fun CategoryFormDialog(
                 }
 
                 if (viewModel.isUploading) {
+                    // Opcional: Podrías añadir un texto que diga "Pujant..."
+                    // usando stringResource(R.string.add_fountain_uploading)
                     LinearProgressIndicator(
                         progress = viewModel.uploadProgress / 100f,
                         modifier = Modifier.fillMaxWidth(),
@@ -127,7 +130,8 @@ fun CategoryFormDialog(
                     onValueChange = { viewModel.name = it },
                     label = { Text(stringResource(R.string.category_form_name)) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true // Recomendado para nombres
                 )
                 OutlinedTextField(
                     value = viewModel.description,
@@ -138,6 +142,8 @@ fun CategoryFormDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
 
+                // IMPORTANTE: Asegúrate de que viewModel.errorMessage devuelva
+                // un string ya localizado desde el ViewModel.
                 viewModel.errorMessage?.let {
                     Text(it, color = Rojo, fontSize = 12.sp)
                 }

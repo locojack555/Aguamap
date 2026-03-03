@@ -43,21 +43,26 @@ fun CategoryItem(category: Category, count: Int, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 6.dp) // Añadido un pequeño margen para que no respiren pegadas
+            .clickable(
+                onClickLabel = stringResource(R.string.expand_info), // CORREGIDO: Indica qué hará el botón
+                onClick = onClick
+            )
             .semantics { role = Role.Button },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Blanco),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(12.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model = category.imageUrl,
-                contentDescription = null,
+                // CORREGIDO: Accesibilidad contextual
+                contentDescription = category.name,
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))
@@ -65,22 +70,32 @@ fun CategoryItem(category: Category, count: Int, onClick: () -> Unit) {
                 contentScale = ContentScale.Crop,
                 error = painterResource(R.drawable.gota)
             )
+
             Spacer(modifier = Modifier.width(16.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = category.name,
                     fontWeight = FontWeight.Bold,
                     color = AzulGrisaceo,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    maxLines = 1 // Evita que nombres muy largos rompan el diseño
                 )
-                // Usamos stringResource pasándole el conteo como argumento
+
                 Text(
+                    // Aquí ya lo hacías perfecto: inyección de %d
                     text = stringResource(R.string.category_item_count, count),
                     fontSize = 13.sp,
                     color = Gris
                 )
             }
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = GrisClaro)
+
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = null, // Visual solamente
+                tint = GrisClaro,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }

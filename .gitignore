@@ -20,4 +20,4 @@ Thumbs.db
 
 # --- Firebase ---
 # Si el equipo usa la misma DB de Firebase, comenten la siguiente línea
-# google-services.json
+app/google-services.json

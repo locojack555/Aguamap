@@ -1,6 +1,5 @@
 package cat.copernic.aguamap1.presentation.game.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -62,29 +61,31 @@ fun GamePlayScreen(
                     Arrangement.SpaceBetween,
                     Alignment.CenterVertically
                 ) {
+                    // Texto del tiempo con la unidad localizada (ej: 30s)
                     Text(
-                        text = "${remainingTime}s",
+                        text = "${remainingTime}${stringResource(R.string.unit_seconds_short)}",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (remainingTime < 10) Rojo else Color.Black
                     )
                     Text(
-                        stringResource(R.string.game_instructions_title_app),
+                        text = stringResource(R.string.game_instructions_title_app),
                         color = Color.Black,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp
                     )
                     Icon(
-                        painterResource(R.drawable.timer_24px),
-                        null,
+                        painter = painterResource(R.drawable.timer_24px),
+                        contentDescription = null,
                         tint = Color.Black,
                         modifier = Modifier.size(28.dp)
                     )
                 }
+
                 if (fountain.imageUrl.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "¿Dónde está esta fuente?",
+                        text = stringResource(R.string.game_play_question), // Corregido a multiidioma
                         fontSize = 14.sp,
                         color = Color.Gray,
                         fontWeight = FontWeight.Medium
@@ -122,7 +123,7 @@ fun GamePlayScreen(
                                 modifier = Modifier.size(32.dp)
                             )
                             Text(
-                                fountain.name,
+                                text = fountain.name,
                                 fontSize = 14.sp,
                                 color = Color.Gray,
                                 fontWeight = FontWeight.Bold
@@ -145,7 +146,7 @@ fun GamePlayScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = VerdeClaro)
             ) {
                 Text(
-                    stringResource(R.string.game_play_confirm_button),
+                    text = stringResource(R.string.game_play_confirm_button),
                     color = Blanco,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
@@ -160,7 +161,7 @@ fun GamePlayScreen(
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Text(
-                    stringResource(R.string.game_play_hint_text),
+                    text = stringResource(R.string.game_play_hint_text),
                     color = Blanco,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                     fontSize = 16.sp

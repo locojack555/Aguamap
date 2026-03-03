@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.model.RankingPeriod
 import cat.copernic.aguamap1.domain.usecase.ranking.GetRankingByPeriodUseCase
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.domain.model.RankingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

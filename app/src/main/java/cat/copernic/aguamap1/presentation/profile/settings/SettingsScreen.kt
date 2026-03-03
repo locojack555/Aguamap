@@ -1,4 +1,4 @@
-package cat.copernic.aguamap1.presentation.profile
+package cat.copernic.aguamap1.presentation.profile.settings
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
@@ -91,13 +91,13 @@ fun SettingsScreen(
                 IconButton(onClick = onClose) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Cerrar",
+                        contentDescription = stringResource(id = R.string.close_button_description),
                         tint = Color.White
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Configuración",
+                    text = stringResource(id = R.string.profile_label_config),
                     color = Color.White,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
@@ -115,7 +115,7 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Idioma",
+                        text = stringResource(id = R.string.settings_language_label),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF757575),
@@ -146,13 +146,15 @@ fun AguaMapLanguageSelector(
         label = "arrow"
     )
 
+    // Lista de idiomas con etiquetas traducidas
     val languages = listOf(
-        "es" to "Español",
-        "ca" to "Catalán",
-        "en" to "Inglés"
+        "es" to stringResource(id = R.string.lang_es),
+        "ca" to stringResource(id = R.string.lang_ca),
+        "en" to stringResource(id = R.string.lang_en)
     )
 
-    val selectedLabel = languages.firstOrNull { it.first == selectedLanguage }?.second ?: "Español"
+    val selectedLabel = languages.firstOrNull { it.first == selectedLanguage }?.second
+        ?: stringResource(id = R.string.lang_es)
 
     Column {
         // Selector principal
@@ -235,6 +237,4 @@ fun AguaMapLanguageSelector(
             }
         }
     }
-
-
 }

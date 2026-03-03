@@ -34,15 +34,16 @@ import cat.copernic.aguamap1.ui.theme.Blanco
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import org.osmdroid.util.GeoPoint
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun GameScreen(
     viewModel: GameViewModel = hiltViewModel(),
+    userLat: Double,
+    userLng: Double,
     onBackToHome: () -> Unit,
-    onFountainClick: (Fountain) -> Unit // Callback para navegar al detalle oficial
+    onFountainClick: (Fountain) -> Unit
 ) {
     val gameState by viewModel.gameState.collectAsState()
     val currentFountain by viewModel.currentFountain.collectAsState()
@@ -54,27 +55,25 @@ fun GameScreen(
     val userGuessPos by viewModel.userGuessPos.collectAsState()
     val hasLost by viewModel.hasLost.collectAsState()
 
-    // Estado para la ubicación del usuario
-    var currentUserLat by remember { mutableDoubleStateOf(0.0) }
-    var currentUserLng by remember { mutableDoubleStateOf(0.0) }
-    var isLocationReady by remember { mutableStateOf(false) }
+    var currentUserLat by remember { mutableDoubleStateOf(userLat) }
+    var currentUserLng by remember { mutableDoubleStateOf(userLng) }
 
-    // Permiso de ubicación
+    var isLocationReady by remember {
+        mutableStateOf(userLat != 0.0 && userLat != 41.5632)
+    }
+
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
     val context = LocalContext.current
 
-    // Efecto para obtener la ubicación cuando se concede el permiso
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (locationPermissionState.status.isGranted) {
-            val locationManager =
-                context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             try {
-                val lastLocation =
-                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                        ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                val lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
 
                 lastLocation?.let {
                     currentUserLat = it.latitude
@@ -82,19 +81,17 @@ fun GameScreen(
                     isLocationReady = true
                 }
             } catch (e: SecurityException) {
-                isLocationReady = false
+                if (currentUserLat != 0.0) isLocationReady = true
             }
         }
     }
 
-    // Lógica de inicio de partida
     LaunchedEffect(isLocationReady) {
         if (isLocationReady && gameState == GameViewModel.GameState.Initial) {
             viewModel.checkCanPlay(currentUserLat, currentUserLng)
         }
     }
 
-    // Limpieza al salir de la pantalla
     DisposableEffect(Unit) {
         onDispose {
             viewModel.onBackToHomePressed()
@@ -108,14 +105,9 @@ fun GameScreen(
     ) {
         if (!locationPermissionState.status.isGranted) {
             PermissionRequestUI {
-                if (locationPermissionState.status.shouldShowRationale) {
-                    locationPermissionState.launchPermissionRequest()
-                } else {
-                    locationPermissionState.launchPermissionRequest()
-                }
+                locationPermissionState.launchPermissionRequest()
             }
         } else {
-            // Control de estados del juego
             when (gameState) {
                 GameViewModel.GameState.Initial -> {
                     LoadingPartida()
@@ -130,10 +122,7 @@ fun GameScreen(
                         GamePlayScreen(
                             fountain = it,
                             remainingTime = remainingTime,
-                            userLocation = if (isLocationReady) GeoPoint(
-                                currentUserLat,
-                                currentUserLng
-                            ) else null,
+                            userLocation = if (isLocationReady) GeoPoint(currentUserLat, currentUserLng) else null,
                             onGuess = { lat, lng -> viewModel.setUserGuess(lat, lng) },
                             onFinish = { viewModel.finishGame() }
                         )
@@ -146,18 +135,13 @@ fun GameScreen(
                             fountain = it,
                             score = score,
                             distance = distance,
-                            userGuessPos = userGuessPos?.let { pos ->
-                                GeoPoint(pos.first, pos.second)
-                            },
+                            userGuessPos = userGuessPos?.let { pos -> GeoPoint(pos.first, pos.second) },
                             hasLost = hasLost,
                             onBackToHome = {
                                 viewModel.onBackToHomePressed()
                                 onBackToHome()
                             },
-                            onFountainClick = { fountain ->
-                                // Navegamos usando el callback que va al NavigationGraph
-                                onFountainClick(fountain)
-                            }
+                            onFountainClick = { fountain -> onFountainClick(fountain) }
                         )
                     }
                 }
@@ -171,9 +155,22 @@ fun GameScreen(
                     }
                 )
 
+                GameViewModel.GameState.TooFar -> ErrorScreen(
+                    message = error ?: stringResource(R.string.game_error_too_far),
+                    onRetry = {
+                        if (isLocationReady) viewModel.retryGame(currentUserLat, currentUserLng)
+                    },
+                    onBack = {
+                        viewModel.onBackToHomePressed()
+                        onBackToHome()
+                    }
+                )
+
                 else -> ErrorScreen(
                     message = error ?: stringResource(R.string.game_error_unexpected),
-                    onRetry = { viewModel.retryGame() },
+                    onRetry = {
+                        if (isLocationReady) viewModel.retryGame(currentUserLat, currentUserLng)
+                    },
                     onBack = {
                         viewModel.onBackToHomePressed()
                         onBackToHome()
@@ -181,8 +178,7 @@ fun GameScreen(
                 )
             }
 
-            // Overlay de carga global
-            if (isLoading) {
+            if (isLoading && gameState != GameViewModel.GameState.Initial) {
                 Box(
                     Modifier
                         .fillMaxSize()

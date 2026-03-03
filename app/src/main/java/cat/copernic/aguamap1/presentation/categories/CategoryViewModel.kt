@@ -1,12 +1,14 @@
 package cat.copernic.aguamap1.presentation.categories
 
+import android.app.Application
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
 import cat.copernic.aguamap1.data.cloudinary.UploadProgress
 import cat.copernic.aguamap1.domain.model.Category
@@ -38,12 +40,15 @@ class CategoryViewModel @Inject constructor(
     private val updateCategoryUseCase: UpdateCategoryUseCase,
     private val deleteCategoryUseCase: DeleteCategoryUseCase,
     private val getFountainsUseCase: GetFountainsUseCase,
-    // CORRECCIÓN: Inyectamos el calculador de distancia
     private val getDistanceUseCase: GetDistanceFountainsUseCaseUseCase,
     private val cloudinaryService: CloudinaryService,
     private val authRepository: AuthRepository,
-    private val getUserRoleUseCase: GetUserRoleUseCase
-) : ViewModel() {
+    private val getUserRoleUseCase: GetUserRoleUseCase,
+    application: Application // Cambiamos a AndroidViewModel para acceder a recursos
+) : AndroidViewModel(application) {
+
+    // Helper para obtener traducciones
+    private fun getString(resId: Int): String = getApplication<Application>().getString(resId)
 
     // --- ESTADO DE USUARIO ---
     var isAdmin by mutableStateOf(false)
@@ -68,7 +73,6 @@ class CategoryViewModel @Inject constructor(
     fun setLocation(lat: Double, lng: Double) {
         val lastLoc = lastFetchedLocation
         if (lastLoc == null) {
-            android.util.Log.d("CONTEO", "📍 Primera ubicación recibida: $lat, $lng")
             _userLocation.value = lat to lng
             lastFetchedLocation = lat to lng
         } else {
@@ -77,7 +81,6 @@ class CategoryViewModel @Inject constructor(
                 lastLoc.first, lastLoc.second, lat, lng, distance
             )
             if (distance[0] > MIN_DISTANCE_TO_REFETCH) {
-                android.util.Log.d("CONTEO", "🔄 Re-calculando por movimiento: ${distance[0]}m")
                 _userLocation.value = lat to lng
                 lastFetchedLocation = lat to lng
             }
@@ -112,34 +115,23 @@ class CategoryViewModel @Inject constructor(
             val fountains = result.getOrDefault(emptyList())
             val location = _userLocation.value
 
-            // CORRECCIÓN CLAVE: Calculamos la distancia aquí para que la lista de la categoría la tenga
             val fountainsWithDistance = if (location != null) {
                 fountains.map { fountain ->
                     fountain.copy(
                         distanceFromUser = getDistanceUseCase(
-                            location.first,
-                            location.second,
-                            fountain.latitude,
-                            fountain.longitude
+                            location.first, location.second,
+                            fountain.latitude, fountain.longitude
                         )
                     )
                 }
-            } else {
-                fountains
-            }
+            } else fountains
 
             val filtered = if (isOp == null) fountainsWithDistance else fountainsWithDistance.filter { it.operational == isOp }
-
-            // Agrupamos por ID normalizado
             filtered.groupBy { it.category.id.trim() }
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyMap()
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    // --- ESTADO DEL FORMULARIO Y MÉTODOS (SIN CAMBIOS) ---
+    // --- ESTADO DEL FORMULARIO ---
     var name by mutableStateOf("")
     var description by mutableStateOf("")
     var selectedImageUri by mutableStateOf<Uri?>(null)
@@ -167,7 +159,7 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun updateSearchQuery(query: String) = run { _searchQuery.value = query }
+    fun updateSearchQuery(query: String) { _searchQuery.value = query }
 
     fun toggleOperationalFilter(isFilterActive: Boolean) {
         _operationalFilter.value = if (isFilterActive) null else false
@@ -187,9 +179,9 @@ class CategoryViewModel @Inject constructor(
         uploadProgress = 0; errorMessage = null
     }
 
-    fun clearError() = run { errorMessage = null }
+    fun clearError() { errorMessage = null }
 
-    fun updateSelectedImage(uri: Uri?) = run { selectedImageUri = uri }
+    fun updateSelectedImage(uri: Uri?) { selectedImageUri = uri }
 
     fun clearSelectedImage() {
         selectedImageUri = null
@@ -225,28 +217,25 @@ class CategoryViewModel @Inject constructor(
                 onSuccess()
                 resetForm()
             } catch (e: Exception) {
-                errorMessage = e.message ?: "Error al guardar"
+                errorMessage = getString(R.string.error_email_generic)
             } finally {
                 isUploading = false
             }
         }
     }
 
-    fun canDeleteCategory(categoryId: String): Boolean {
-        return fountainsByCategory.value[categoryId].isNullOrEmpty()
-    }
-
     fun deleteCategory(id: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                if (!canDeleteCategory(id)) {
-                    errorMessage = "No se puede eliminar: tiene fuentes asociadas en tu zona."
+                val fountainsInThisCategory = fountainsByCategory.value[id]
+                if (!fountainsInThisCategory.isNullOrEmpty()) {
+                    errorMessage = getString(R.string.error_category_not_empty)
                     return@launch
                 }
                 deleteCategoryUseCase(id)
                 onSuccess()
             } catch (e: Exception) {
-                errorMessage = "Error al eliminar: ${e.message}"
+                errorMessage = getString(R.string.error_title)
             }
         }
     }

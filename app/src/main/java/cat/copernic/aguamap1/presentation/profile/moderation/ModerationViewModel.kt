@@ -1,7 +1,8 @@
-package cat.copernic.aguamap1.presentation.profile
+package cat.copernic.aguamap1.presentation.profile.moderation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Comment
 import cat.copernic.aguamap1.domain.model.ReportedComment
 import cat.copernic.aguamap1.domain.repository.FountainRepository
@@ -28,11 +29,12 @@ class ModerationViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    // Usamos Int? para almacenar el ID del recurso String (R.string...)
+    private val _errorResId = MutableStateFlow<Int?>(null)
+    val errorResId: StateFlow<Int?> = _errorResId.asStateFlow()
 
-    private val _successMessage = MutableStateFlow<String?>(null)
-    val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
+    private val _successResId = MutableStateFlow<Int?>(null)
+    val successResId: StateFlow<Int?> = _successResId.asStateFlow()
 
     init {
         loadReportedComments()
@@ -42,6 +44,7 @@ class ModerationViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
+                // 1. Obtener los reportes
                 val snapshot = db.collection("reports_comments")
                     .whereEqualTo("type", "COMMENT_REPORT")
                     .get()
@@ -60,7 +63,7 @@ class ModerationViewModel @Inject constructor(
                     )
                 }
 
-                // Enrich each report with its actual comment data
+                // 2. Enriquecer con los datos del comentario original
                 val enrichedItems = items.map { item ->
                     try {
                         val commentDoc = db.collection("fountains")
@@ -80,46 +83,48 @@ class ModerationViewModel @Inject constructor(
                 _reportedComments.value = enrichedItems.sortedByDescending { it.timestamp }
 
             } catch (e: Exception) {
-                _errorMessage.value = "Error al cargar los reportes: ${e.message}"
+                _errorResId.value = R.string.error_loading_reports
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    // Elimina el comentario y borra el reporte
     fun deleteComment(item: ReportedComment) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 fountainRepository.deleteComment(item.fountainId, item.commentId)
-                deleteReport(item.reportId)
-                _successMessage.value = "Comentario eliminado"
+                deleteReportFromDb(item.reportId)
+                _successResId.value = R.string.success_comment_deleted
                 loadReportedComments()
             } catch (e: Exception) {
-                _errorMessage.value = "Error al eliminar: ${e.message}"
+                _errorResId.value = R.string.error_deleting_comment
+                _isLoading.value = false
             }
         }
     }
 
-    // Censura el comentario y borra el reporte
     fun censorComment(item: ReportedComment) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 censorCommentUseCase(item.fountainId, item.commentId)
-                deleteReport(item.reportId)
-                _successMessage.value = "Comentario censurado"
+                deleteReportFromDb(item.reportId)
+                _successResId.value = R.string.success_comment_censored
                 loadReportedComments()
             } catch (e: Exception) {
-                _errorMessage.value = "Error al censurar: ${e.message}"
+                _errorResId.value = R.string.error_censoring_comment
+                _isLoading.value = false
             }
         }
     }
 
-    // Solo borra el reporte, el comentario queda intacto
     fun dismissReport(item: ReportedComment) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
-                // Quitar el flag isReported del comentario
+                // Marcamos el comentario como ya no reportado en la colección original
                 db.collection("fountains")
                     .document(item.fountainId)
                     .collection("comments")
@@ -127,24 +132,28 @@ class ModerationViewModel @Inject constructor(
                     .update("isReported", false)
                     .await()
 
-                deleteReport(item.reportId)
-                _successMessage.value = "Reporte descartado"
+                deleteReportFromDb(item.reportId)
+                _successResId.value = R.string.success_report_dismissed
                 loadReportedComments()
             } catch (e: Exception) {
-                _errorMessage.value = "Error al descartar: ${e.message}"
+                _errorResId.value = R.string.error_dismissing_report
+                _isLoading.value = false
             }
         }
     }
 
-    private suspend fun deleteReport(reportId: String) {
+    private suspend fun deleteReportFromDb(reportId: String) {
         db.collection("reports_comments")
             .document(reportId)
             .delete()
             .await()
     }
 
+    /**
+     * Importante: Este método lo llama la Screen después de mostrar el Snackbar
+     */
     fun clearMessages() {
-        _errorMessage.value = null
-        _successMessage.value = null
+        _errorResId.value = null
+        _successResId.value = null
     }
 }
