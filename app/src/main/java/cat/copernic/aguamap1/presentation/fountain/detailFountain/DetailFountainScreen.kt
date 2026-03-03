@@ -111,7 +111,7 @@ fun DetailFountainScreen(
 
                 // 4. DESCRIPCIÓN
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(stringResource(R.string.description_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(stringResource(R.string.description_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Negro)
                 Text(uiFountain.description.ifBlank { stringResource(R.string.no_description) }, color = NegroSuave)
 
                 Spacer(modifier = Modifier.height(24.dp))
