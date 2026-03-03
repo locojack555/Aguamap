@@ -89,7 +89,7 @@ fun AddFountainScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Negro, unfocusedBorderColor = Negro)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Negro, unfocusedBorderColor = Negro, focusedTextColor = Negro)
                 )
 
                 OutlinedTextField(
@@ -100,7 +100,7 @@ fun AddFountainScreen(
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Negro, unfocusedBorderColor = Negro)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Negro, unfocusedBorderColor = Negro, focusedTextColor = Negro)
                 )
 
                 // 5. Sección de Categorías
@@ -117,7 +117,7 @@ fun AddFountainScreen(
                 ) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.fountain_operational_status), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(stringResource(R.string.fountain_operational_status), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Negro)
                             Text(
                                 text = if (viewModel.isOperational) stringResource(R.string.operational_yes)
                                 else stringResource(R.string.operational_no),

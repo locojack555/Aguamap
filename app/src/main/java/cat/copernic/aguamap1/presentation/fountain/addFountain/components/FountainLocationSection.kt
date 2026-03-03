@@ -29,7 +29,7 @@ fun FountainLocationSection(viewModel: AddFountainViewModel) {
         Surface(color = NegroMinimal, shape = RoundedCornerShape(16.dp)) {
             Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.location_source_title), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(stringResource(R.string.location_source_title), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Negro)
                     Text(
                         text = if (viewModel.useGpsLocation) stringResource(R.string.location_gps)
                         else stringResource(R.string.location_manual),
