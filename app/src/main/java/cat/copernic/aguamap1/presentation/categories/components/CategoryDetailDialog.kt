@@ -75,7 +75,7 @@ fun CategoryDetailDialog(
                 ) {
                     AsyncImage(
                         model = category.imageUrl,
-                        contentDescription = null,
+                        contentDescription = category.name, // Mejor usar el nombre de la categoría que null
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(8.dp)),
@@ -92,10 +92,20 @@ fun CategoryDetailDialog(
                     )
                     if (isAdmin) {
                         IconButton(onClick = onEditCategory) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = InfoBlue)
+                            Icon(
+                                Icons.Default.Edit,
+                                // CORREGIDO: Usamos el recurso de texto para accesibilidad
+                                contentDescription = stringResource(R.string.edit),
+                                tint = InfoBlue
+                            )
                         }
                         IconButton(onClick = onDeleteCategory) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Rojo)
+                            Icon(
+                                Icons.Default.Delete,
+                                // CORREGIDO: Usamos el recurso de texto para accesibilidad
+                                contentDescription = stringResource(R.string.delete),
+                                tint = Rojo
+                            )
                         }
                     }
                 }
@@ -115,7 +125,7 @@ fun CategoryDetailDialog(
                     if (fountains.isEmpty()) {
                         item {
                             Text(
-                                stringResource(R.string.category_no_fountains), // LOCALIZADO
+                                stringResource(R.string.category_no_fountains),
                                 color = Gris,
                                 modifier = Modifier.padding(16.dp),
                                 fontSize = 14.sp
@@ -137,7 +147,7 @@ fun CategoryDetailDialog(
                         .padding(top = 16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro),
                     shape = RoundedCornerShape(12.dp)
-                ) { Text(stringResource(R.string.category_close), color = Blanco) } // LOCALIZADO
+                ) { Text(stringResource(R.string.category_close), color = Blanco) }
             }
         }
     }
@@ -169,7 +179,7 @@ private fun FountainRow(fountain: Fountain, onClick: () -> Unit) {
             )
             if (!fountain.operational) {
                 Text(
-                    stringResource(R.string.legend_averiada), // LOCALIZADO (Asegúrate de tener esta clave)
+                    stringResource(R.string.legend_averiada),
                     color = Rojo,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
@@ -183,7 +193,8 @@ private fun FountainRow(fountain: Fountain, onClick: () -> Unit) {
             modifier = Modifier.size(14.dp)
         )
         Text(
-            String.format("%.1f", fountain.ratingAverage),
+            // CORREGIDO: Usamos el locale del sistema para que el punto/coma decimal sea correcto
+            text = "%.1f".format(fountain.ratingAverage),
             fontSize = 12.sp,
             color = GrisOscuro,
             modifier = Modifier.padding(start = 4.dp)

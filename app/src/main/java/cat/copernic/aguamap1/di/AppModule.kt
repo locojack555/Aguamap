@@ -22,6 +22,8 @@ import cat.copernic.aguamap1.domain.repository.RankingRepository
 import cat.copernic.aguamap1.domain.repository.RealtimeStatusRepository
 import cat.copernic.aguamap1.domain.repository.ReportRepository
 import cat.copernic.aguamap1.domain.repository.SoundRepository
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
@@ -122,5 +124,13 @@ object AppModule {
         @ApplicationContext context: Context // Hilt te lo pasa aquí
     ): CloudinaryService {
         return CloudinaryService(context) // Y ahora se lo pasas al constructor
+    }
+
+    @Provides
+    @Singleton
+    fun provideFusedLocationProviderClient(
+        @ApplicationContext context: Context
+    ): FusedLocationProviderClient {
+        return LocationServices.getFusedLocationProviderClient(context)
     }
 }

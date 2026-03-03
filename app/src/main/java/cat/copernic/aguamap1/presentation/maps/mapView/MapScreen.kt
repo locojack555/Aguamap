@@ -23,14 +23,11 @@ import cat.copernic.aguamap1.presentation.util.PermissionRequestUI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import org.osmdroid.views.MapView
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapScreen(
-    // CAMBIO: Ahora recibimos el viewModel como parámetro
-    // para usar el que viene del NavigationGraph
     viewModel: MapViewModel,
     addViewModel: AddFountainViewModel = hiltViewModel(),
     onFountainClick: (cat.copernic.aguamap1.domain.model.Fountain) -> Unit,
@@ -39,14 +36,13 @@ fun MapScreen(
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
 
-    // USAMOS EL viewModel QUE RECIBIMOS POR PARÁMETRO
     val isMapView by viewModel.isMapView.collectAsState()
     val isAdding = addViewModel.isAdding
     val categories = viewModel.categories
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
-            // 1. Capa Superior: Pantalla Agregar
+            // 1. Capa Superior: Pantalla Agregar (Los textos internos de AddFountainScreen deben estar en su propia clase)
             isAdding && viewModel.isLocationAvailable -> {
                 AddFountainScreen(
                     latitude = viewModel.userLat!!,
@@ -60,39 +56,41 @@ fun MapScreen(
                 )
             }
 
-            // 2. Capa Base: Mapa o Lista
+            // 2. Capa Base: Mapa o Lista si hay permisos
             locationPermissionState.status.isGranted -> {
                 if (isMapView) {
                     OSMMapContent(
-                        viewModel = viewModel, // Usamos el compartido
+                        viewModel = viewModel,
                         isHome = isHome,
                         onMapLoad = { mapViewRef = it },
                         onFountainClick = { fountain ->
                             onFountainClick(fountain)
                         }
                     )
+                    // La leyenda ya usa stringResource internamente según lo que hicimos antes
                     MapLegend(
                         categories = categories,
                         modifier = Modifier.align(Alignment.BottomStart)
                     )
                 } else {
                     ListScreen(
-                        viewModel = viewModel, // Usamos el compartido
+                        viewModel = viewModel,
                         onFountainClick = { fountain ->
                             onFountainClick(fountain)
                         }
                     )
                 }
 
-                // UI flotante
+                // UI flotante (Botones de añadir y centrar con descripciones localizadas)
                 MapFloatingButtons(
                     mapViewRef = mapViewRef,
                     addViewModel = addViewModel,
-                    mapViewModel = viewModel, // Usamos el compartido
+                    mapViewModel = viewModel,
                     isMapView = isMapView,
                     modifier = Modifier.align(Alignment.BottomEnd)
                 )
 
+                // Barra de búsqueda y filtros
                 if (isHome) {
                     MapTopBar(
                         isMapView = isMapView,
@@ -101,7 +99,7 @@ fun MapScreen(
                 }
             }
 
-            // 3. Caso sin permisos
+            // 3. Caso sin permisos: Se muestra la UI de solicitud
             else -> {
                 PermissionRequestUI {
                     locationPermissionState.launchPermissionRequest()

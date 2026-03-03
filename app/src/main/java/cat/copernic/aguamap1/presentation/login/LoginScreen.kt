@@ -2,26 +2,11 @@ package cat.copernic.aguamap1.presentation.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -35,47 +20,41 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
 import cat.copernic.aguamap1.presentation.reusable.AguaMapInput
-import cat.copernic.aguamap1.ui.theme.AguaMapGradient
-import cat.copernic.aguamap1.ui.theme.Blanco
-import cat.copernic.aguamap1.ui.theme.Blue10
-import cat.copernic.aguamap1.ui.theme.Negro
-import cat.copernic.aguamap1.ui.theme.PurpleGrey40
-import cat.copernic.aguamap1.ui.theme.Rojo
+import cat.copernic.aguamap1.ui.theme.*
 
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
     navigateToForgotPassword: () -> Unit = {},
-    navigateToSingUp: () -> Unit = {},
+    navigateToSingUp: () -> Unit = {}, // Mantengo tu nombre de función 'SingUp'
     onLoginSuccess: () -> Unit = {}
 ) {
-    // Se ejecuta una vez al abrir esta pantalla
     LaunchedEffect(Unit) {
         viewModel.resetState()
-        // Eliminada la comprobación automática que causaba el salto al diálogo de nombre
         viewModel.navigateToHome.collect {
             onLoginSuccess()
         }
     }
 
+    // Diálogo para completar el nombre tras el primer login (Social o Registro incompleto)
     if (viewModel.needsName) {
         AlertDialog(
-            onDismissRequest = { /* Opcional: podrías poner needsName = false */ },
+            onDismissRequest = { /* Bloqueado hasta completar */ },
             shape = RoundedCornerShape(28.dp),
             title = {
                 Text(
-                    text = stringResource(R.string.info),
+                    text = stringResource(R.string.login_dialog_info_title),
                     fontWeight = FontWeight.Bold,
                     color = Blanco
                 )
             },
             text = {
                 Column {
-                    Text(text = stringResource(R.string.welcome), color = Blanco)
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = stringResource(R.string.login_dialog_welcome_message), color = Blanco)
+                    Spacer(modifier = Modifier.height(16.dp))
                     AguaMapInput(
-                        label = stringResource(R.string.complete_name),
-                        placeholder = stringResource(R.string.name_example),
+                        label = stringResource(R.string.login_label_full_name),
+                        placeholder = stringResource(R.string.login_placeholder_name_example),
                         value = viewModel.name,
                         onValueChange = { viewModel.onNameChanged(it) },
                         color = Blanco
@@ -85,17 +64,18 @@ fun LoginScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.onCompleteRegistration() },
-                    enabled = viewModel.name.trim().split(" ").size >= 2,
+                    // Validación: Nombre y al menos un apellido
+                    enabled = viewModel.name.trim().split(" ").filter { it.isNotEmpty() }.size >= 2,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Negro.copy(alpha = 0.8f),
-                        disabledContainerColor = Negro.copy(alpha = 0.8f)
+                        disabledContainerColor = Negro.copy(alpha = 0.4f)
                     )
                 ) {
-                    Text(stringResource(R.string.map), color = Blanco)
+                    Text(stringResource(R.string.login_btn_save_continue), color = Blanco)
                 }
             },
             containerColor = Color.Transparent,
-            modifier = Modifier.background(AguaMapGradient)
+            modifier = Modifier.background(AguaMapGradient, shape = RoundedCornerShape(28.dp))
         )
     }
 
@@ -104,15 +84,13 @@ fun LoginScreen(
             .fillMaxSize()
             .background(AguaMapGradient)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             AguaMapHeader()
+
             Spacer(modifier = Modifier.height(56.dp))
+
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
+                modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
                 colors = CardDefaults.cardColors(containerColor = Blanco)
             ) {
@@ -123,78 +101,90 @@ fun LoginScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = stringResource(R.string.sing_in),
+                        text = stringResource(R.string.login_title_sign_in),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Negro
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     AguaMapInput(
-                        stringResource(R.string.email),
-                        stringResource(R.string.email_example),
-                        viewModel.email,
-                        onValueChange = {
-                            viewModel.onEmailChanged(it)
-                        },
+                        label = stringResource(R.string.login_label_email),
+                        placeholder = stringResource(R.string.login_placeholder_email),
+                        value = viewModel.email,
+                        onValueChange = { viewModel.onEmailChanged(it) },
                         isError = viewModel.isError
                     )
+
                     AguaMapInput(
-                        stringResource(R.string.password),
-                        stringResource(R.string.password_example),
-                        viewModel.password,
-                        onValueChange = {
-                            viewModel.onPasswordChanged(it)
-                        },
+                        label = stringResource(R.string.login_label_password),
+                        placeholder = stringResource(R.string.login_placeholder_password),
+                        value = viewModel.password,
+                        onValueChange = { viewModel.onPasswordChanged(it) },
                         isPasswordField = true,
                         isError = viewModel.isError
                     )
+
+                    // Errores dinámicos
                     if (viewModel.isError) {
                         Text(
-                            text = stringResource(R.string.incorrect_sing_in),
+                            text = stringResource(R.string.login_error_invalid_credentials),
                             color = Rojo,
+                            fontSize = 14.sp,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
+
                     if (viewModel.isEmailVerifiedError) {
                         Text(
-                            text = stringResource(R.string.error_email_not_verified),
+                            text = stringResource(R.string.login_error_email_not_verified),
                             color = Rojo,
+                            fontSize = 14.sp,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
+
                     Text(
-                        text = stringResource(R.string.text_recovery_password),
+                        text = stringResource(R.string.login_btn_forgot_password),
                         color = Blue10,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .padding(vertical = 20.dp)
+                            .padding(vertical = 24.dp)
                             .clickable { navigateToForgotPassword() }
                     )
+
                     Button(
                         onClick = { viewModel.onLoginClick() },
                         modifier = Modifier
-                            .fillMaxWidth(0.6f)
+                            .fillMaxWidth(0.7f)
                             .align(Alignment.CenterHorizontally)
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
+                            .height(54.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Blue10)
                     ) {
                         Text(
-                            stringResource(R.string.login),
+                            text = stringResource(R.string.login_btn_enter),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = Blanco
                         )
                     }
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp),
+                            .padding(top = 24.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.text_sing_in), color = PurpleGrey40)
+                        Text(
+                            text = stringResource(R.string.login_text_no_account),
+                            color = PurpleGrey40
+                        )
                         TextButton(onClick = { navigateToSingUp() }) {
                             Text(
-                                stringResource(R.string.text_sing_in_link),
+                                text = stringResource(R.string.login_btn_register_now),
                                 fontWeight = FontWeight.Bold,
                                 color = Blue10
                             )

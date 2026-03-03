@@ -73,7 +73,7 @@ fun MapTopBar(
             onValueChange = { viewModel.onSearchQueryChanged(it) },
             placeholder = {
                 Text(
-                    stringResource(R.string.search_fountains),
+                    text = stringResource(R.string.search_fountains),
                     color = Negro.copy(alpha = 0.6f)
                 )
             },
@@ -91,7 +91,7 @@ fun MapTopBar(
                 ) {
                     IconButton(onClick = { viewModel.toggleFilterMenu() }) {
                         Icon(
-                            painterResource(R.drawable.filter_alt_24px),
+                            painter = painterResource(R.drawable.filter_alt_24px),
                             contentDescription = stringResource(R.string.filter),
                             tint = if (viewModel.filterState != FilterState()) Blue10 else Negro.copy(
                                 alpha = 0.7f
@@ -160,7 +160,7 @@ fun FilterDropDown(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    stringResource(R.string.filter_title),
+                    text = stringResource(R.string.filter_title),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 18.sp,
                     color = Blanco
@@ -249,12 +249,12 @@ fun FilterDropDown(
                                 )
                                 Text(
                                     text = when (option) {
-                                        SortOption.DISTANCE_ASC -> "Cercanas primero"
-                                        SortOption.DISTANCE_DESC -> "Lejanas primero"
-                                        SortOption.RATING_DESC -> "Mejor valoradas"
-                                        SortOption.RATING_ASC -> "Peor valoradas"
-                                        SortOption.DATE_DESC -> "Más nuevas"
-                                        SortOption.DATE_ASC -> "Más antiguas"
+                                        SortOption.DISTANCE_ASC -> stringResource(R.string.sort_distance_asc)
+                                        SortOption.DISTANCE_DESC -> stringResource(R.string.sort_distance_desc)
+                                        SortOption.RATING_DESC -> stringResource(R.string.sort_rating_desc)
+                                        SortOption.RATING_ASC -> stringResource(R.string.sort_rating_asc)
+                                        SortOption.DATE_DESC -> stringResource(R.string.sort_date_desc)
+                                        SortOption.DATE_ASC -> stringResource(R.string.sort_date_asc)
                                     },
                                     fontSize = 10.sp,
                                     color = Blanco,
@@ -280,13 +280,13 @@ fun FilterDropDown(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    stringResource(R.string.max_distance),
+                    text = stringResource(R.string.max_distance),
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     color = Blanco
                 )
                 Text(
-                    "${state.maxDistanceKm.toInt()} km",
+                    text = "${state.maxDistanceKm.toInt()} km",
                     color = Blanco,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
@@ -312,7 +312,7 @@ fun OperationalSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Column {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            stringResource(R.string.only_operational),
+            text = stringResource(R.string.only_operational),
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp,
             color = Blanco

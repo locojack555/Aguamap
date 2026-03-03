@@ -50,7 +50,9 @@ fun ForgotPasswordScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             AguaMapHeader()
+
             Spacer(modifier = Modifier.height(56.dp))
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -70,6 +72,7 @@ fun ForgotPasswordScreen(
                         fontWeight = FontWeight.Bold,
                         color = Negro
                     )
+
                     Text(
                         text = stringResource(R.string.text_forgot_password),
                         textAlign = TextAlign.Justify,
@@ -77,43 +80,56 @@ fun ForgotPasswordScreen(
                         color = Negro,
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                     )
+
                     AguaMapInput(
-                        stringResource(R.string.email),
-                        stringResource(R.string.email_example),
-                        viewModel.email,
+                        label = stringResource(R.string.email),
+                        placeholder = stringResource(R.string.email_example),
+                        value = viewModel.email,
                         onValueChange = { viewModel.onEmailChanged(it) },
                         isError = viewModel.isError
                     )
+
                     if (viewModel.isSent) {
                         Text(
                             text = stringResource(R.string.link_sent),
                             color = Blue10,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(top = 8.dp),
+                            fontWeight = FontWeight.Medium
                         )
                     }
+
                     if (viewModel.isError) {
                         Text(
                             text = stringResource(R.string.incorrect_email),
                             color = Rojo,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(top = 8.dp),
+                            fontSize = 14.sp
                         )
                     }
+
                     Button(
                         onClick = { viewModel.onResetPasswordClick() },
+                        // DESHABILITADO si el email está vacío para evitar clics innecesarios
+                        enabled = viewModel.email.isNotBlank(),
                         modifier = Modifier
                             .padding(top = 24.dp)
                             .fillMaxWidth(0.7f)
                             .align(Alignment.CenterHorizontally)
                             .height(50.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Blue10)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Blue10,
+                            disabledContainerColor = Blue10.copy(alpha = 0.5f)
+                        )
                     ) {
                         Text(
-                            stringResource(R.string.recovery_password),
+                            text = stringResource(R.string.recovery_password),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = Blanco
                         )
                     }
+
                     Text(
                         text = stringResource(R.string.back_home),
                         color = Blue10,
@@ -121,7 +137,10 @@ fun ForgotPasswordScreen(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(vertical = 20.dp)
-                            .clickable { navigateToLogin() }
+                            .clickable(
+                                onClickLabel = stringResource(R.string.back_home),
+                                onClick = navigateToLogin
+                            )
                     )
                 }
             }

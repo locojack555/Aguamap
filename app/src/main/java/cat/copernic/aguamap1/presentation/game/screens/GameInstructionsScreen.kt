@@ -25,17 +25,13 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
             .fillMaxSize()
             .background(Blanco)
     ) {
+        // --- CABECERA ---
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.16f)
-                .background(brush = Brush.verticalGradient(
-                    colors = listOf(
-                        AzulOscuro,
-                        AzulTurquesa
-                    )
-                ))
-                .padding(18.dp)
+                .weight(0.20f) // Ajustado un poco para que respire más la cabecera
+                .background(AzulGradient)
+                .padding(24.dp)
         ) {
             Column(Modifier.align(Alignment.CenterStart)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -47,40 +43,39 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
                     )
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        stringResource(R.string.game_instructions_title_app),
+                        text = stringResource(R.string.game_instructions_title_app),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = Blanco
                     )
                 }
                 Text(
-                    stringResource(R.string.game_instructions_subtitle),
+                    text = stringResource(R.string.game_instructions_subtitle),
                     color = Blanco.copy(alpha = 0.9f),
                     fontSize = 18.sp
                 )
             }
         }
 
+        // --- CUERPO CENTRAL ---
         Column(
             modifier = Modifier
-                .weight(0.65f)
+                .weight(0.60f)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Icono de Trofeo con Gradiente
             Surface(
                 modifier = Modifier.size(100.dp),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 color = Color.Transparent
             ) {
                 Box(
                     modifier = Modifier
                         .background(
                             brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    AzulOscuro,
-                                    AzulTurquesa
-                                )
+                                colors = listOf(AzulOscuro, AzulTurquesa)
                             )
                         )
                         .fillMaxSize(),
@@ -95,43 +90,48 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
 
             Text(
-                stringResource(R.string.game_instructions_play_learn_title),
-                fontSize = 24.sp,
+                text = stringResource(R.string.game_instructions_play_learn_title),
+                fontSize = 22.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = AzulGrisaceo
+                color = AzulGrisaceo,
+                textAlign = TextAlign.Center
             )
 
             Text(
-                stringResource(R.string.game_instructions_play_learn_description),
+                text = stringResource(R.string.game_instructions_play_learn_description),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 40.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 40.dp, vertical = 12.dp),
                 color = Gris,
-                fontSize = 15.sp
+                fontSize = 15.sp,
+                lineHeight = 20.sp
             )
 
             Spacer(Modifier.height(16.dp))
 
+            // Caja de reglas
             Surface(
-                modifier = Modifier.padding(horizontal = 32.dp).widthIn(max = 280.dp),
+                modifier = Modifier
+                    .padding(horizontal = 32.dp)
+                    .widthIn(max = 300.dp),
                 color = AzulClaro,
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        stringResource(R.string.game_instructions_rule_one),
+                        text = "• " + stringResource(R.string.game_instructions_rule_one),
                         fontSize = 14.sp,
                         color = GrisOscuro
                     )
                     Text(
-                        stringResource(R.string.game_instructions_rule_two),
+                        text = "• " + stringResource(R.string.game_instructions_rule_two),
                         fontSize = 14.sp,
                         color = GrisOscuro
                     )
                     Text(
-                        stringResource(R.string.game_instructions_rule_three),
+                        text = "• " + stringResource(R.string.game_instructions_rule_three),
                         fontSize = 14.sp,
                         color = GrisOscuro
                     )
@@ -139,35 +139,35 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
             }
         }
 
-        Button(
-            onClick = onStart,
+        // --- BOTÓN INFERIOR ---
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent
-            )
+                .padding(horizontal = 32.dp, vertical = 16.dp)
         ) {
-            Text(
-                stringResource(R.string.game_instructions_start_button),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Blanco,
+            Button(
+                onClick = onStart,
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .height(56.dp)
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(
-                                AzulOscuro,
-                                AzulTurquesa
-                            )
+                            colors = listOf(AzulOscuro, AzulTurquesa)
                         ),
-                        shape = RoundedCornerShape(5.dp)
-                    )
-                    .wrapContentSize(Alignment.Center)
-            )
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues()
+            ) {
+                Text(
+                    text = stringResource(R.string.game_instructions_start_button),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Blanco
+                )
+            }
         }
-        Spacer(modifier = Modifier.weight(0.05f))
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }

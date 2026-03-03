@@ -9,11 +9,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.categories.CategoriesScreen
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainScreen
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
@@ -26,13 +28,13 @@ import cat.copernic.aguamap1.presentation.maps.mapView.MapScreen
 import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
 import cat.copernic.aguamap1.presentation.music.SoundManager
 import cat.copernic.aguamap1.presentation.navigationInitial.RootScreen
-import cat.copernic.aguamap1.presentation.profile.EditProfileScreen
-import cat.copernic.aguamap1.presentation.profile.FountainReportsScreen
-import cat.copernic.aguamap1.presentation.profile.FountainReportsViewModel
-import cat.copernic.aguamap1.presentation.profile.ModerationScreen
+import cat.copernic.aguamap1.presentation.profile.edit.EditProfileScreen
+import cat.copernic.aguamap1.presentation.profile.reports.FountainReportsScreen
+import cat.copernic.aguamap1.presentation.profile.reports.FountainReportsViewModel
+import cat.copernic.aguamap1.presentation.profile.moderation.ModerationScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileViewModel
-import cat.copernic.aguamap1.presentation.profile.SettingsScreen
+import cat.copernic.aguamap1.presentation.profile.settings.SettingsScreen
 import cat.copernic.aguamap1.presentation.ranking.RankingScreen
 
 @Composable
@@ -43,13 +45,10 @@ fun NavigationGraph(
 ) {
     val context = LocalContext.current
 
-    // USAMOS EL MISMO VIEWMODEL PARA TODO EL GRAFO DE NAVEGACIÓN
-    // Al estar declarado aquí, sobrevive a los cambios de pantalla del NavHost
+    // ViewModels compartidos para persistencia en el grafo
     val mapViewModel: MapViewModel = hiltViewModel()
     val addFountainViewModel: AddFountainViewModel = hiltViewModel()
 
-    // --- OBTENCIÓN DE UBICACIÓN DESDE EL MAPVIEWMODEL ---
-    // Extraemos la latitud y longitud que el MapViewModel ya está gestionando
     val currentLatitude = mapViewModel.userLat
     val currentLongitude = mapViewModel.userLng
 
@@ -73,7 +72,6 @@ fun NavigationGraph(
             composable(BottomNavItem.Map.route) {
                 MapScreen(
                     isHome = true,
-                    // Pasamos el ViewModel compartido para asegurar que es la misma instancia
                     viewModel = mapViewModel,
                     onFountainClick = { fountain ->
                         mapViewModel.selectFountain(fountain)
@@ -88,6 +86,10 @@ fun NavigationGraph(
                 val commentsViewModel: FountainCommentsViewModel = hiltViewModel()
                 val selectedFountain = mapViewModel.selectedFountainForDetail
 
+                // Strings localizados para Toasts
+                val toastConfirm = stringResource(R.string.toast_fountain_confirmed)
+                val toastError = stringResource(R.string.toast_error_fountain_not_found)
+
                 if (selectedFountain != null) {
                     LaunchedEffect(selectedFountain) {
                         detailViewModel.selectFountain(selectedFountain)
@@ -96,7 +98,8 @@ fun NavigationGraph(
                     DetailFountainScreen(
                         fountain = selectedFountain,
                         viewModel = detailViewModel,
-                        addFountainViewModel = addFountainViewModel,
+                        // El ViewModel de comentarios se inyecta mediante hiltViewModel() por defecto,
+                        // pero puedes pasarlo si ya lo tienes instanciado
                         commentsViewModel = commentsViewModel,
                         onBack = {
                             navController.popBackStack()
@@ -114,7 +117,7 @@ fun NavigationGraph(
                                 detailViewModel.selectedFountain?.let { updated ->
                                     mapViewModel.updateSingleFountainInList(updated)
                                 }
-                                Toast.makeText(context, "Fuente confirmada", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, toastConfirm, Toast.LENGTH_SHORT).show()
                             }
                         },
                         onDelete = {
@@ -123,15 +126,9 @@ fun NavigationGraph(
                                 navController.popBackStack()
                             }
                         },
-                        onReportAveria = {
-                            detailViewModel.toggleOperationalStatus {
-                                detailViewModel.selectedFountain?.let { updated ->
-                                    mapViewModel.updateSingleFountainInList(updated)
-                                }
-                            }
-                        },
                         onReportNoExiste = {
                             detailViewModel.reportNonExistent {
+                                // Si la fuente se elimina por exceso de reportes negativos, refrescamos y volvemos
                                 mapViewModel.loadFountains()
                                 navController.popBackStack()
                             }
@@ -142,47 +139,46 @@ fun NavigationGraph(
 
             // --- CATEGORÍAS ---
             composable(BottomNavItem.Categories.route) {
-                // El log ahora debería mostrar la ubicación real si ya pasó por el mapa
-                LaunchedEffect(currentLatitude) {
-                    android.util.Log.d("NAV_FLOW", "Enviando a Categorías -> Lat: $currentLatitude, Lng: $currentLongitude")
-                }
-
                 CategoriesScreen(
-                    userLat = currentLatitude,  // Ahora pasamos la variable extraída arriba
-                    userLng = currentLongitude, // Ahora pasamos la variable extraída arriba
+                    userLat = currentLatitude,
+                    userLng = currentLongitude,
                     onFountainClick = { fountain ->
-                        // Sincronizamos con el MapViewModel para que el detalle sepa qué mostrar
                         mapViewModel.selectFountain(fountain)
                         navController.navigate("fountain_detail")
                     }
                 )
             }
-
-            // ... (Resto de rutas: Game, Ranking, Profile se mantienen igual)
 
             // --- JUEGO ---
             composable(BottomNavItem.Game.route) {
                 val gameKey = remember { "game_${System.currentTimeMillis()}" }
                 val gameViewModel: GameViewModel = hiltViewModel(key = gameKey)
-                GameScreen(
-                    viewModel = gameViewModel,
-                    onBackToHome = {
-                        gameViewModel.clearGameState()
-                        soundManager.stopAllSounds()
-                        navController.navigate(BottomNavItem.Map.route) {
-                            popUpTo(BottomNavItem.Map.route) { inclusive = false }
-                            launchSingleTop = true
+
+                if (currentLatitude != null && currentLongitude != null) {
+                    GameScreen(
+                        viewModel = gameViewModel,
+                        userLat = currentLatitude,
+                        userLng = currentLongitude,
+                        onBackToHome = {
+                            gameViewModel.clearGameState()
+                            soundManager.stopAllSounds()
+                            navController.navigate(BottomNavItem.Map.route) {
+                                popUpTo(BottomNavItem.Map.route) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        },
+                        onFountainClick = { fountain ->
+                            mapViewModel.selectFountain(fountain)
+                            navController.navigate("fountain_detail")
                         }
-                    },
-                    onFountainClick = { fountain ->
-                        mapViewModel.selectFountain(fountain)
-                        navController.navigate("fountain_detail")
-                    }
-                )
+                    )
+                } else {
+                    cat.copernic.aguamap1.presentation.game.components.LoadingPartida()
+                }
             }
 
-            // ... (Rutas de Profile, Settings, etc.)
             composable(BottomNavItem.Ranking.route) { RankingScreen() }
+
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen(
                     navigateToLogin = {
@@ -198,17 +194,15 @@ fun NavigationGraph(
                     navigateToFountainReports = { navController.navigate("fountain_reports") }
                 )
             }
+
             composable("edit_profile") { backStackEntry ->
-                // IMPORTANTE: Obtener el mismo ViewModel que usa ProfileScreen
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry(BottomNavItem.Profile.route)
                 }
                 val profileViewModel: ProfileViewModel = hiltViewModel(parentEntry)
 
-                // NUEVA VERSIÓN: EditProfileScreen ya no necesita initialNombre
-                // porque obtiene el nombre directamente del profileState
                 EditProfileScreen(
-                    viewModel = profileViewModel,  // Pasamos el mismo ViewModel
+                    viewModel = profileViewModel,
                     onBack = { navController.popBackStack() },
                     onSaveComplete = {
                         profileViewModel.loadUserData()
@@ -221,18 +215,18 @@ fun NavigationGraph(
             composable("moderation") { ModerationScreen(onBack = { navController.popBackStack() }) }
 
             composable("fountain_reports") {
-                val context = LocalContext.current
                 val reportsViewModel: FountainReportsViewModel = hiltViewModel()
+                val toastError = stringResource(R.string.toast_error_fountain_not_found)
 
                 FountainReportsScreen(
                     onBack = { navController.popBackStack() },
                     onGoToFountain = { fountainId ->
                         reportsViewModel.getFountainById(fountainId) { fountain ->
                             if (fountain != null) {
-                                mapViewModel.selectFountain(fountain) // ← usa el de arriba
+                                mapViewModel.selectFountain(fountain)
                                 navController.navigate("fountain_detail")
                             } else {
-                                Toast.makeText(context, "Error: No se encontró la fuente", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, toastError, Toast.LENGTH_SHORT).show()
                             }
                         }
                     }

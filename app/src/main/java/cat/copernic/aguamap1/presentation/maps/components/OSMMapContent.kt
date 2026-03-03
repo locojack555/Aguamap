@@ -5,12 +5,10 @@ import android.location.LocationManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -18,6 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,12 +42,10 @@ import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
 import cat.copernic.aguamap1.presentation.util.getMarkerColor
 import cat.copernic.aguamap1.presentation.util.getRandomCategoryColor
 import cat.copernic.aguamap1.ui.theme.Blanco
-import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Gris
 import cat.copernic.aguamap1.ui.theme.Naranja
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.Rojo
-import cat.copernic.aguamap1.ui.theme.Verde
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
@@ -55,9 +56,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import kotlin.random.Random
 
-// Función para generar colores aleatorios basados en un seed
 @Composable
 fun OSMMapContent(
     viewModel: MapViewModel?,
@@ -68,6 +67,22 @@ fun OSMMapContent(
     val context = LocalContext.current
     val fountains = viewModel?.uiState?.fountains ?: emptyList()
 
+    // Títulos de marcadores localizados para el filtrado de overlays
+    val titleGuess = stringResource(R.string.map_marker_guess)
+    val titleReal = stringResource(R.string.map_marker_real_location)
+
+    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+
+    LaunchedEffect(viewModel?.userLat, viewModel?.userLng) {
+        if (viewModel != null && viewModel.isFirstLocationUpdate && viewModel.isLocationAvailable) {
+            mapViewRef?.let { map ->
+                val userPoint = GeoPoint(viewModel.userLat!!, viewModel.userLng!!)
+                map.controller.animateTo(userPoint)
+                map.controller.zoomTo(17.0)
+            }
+        }
+    }
+
     AndroidView(
         factory = { ctx ->
             MapView(ctx).apply {
@@ -77,20 +92,22 @@ fun OSMMapContent(
                 if (isHome && viewModel != null) {
                     setupHomeMap(viewModel)
                 }
+                mapViewRef = this
                 onMapLoad(this)
             }
         },
         update = { mapView ->
-            mapView.overlays.removeAll { it is Marker && it.title != "Tu apuesta" && it.title != "Ubicación Real" }
+            // Filtrar overlays usando los strings localizados
+            mapView.overlays.removeAll { it is Marker && it.title != titleGuess && it.title != titleReal }
 
             fountains.forEach { fountain ->
                 val marker = Marker(mapView)
                 marker.position = GeoPoint(fountain.latitude, fountain.longitude)
+                marker.title = fountain.name
 
                 val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
                 val wrapped = drawable?.let {
                     val w = DrawableCompat.wrap(it).mutate()
-                    // La lógica ahora es transparente para el Composable
                     DrawableCompat.setTint(w, fountain.getMarkerColor())
                     w
                 }
@@ -125,6 +142,7 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
 
     val locationOverlay = MyLocationNewOverlay(provider, this).apply {
         enableMyLocation()
+        enableFollowLocation()
         isDrawAccuracyEnabled = false
         customIcon?.let { setPersonIcon(it); setDirectionIcon(it) }
     }
@@ -136,11 +154,11 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
         val myLoc = locationOverlay.myLocation
         if (myLoc != null) {
             post {
+                viewModel.onFirstLocationFound(myLoc.latitude, myLoc.longitude)
                 if (viewModel.isFirstLocationUpdate) {
-                    controller.setCenter(myLoc)
+                    controller.animateTo(myLoc)
                     controller.setZoom(17.0)
                 }
-                viewModel.onFirstLocationFound(myLoc.latitude, myLoc.longitude)
             }
         }
     }
@@ -172,7 +190,6 @@ fun MapFloatingButtons(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Botón AÑADIR FUENTE
         FloatingActionButton(
             onClick = {
                 if (mapViewModel.isLocationAvailable) {
@@ -187,25 +204,27 @@ fun MapFloatingButtons(
         ) {
             Icon(
                 painter = painterResource(R.drawable.add_24px),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.map_desc_add_fountain),
                 tint = if (mapViewModel.isLocationAvailable) Rojo else Negro.copy(alpha = 0.3f)
             )
         }
 
-        // Botón CENTRAR UBICACIÓN
         if (isMapView) {
             FloatingActionButton(
                 onClick = {
                     val locationOverlay =
                         mapViewRef?.overlays?.find { it is MyLocationNewOverlay } as? MyLocationNewOverlay
-                    locationOverlay?.myLocation?.let { mapViewRef?.controller?.animateTo(it) }
+                    locationOverlay?.myLocation?.let {
+                        mapViewRef.controller.animateTo(it)
+                        mapViewRef.controller.setZoom(17.0)
+                    }
                 },
                 containerColor = Blanco,
                 modifier = Modifier.size(44.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.icon_map_blue),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.map_desc_center_location),
                     modifier = Modifier.size(32.dp),
                     tint = Color.Unspecified
                 )
@@ -229,17 +248,8 @@ fun MapLegend(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // 1. Estados fijos (Naranja y Rojo con prioridad)
-            LegendItem(
-                color = Naranja,
-                text = stringResource(R.string.legend_pendiente)
-            )
-            LegendItem(
-                color = Rojo,
-                text = stringResource(R.string.legend_averiada)
-            )
-
-            // 2. Categorías dinámicas (Sin línea divisoria, igual que antes)
+            LegendItem(color = Naranja, text = stringResource(R.string.legend_pendiente))
+            LegendItem(color = Rojo, text = stringResource(R.string.legend_averiada))
             categories.forEach { category ->
                 LegendItem(
                     color = getRandomCategoryColor(category.id),

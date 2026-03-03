@@ -69,7 +69,14 @@ fun CategoriesHeader(
                         modifier = Modifier
                             .border(1.dp, GrisClaro, RoundedCornerShape(8.dp))
                             .size(40.dp)
-                    ) { Icon(Icons.Default.Add, contentDescription = null, tint = Blue10) }
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            // CAMBIO: Añadido stringResource para accesibilidad
+                            contentDescription = stringResource(R.string.new_category),
+                            tint = Blue10
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -81,7 +88,8 @@ fun CategoriesHeader(
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
-                        contentDescription = null,
+                        // CAMBIO: Añadido stringResource (puedes usar search_placeholder o crear uno nuevo)
+                        contentDescription = stringResource(R.string.search_fountains),
                         tint = AzulOscuro
                     )
                 },
@@ -103,11 +111,12 @@ fun CategoriesHeader(
             FilterChip(
                 selected = isSelected,
                 onClick = { onToggleFilter(isSelected) },
-                label = { Text(stringResource(R.string.category_only_broken)) }, // LOCALIZADO
+                label = { Text(stringResource(R.string.category_only_broken)) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Warning,
-                        contentDescription = null,
+                        // CAMBIO: Añadido stringResource
+                        contentDescription = stringResource(R.string.legend_averiada),
                         modifier = Modifier.size(16.dp),
                         tint = if (isSelected) Blanco else Rojo
                     )

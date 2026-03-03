@@ -148,6 +148,8 @@
     <string name="game_result_points">Puntos</string>
 
     <string name="game_loading_message">PREPARANDO PARTIDA...</string>
+    <string name="unit_seconds_short">s</string>
+    <string name="game_play_question">¿Dónde está esta fuente?</string>
 
     <string name="game_error_retry_button">REINTENTAR</string>
     <string name="back">Atrás</string>
@@ -248,30 +250,174 @@
     <string name="profile_btn_logout">Cerrar Sesión</string>
     <string name="edit_profile_title">Editar perfil</string>
     <string name="edit_profile_name">Nombre</string>
-    <string name="edit_profile_save">Guardar"></string>
+    <string name="edit_profile_save">Guardar</string>
     <string name="config_profile_title">Configuración</string>
     <string name="config_profile_subtitle">Idioma</string>
     <string name="config_profile_es">Español</string>
     <string name="config_profile_ca">Catalán</string>
     <string name="config_profile_en">Inglés</string>
+
+    <string name="game_too_far_message">Estás a %1$.0fm. Acércate a menos de 5m para jugar.</string>
+    <string name="legend_operativa">Operativa</string>
+    <string name="map_loading">Cargando mapa...</string>
+    <string name="category_historica">Histórica</string>
+    <string name="error_user_not_found">No hay ninguna cuenta registrada con este correo electrónico.</string>
+    <string name="edit_fountain_subtitle">Modifica la información de la fuente</string>
+    <string name="latitude_label">Latitud</string>
+    <string name="longitude_label">Longitud</string>
+    <string name="error_lat_required">La latitud es obligatoria</string>
+    <string name="error_lng_required">La longitud es obligatoria</string>
+    <string name="error_invalid_format">Formato inválido (ej: 41.123)</string>
+    <string name="error_lat_range">Debe estar entre -90 y 90</string>
+    <string name="error_lng_range">Debe estar entre -180 y 180</string>
+    <string name="error_location_invalid">No se ha podido determinar la ubicación</string><string name="star_rating_description">%1$d estrellas de 5</string>
+    <string name="dialog_add_comment_placeholder">Escribe aquí tu experiencia...</string>
+    <string name="error_sync_comments">Error al sincronizar comentarios.</string>
+    <string name="error_add_comment">No se pudo publicar el comentario.</string>
+    <string name="error_report_comment">Error al enviar el reporte.</string>
+    <string name="error_censor_comment">No tienes permisos para censurar.</string>
+    <string name="default_user_name">Usuario de AguaMap</string>
+    <string name="error_edit_generic">No se han podido guardar los cambios. Inténtalo de nuevo.</string>
+    <string name="error_delete_generic">Ha ocurrido un error al intentar eliminar el elemento.</string>
+    <string name="you_label">%1$s (Tú)</string>
+    <string name="report_comment_label">Reportar comentario</string>
+    <string name="censor_comment_label">Censurar comentario</string>
+    <string name="info_row_format">%1$s: %2$s</string>
+    <string name="error_icon_description">Icono de error</string>
+    <string name="btn_retry">Reintentar</string>
+    <string name="btn_back">Volver</string>
+    <string name="map_your_guess">Tu apuesta</string>
+    <string name="map_real_location">Ubicación real</string>
+    <string name="unit_meters">m</string>
+    <string name="error_icon_desc">Icono de error</string>
+    <string name="game_result_points_format">%1$d puntos</string>
+    <string name="game_result_distance_format">Distancia: %1$s</string>
+    <string name="game_default_user_name">Jugador</string>
+    <string name="login_title_sign_in">Iniciar Sesión</string>
+    <string name="login_label_email">Correo Electrónico</string>
+    <string name="login_placeholder_email">ejemplo@correo.com</string>
+    <string name="login_label_password">Contraseña</string>
+    <string name="login_placeholder_password">Tu contraseña</string>
+    <string name="login_error_invalid_credentials">Correo o contraseña incorrectos.</string>
+    <string name="login_error_email_not_verified">Por favor, verifica tu correo antes de entrar.</string>
+    <string name="login_btn_forgot_password">¿Has olvidado la contraseña?</string>
+    <string name="login_btn_enter">ENTRAR</string>
+    <string name="login_text_no_account">¿No tienes cuenta?</string><string name="toast_fountain_confirmed">¡Fuente confirmada!</string>
+    <string name="toast_error_fountain_not_found">Error: No se encontró la fuente</string>
+    <string name="edit_profile_delete_selection">Eliminar imagen seleccionada</string>
+    <string name="common_ok">Aceptar</string>
+    <plurals name="reports_pending_count">
+        <item quantity="one">%d reporte pendiente</item>
+        <item quantity="other">%d reportes pendientes</item>
+    </plurals>
+    <string name="error_loading_reports">Error al cargar los reportes</string>
+    <string name="error_resolving_report">Error al resolver el reporte</string>
+    <string name="success_report_resolved">Reporte marcado como resuelto</string>
+    <string name="reports_title">Reportes de fuentes</string>
+    <string name="reports_reported_by">Reportado por: %1$s</string>
+    <string name="reports_dialog_resolve_title">Marcar como resuelta</string>
+    <string name="reports_dialog_resolve_desc">El reporte quedará marcado como resuelto y desaparecerá de esta lista.</string>
+    <string name="reports_btn_resolve">Resolver</string>
+    <string name="reports_btn_resolve_short">Resuelta</string>
+    <string name="reports_btn_view_fountain">Ver fuente</string>
+    <string name="reports_badge_label">Reporte</string>
+    <string name="reports_fountain_label">Fuente reportada</string>
+    <string name="reports_no_description">(Sin descripción)</string>
+    <string name="reports_empty_title">Sin reportes pendientes</string>
+    <string name="reports_empty_desc">Todas las fuentes están en orden</string>
+    <string name="common_back">Volver</string>
+    <string name="common_refresh">Recargar</string>
+    <string name="common_cancel">Cancelar</string>
+
+    <string name="edit_profile_photo_label">Foto de perfil</string>
+    <string name="edit_profile_tap_to_change">Toca la foto para cambiarla</string>
+    <string name="edit_profile_tap_to_add">Tocar para añadir</string>
+    <string name="edit_profile_delete_photo">Eliminar foto</string>
+    <string name="edit_profile_name_label">Nombre</string>
+    <string name="edit_profile_name_placeholder">Tu nombre</string>
+    <string name="edit_profile_save_btn">Guardar cambios</string>
+    <string name="common_close">Cerrar</string>
+
+    <string name="login_btn_register_now">Regístrate</string>
+    <string name="sort_distance_asc">Cercanas primero</string>
+    <string name="desc_fountain_image">Imagen de la fuente</string>
+    <string name="status_operational">Operativa</string>
+    <string name="status_non_operational">No operativa</string>
+    <string name="status_pending">Pendiente</string>
+    <string name="sort_distance_desc">Lejanas primero</string>
+    <string name="sort_rating_desc">Mejor valoradas</string>
+    <string name="sort_rating_asc">Peor valoradas</string>
+    <string name="sort_date_desc">Más nuevas</string>
+    <string name="sort_date_asc">Más antiguas</string>
+    <string name="map_marker_guess">Tu apuesta</string>
+    <string name="map_marker_real_location">Ubicación Real</string>
+    <string name="map_desc_add_fountain">Añadir nueva fuente</string>
+    <string name="map_desc_center_location">Centrar en mi ubicación</string>
+
+    <string name="login_dialog_info_title">Información necesaria</string>
+    <string name="login_dialog_welcome_message">¡Bienvenido! Para continuar necesitamos conocerte un poco mejor.</string>
+    <string name="login_label_full_name">Nombre Completo (Nombre y Apellidos)</string>
+    <string name="login_placeholder_name_example">Ej: Juan Pérez</string>
+    <string name="login_btn_save_continue">GUARDAR Y CONTINUAR</string>
+    <string name="game_error_too_far">Estás demasiado lejos para jugar. Acércate a una zona con fuentes.</string>
+    <string name="btn_back_home">VOLVER AL INICIO</string>
+    <plurals name="moderation_pending_count">
+        <item quantity="one">%d reporte pendiente</item>
+        <item quantity="other">%d reportes pendientes</item>
+    </plurals>
+    <string name="moderation_title">Moderación</string>
+    <string name="moderation_badge_reported">Reportado</string>
+    <string name="moderation_reason_label">Motivo: %1$s</string>
+    <string name="moderation_comment_unavailable">Comentario no disponible</string>
+    <string name="moderation_btn_dismiss">Descartar reporte</string>
+    <string name="moderation_btn_censor">Censurar</string>
+    <string name="moderation_dialog_delete_title">Eliminar comentario</string>
+    <string name="moderation_dialog_delete_desc">El comentario será eliminado permanentemente.</string>
+    <string name="moderation_dialog_censor_title">Censurar comentario</string>
+    <string name="moderation_dialog_censor_desc">El comentario quedará oculto para todos los usuarios.</string>
+    <string name="moderation_empty_title">Sin reportes pendientes</string>
+    <string name="moderation_empty_desc">Todo está limpio por aquí</string>
+    <string name="common_delete">Eliminar</string>
+    <string name="success_comment_deleted">Comentario eliminado correctamente</string>
+    <string name="success_comment_censored">Comentario censurado correctamente</string>
+    <string name="success_report_dismissed">Reporte descartado</string>
+    <string name="error_deleting_comment">Error al intentar eliminar el comentario</string>
+    <string name="error_censoring_comment">Error al intentar censurar el comentario</string>
     <string name="select_language">Seleccionar idioma</string>
-    <!--<string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>
-    <string name=""></string>-->
+    <string name="error_dismissing_report">Error al descartar el reporte</string>
+    <string name="profile_picture_description">Foto de perfil</string>
+    <string name="role_admin">Administrador</string>
+    <string name="role_user">Usuario</string>
+    <plurals name="pending_count_short">
+        <item quantity="one">%d pendiente</item>
+        <item quantity="other">%d pendientes</item>
+    </plurals>
+    <string name="error_loading_user_data">Error al cargar los datos de usuario</string>
+    <string name="error_updating_profile">Error al actualizar el perfil</string>
+    <string name="error_deleting_picture">Error al eliminar la foto de perfil</string>
+    <string name="error_uploading_image">Error al subir la imagen</string>
+    <string name="error_generic">Ha ocurrido un error inesperado</string>
+    <string name="settings_language_label">Idioma</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ca">Catalán</string>
+    <string name="lang_en">Inglés</string>
+    <string name="close_button_description">Cerrar</string>
+
+
+        <string name="category_title">Categoría</string>
+        <string name="category_natural">Natural</string>
+        <string name="category_urban">Urbana</string>
+        <string name="category_park">Parque</string>
+        <string name="category_historical">Histórica</string>
+
+
+
+
+        <string name="fountain_operational_status">Estado de la fuente</string>
+        <string name="operational_yes">En funcionamiento</string>
+        <string name="operational_no">Fuera de servicio</string>
+
+        <string name="btn_create_fountain">Crear fuente</string>
+        <string name="btn_update_fountain">Guardar cambios</string>
+
 </resources>

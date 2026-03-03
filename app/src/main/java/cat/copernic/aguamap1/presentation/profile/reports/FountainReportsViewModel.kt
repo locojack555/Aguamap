@@ -1,7 +1,8 @@
-package cat.copernic.aguamap1.presentation.profile
+package cat.copernic.aguamap1.presentation.profile.reports
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.Report
 import cat.copernic.aguamap1.domain.repository.AuthRepository
@@ -24,21 +25,21 @@ class FountainReportsViewModel @Inject constructor(
     private val _reports = MutableStateFlow<List<Report>>(emptyList())
     val reports: StateFlow<List<Report>> = _reports.asStateFlow()
 
-    // Cache uid → nombre para no repetir llamadas a Firestore
     private val usernameCache = mutableMapOf<String, String>()
 
-    // Mapa uid → nombre resuelto que la UI consume
     private val _userNames = MutableStateFlow<Map<String, String>>(emptyMap())
     val userNames: StateFlow<Map<String, String>> = _userNames.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    // Cambiado para coincidir con la Screen
+    private val _errorResId = MutableStateFlow<Int?>(null)
+    val errorResId: StateFlow<Int?> = _errorResId.asStateFlow()
 
-    private val _successMessage = MutableStateFlow<String?>(null)
-    val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
+    // Cambiado a Boolean para manejar el estado de éxito simplemente
+    private val _isSuccess = MutableStateFlow(false)
+    val isSuccess: StateFlow<Boolean> = _isSuccess.asStateFlow()
 
     init {
         loadReports()
@@ -52,7 +53,9 @@ class FountainReportsViewModel @Inject constructor(
                     _reports.value = list
                     resolveUserNames(list.map { it.userId }.distinct())
                 }
-                .onFailure { _errorMessage.value = "Error al cargar los reportes" }
+                .onFailure {
+                    _errorResId.value = R.string.error_loading_reports
+                }
             _isLoading.value = false
         }
     }
@@ -61,9 +64,8 @@ class FountainReportsViewModel @Inject constructor(
         val resolved = mutableMapOf<String, String>()
         for (uid in uids) {
             val name = usernameCache[uid] ?: run {
-                // getUserNameById usa el campo "nom" de la colección users
                 authRepository.getUserNameById(uid)
-                    .getOrDefault("Usuario desconocido")
+                    .getOrNull() ?: "Unknown User"
                     .also { usernameCache[uid] = it }
             }
             resolved[uid] = name
@@ -76,9 +78,11 @@ class FountainReportsViewModel @Inject constructor(
             reportRepository.resolveReport(reportId)
                 .onSuccess {
                     _reports.value = _reports.value.filter { it.id != reportId }
-                    _successMessage.value = "Reporte marcado como resuelto"
+                    _isSuccess.value = true // Activamos el éxito
                 }
-                .onFailure { _errorMessage.value = "Error al resolver el reporte" }
+                .onFailure {
+                    _errorResId.value = R.string.error_resolving_report
+                }
         }
     }
 
@@ -89,8 +93,11 @@ class FountainReportsViewModel @Inject constructor(
         }
     }
 
-    fun clearMessages() {
-        _errorMessage.value = null
-        _successMessage.value = null
+    fun clearError() {
+        _errorResId.value = null
+    }
+
+    fun resetSuccess() {
+        _isSuccess.value = false
     }
 }

@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,11 +33,10 @@ fun GameResultScreen(
     onBackToHome: () -> Unit,
     onFountainClick: (Fountain) -> Unit
 ) {
-    val context = LocalContext.current
     val scrollState = rememberScrollState()
 
     Column(Modifier.fillMaxSize()) {
-        // Mapa con los marcadores - USAMOS EL MISMO COMPONENTE SIEMPRE
+        // Mapa con los marcadores
         Box(modifier = Modifier.weight(0.4f)) {
             GameMapView(
                 fountain = fountain,
@@ -70,6 +68,7 @@ fun GameResultScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     if (hasLost) {
+                        // --- ESTADO: DERROTA ---
                         Surface(
                             color = Rojo.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(50.dp)
@@ -86,7 +85,7 @@ fun GameResultScreen(
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    stringResource(R.string.game_result_lost_title),
+                                    text = stringResource(R.string.game_result_lost_title),
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 18.sp,
                                     color = Rojo
@@ -96,7 +95,7 @@ fun GameResultScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            stringResource(R.string.game_result_lost_message),
+                            text = stringResource(R.string.game_result_lost_message),
                             fontSize = 14.sp,
                             color = Color.Gray,
                             textAlign = TextAlign.Center
@@ -108,7 +107,7 @@ fun GameResultScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                stringResource(R.string.game_result_lost_points),
+                                text = stringResource(R.string.game_result_lost_points),
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
@@ -116,15 +115,8 @@ fun GameResultScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            stringResource(R.string.game_result_click_red_marker),
-                            fontSize = 12.sp,
-                            color = Color.Gray,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
                     } else {
+                        // --- ESTADO: VICTORIA ---
                         Surface(
                             color = Verde.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(50.dp)
@@ -141,7 +133,7 @@ fun GameResultScreen(
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    stringResource(R.string.game_result_won_title),
+                                    text = stringResource(R.string.game_result_won_title),
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 18.sp,
                                     color = Verde
@@ -151,13 +143,15 @@ fun GameResultScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            stringResource(R.string.game_result_your_score),
+                            text = stringResource(R.string.game_result_your_score),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Gray
                         )
+
+                        // Uso de argumento dinámico para puntos
                         Text(
-                            "$score ${stringResource(R.string.game_result_points)}",
+                            text = stringResource(R.string.game_result_points_format, score),
                             fontSize = 48.sp,
                             fontWeight = FontWeight.Black,
                             color = Blue10
@@ -168,24 +162,33 @@ fun GameResultScreen(
                             color = Blanco,
                             shape = RoundedCornerShape(8.dp)
                         ) {
+                            // Uso de argumento dinámico para distancia formateada
+                            val formattedDistance = if (distance >= 1000) {
+                                String.format("%.1f km", distance / 1000.0)
+                            } else {
+                                "${distance.toInt()} m"
+                            }
+
                             Text(
-                                stringResource(R.string.game_result_distance, distance),
+                                text = stringResource(R.string.game_result_distance_format, formattedDistance),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Blue10
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            stringResource(R.string.game_result_click_red_marker),
-                            fontSize = 12.sp,
-                            color = Color.Gray,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Texto común sobre el marcador
+                    Text(
+                        text = stringResource(R.string.game_result_click_red_marker),
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -194,7 +197,7 @@ fun GameResultScreen(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            stringResource(R.string.game_result_daily_message),
+                            text = stringResource(R.string.game_result_daily_message),
                             fontWeight = FontWeight.Bold,
                             color = AzulGrisaceo,
                             textAlign = TextAlign.Center,
@@ -205,6 +208,16 @@ fun GameResultScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // Botón opcional para volver
+                Button(
+                    onClick = onBackToHome,
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.btn_back_home), color = Blanco)
+                }
             }
         }
     }
