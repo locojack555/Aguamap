@@ -25,6 +25,16 @@ import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.ui.theme.NegroMuySuave
 import cat.copernic.aguamap1.ui.theme.NegroSuave
 
+/**
+ * Tarjeta informativa para mostrar el progreso de validación comunitaria.
+ * Utiliza un diseño de superficie con bordes y colores dinámicos según el estado.
+ *
+ * @param title Título descriptivo del tipo de validación.
+ * @param count Cantidad actual de votos o validaciones recibidas.
+ * @param target Objetivo de validaciones necesario para el cambio de estado.
+ * @param color Color temático aplicado a iconos, bordes y textos.
+ * @param icon Icono representativo de la acción de validación.
+ */
 @Composable
 fun ValidationCard(title: String, count: Int, target: Int, color: Color, icon: ImageVector) {
     Surface(
@@ -58,6 +68,14 @@ fun ValidationCard(title: String, count: Int, target: Int, color: Color, icon: I
     }
 }
 
+/**
+ * Fila de información técnica estandarizada con icono y par etiqueta-valor.
+ *
+ * @param icon Icono descriptivo del dato (distancia, estado, etc.).
+ * @param label Texto de la etiqueta descriptiva.
+ * @param value Valor del dato a mostrar.
+ * @param valueColor Color específico para resaltar el valor (ej. Verde para operativo, Rojo para averiado).
+ */
 @Composable
 fun InfoRow(icon: ImageVector, label: String, value: String, valueColor: Color) {
     Row(
@@ -72,7 +90,9 @@ fun InfoRow(icon: ImageVector, label: String, value: String, valueColor: Color) 
         )
         Spacer(Modifier.width(12.dp))
 
-        // La etiqueta (Distancia, Estado, etc.) en color suave
+        /**
+         * Etiqueta descriptiva en tono neutro.
+         */
         Text(
             text = "$label: ",
             color = NegroSuave,
@@ -80,7 +100,9 @@ fun InfoRow(icon: ImageVector, label: String, value: String, valueColor: Color) 
             fontWeight = FontWeight.Medium
         )
 
-        // El valor (200m, Funcionando, etc.) con su COLOR ESPECÍFICO
+        /**
+         * Valor destacado con tipografía bold y color semántico.
+         */
         Text(
             text = value,
             color = valueColor,

@@ -1,14 +1,31 @@
 package cat.copernic.aguamap1.presentation.maps.listView
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +50,10 @@ import cat.copernic.aguamap1.ui.theme.Rojo
 import coil.compose.AsyncImage
 import java.util.Locale
 
+/**
+ * Pantalla que muestra las fuentes en formato de lista desplazable.
+ * Permite visualizar detalles rápidos como la valoración, la distancia y el estado.
+ */
 @Composable
 fun ListScreen(
     viewModel: MapViewModel,
@@ -44,6 +65,7 @@ fun ListScreen(
         color = Blanco
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Espacio para que la TopBar flotante no tape el primer elemento
             Spacer(modifier = Modifier.height(72.dp))
 
             if (state.fountains.isEmpty()) {
@@ -60,7 +82,7 @@ fun ListScreen(
                         start = 16.dp,
                         top = 16.dp,
                         end = 16.dp,
-                        bottom = 100.dp
+                        bottom = 100.dp // Espacio para la BottomBar
                     ),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -76,19 +98,18 @@ fun ListScreen(
     }
 }
 
+/**
+ * Representación visual de una fuente individual dentro de la lista.
+ * Incluye imagen remota (Coil), sistema de estrellas para rating y etiqueta de estado.
+ */
 @Composable
 fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
     val themeColor = fountain.getStatusColor()
 
-    // Dentro de FountainItem en ListScreen.kt
+    // Lógica de etiquetas de estado localizada
     val statusLabel = when {
-        // 1. Prioridad: Si la fuente está marcada como no operativa (Averiada)
         !fountain.operational -> stringResource(R.string.status_non_operational)
-
-        // 2. Si es operativa, miramos el enum 'status'
         fountain.status == StateFountain.PENDING -> stringResource(R.string.status_pending)
-
-        // 3. En cualquier otro caso (ACCEPTED, etc.)
         else -> stringResource(R.string.status_operational)
     }
 
@@ -106,6 +127,7 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                 .padding(12.dp)
                 .height(IntrinsicSize.Min)
         ) {
+            // Imagen de la fuente con carga asíncrona
             AsyncImage(
                 model = fountain.imageUrl,
                 contentDescription = stringResource(R.string.desc_fountain_image),
@@ -123,6 +145,7 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // Título y descripción corta
                 Text(
                     text = fountain.name,
                     fontSize = 18.sp,
@@ -140,6 +163,7 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
 
+                // Visualización del Rating (Estrellas)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val rating = fountain.ratingAverage
                     repeat(5) { index ->
@@ -152,18 +176,27 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                         )
                     }
                     Text(
-                        text = " ${String.format(Locale.getDefault(), "%.1f", rating)} (${fountain.totalRatings})",
+                        text = " ${
+                            String.format(
+                                Locale.getDefault(),
+                                "%.1f",
+                                rating
+                            )
+                        } (${fountain.totalRatings})",
                         fontSize = 12.sp,
                         color = Gris,
                         fontWeight = FontWeight.Medium
                     )
                 }
 
+
+                // Fila inferior: Distancia y Etiqueta de Estado
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Distancia calculada respecto al usuario
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.pin_lleno),
@@ -185,7 +218,11 @@ fun FountainItem(fountain: Fountain, onClick: () -> Unit) {
                         )
                     }
 
-                    val containerColor = if (!fountain.operational) Rojo.copy(alpha = 0.1f) else themeColor.copy(alpha = 0.1f)
+                    // Badge de estado (Operativa/Pendiente/Averiada)
+                    val containerColor =
+                        if (!fountain.operational) Rojo.copy(alpha = 0.1f) else themeColor.copy(
+                            alpha = 0.1f
+                        )
                     val contentColor = if (!fountain.operational) Rojo else themeColor
 
                     Surface(

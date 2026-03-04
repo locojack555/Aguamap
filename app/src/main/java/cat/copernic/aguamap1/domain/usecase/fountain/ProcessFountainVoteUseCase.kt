@@ -5,11 +5,23 @@ import cat.copernic.aguamap1.domain.model.StateFountain
 import cat.copernic.aguamap1.domain.repository.FountainRepository
 import javax.inject.Inject
 
+/**
+ * Caso de Uso encargado de gestionar la lógica de validación y reporte comunitario.
+ * Permite que los usuarios voten sobre la veracidad de una fuente, activando
+ * cambios de estado automáticos o eliminaciones basadas en el consenso.
+ */
 class ProcessFountainVoteUseCase @Inject constructor(
     private val repository: FountainRepository
 ) {
+    /**
+     * Añade un voto positivo a una fuente. Si alcanza el umbral de 3 votos,
+     * la fuente pasa automáticamente a estado ACCEPTED.
+     * * @param fountain La fuente a validar.
+     * @param userId ID del usuario que emite el voto.
+     * @return [Result] con éxito o error si el usuario ya votó o la fuente ya es oficial.
+     */
     suspend fun addPositiveVote(fountain: Fountain, userId: String): Result<Unit> {
-        if (fountain.positiveVotes >= 3) {
+        if (fountain.status == StateFountain.ACCEPTED) {
             return Result.failure(Exception("Esta fuente ya ha sido validada"))
         }
 
@@ -25,6 +37,7 @@ class ProcessFountainVoteUseCase @Inject constructor(
             "votedByPositive" to newVoters
         )
 
+        // Umbral de validación automática
         if (newVotes >= 3) {
             updates["status"] = StateFountain.ACCEPTED.name
         }
@@ -32,6 +45,12 @@ class ProcessFountainVoteUseCase @Inject constructor(
         return repository.updateFountain(fountain.id, updates)
     }
 
+    /**
+     * Añade un voto negativo (reporte). Si alcanza los 3 votos negativos,
+     * la fuente se elimina automáticamente del sistema.
+     * * @param fountain La fuente reportada.
+     * @param userId ID del usuario que reporta.
+     */
     suspend fun addNegativeVote(fountain: Fountain, userId: String): Result<Unit> {
         if (fountain.votedByNegative.contains(userId)) {
             return Result.failure(Exception("Ya has reportado esta fuente"))
@@ -41,6 +60,7 @@ class ProcessFountainVoteUseCase @Inject constructor(
         val newVoters = fountain.votedByNegative + userId
 
         return if (newVotes >= 3) {
+            // Consenso de eliminación alcanzado
             repository.deleteFountain(fountain.id)
         } else {
             repository.updateFountain(
@@ -52,18 +72,19 @@ class ProcessFountainVoteUseCase @Inject constructor(
         }
     }
 
-    // --- NUEVA FUNCIÓN PARA DESMENTIR EL REPORTE ---
+    /**
+     * Permite desmentir un reporte previo. Útil para corregir errores de usuarios
+     * o confirmar que una fuente reportada como "inexistente" realmente sí está ahí.
+     * * @param fountain La fuente cuyo reporte se quiere mitigar.
+     * @param userId ID del usuario que confirma la existencia.
+     */
     suspend fun confirmExistence(fountain: Fountain, userId: String): Result<Unit> {
-        // Solo actuamos si hay votos negativos que quitar
         if (fountain.negativeVotes <= 0) {
             return Result.success(Unit)
         }
 
-        // 1. Calculamos el nuevo conteo (mínimo 0)
         val newVotes = (fountain.negativeVotes - 1).coerceAtLeast(0)
-
-        // 2. Quitamos al usuario de la lista de negativos si estaba en ella
-        // (Esto permite que si alguien se equivocó al reportar, pueda corregirse)
+        // Eliminamos al usuario de la lista de detractores si decide retractarse
         val newVoters = fountain.votedByNegative.filter { it != userId }
 
         val updates = mapOf(

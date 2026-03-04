@@ -24,27 +24,39 @@ import cat.copernic.aguamap1.presentation.language.LanguageViewModel
 import cat.copernic.aguamap1.ui.theme.AguaMapGradient
 import cat.copernic.aguamap1.ui.theme.Blanco
 
+/**
+ * Selector de idioma flotante reutilizable para AguaMap.
+ * Permite cambiar el idioma de la aplicación en tiempo real mediante un menú desplegable.
+ * Generalmente se ubica en la esquina superior derecha de las pantallas de bienvenida.
+ */
 @Composable
 fun AguaMapLanguage(
     modifier: Modifier = Modifier,
     viewModel: LanguageViewModel = viewModel()
 ) {
+    // Estado para controlar si el menú desplegable está abierto
     var expanded by remember { mutableStateOf(false) }
+
     Box(modifier = modifier) {
+        // Botón de activación con el icono de globo/idioma
         IconButton(onClick = { expanded = true }) {
             Icon(
                 painter = painterResource(id = R.drawable.language_24px),
-                stringResource(R.string.select_language),
+                contentDescription = stringResource(R.string.select_language),
                 tint = Blanco,
                 modifier = Modifier.size(40.dp)
             )
         }
+
+
+        // Menú desplegable con diseño personalizado usando el gradiente de la App
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            containerColor = Color.Transparent,
+            containerColor = Color.Transparent, // Hacemos el contenedor transparente para aplicar el gradiente
             modifier = Modifier.background(AguaMapGradient)
         ) {
+            // Opción: Español
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.es), color = Blanco) },
                 onClick = {
@@ -52,6 +64,7 @@ fun AguaMapLanguage(
                     expanded = false
                 }
             )
+            // Opción: Inglés
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.en), color = Blanco) },
                 onClick = {
@@ -59,6 +72,7 @@ fun AguaMapLanguage(
                     expanded = false
                 }
             )
+            // Opción: Catalán
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.ca), color = Blanco) },
                 onClick = {

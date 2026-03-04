@@ -34,13 +34,25 @@ import cat.copernic.aguamap1.ui.theme.GrisClaro
 import cat.copernic.aguamap1.ui.theme.Naranja
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.NegroMinimal
-import cat.copernic.aguamap1.ui.theme.NegroMuySuave
 import cat.copernic.aguamap1.ui.theme.NegroSuave
 import cat.copernic.aguamap1.ui.theme.Rojo
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Representación visual de un comentario individual en la lista de detalles de la fuente.
+ * Gestiona dinámicamente la visibilidad de acciones según el rol del usuario (Dueño, Admin, Visitante)
+ * y el estado de moderación del contenido.
+ *
+ * @param commentObj Datos del comentario provenientes del dominio.
+ * @param isMyComment Indica si el autor del comentario coincide con el usuario autenticado.
+ * @param isAdmin Indica si el usuario actual tiene privilegios de moderación.
+ * @param onCensor Acción para ocultar contenido inapropiado (solo Admin).
+ * @param onDelete Acción para eliminar el comentario (solo Dueño).
+ * @param onEdit Acción para modificar el texto y valoración (solo Dueño).
+ * @param onReport Acción para notificar infracciones de normas (Visitantes).
+ */
 @Composable
 fun CommentItem(
     commentObj: Comment,
@@ -51,11 +63,13 @@ fun CommentItem(
     onEdit: () -> Unit,
     onReport: () -> Unit
 ) {
+    /**
+     * Formateo optimizado de la fecha del comentario.
+     */
     val dateStr = remember(commentObj.timestamp) {
         SimpleDateFormat("dd/MM/yy", Locale.getDefault()).format(Date(commentObj.timestamp))
     }
 
-    // Usamos una Surface para dar un fondo sutil si es nuestro comentario
     Surface(
         color = if (isMyComment) cat.copernic.aguamap1.ui.theme.Celeste.copy(alpha = 0.3f) else cat.copernic.aguamap1.ui.theme.Blanco,
         shape = RoundedCornerShape(12.dp),
@@ -68,13 +82,23 @@ fun CommentItem(
         ) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f)) {
+                    /**
+                     * Identificación del autor con etiqueta contextual.
+                     */
                     Text(
-                        text = if (isMyComment) stringResource(R.string.you_label, commentObj.userName)
+                        text = if (isMyComment) stringResource(
+                            R.string.you_label,
+                            commentObj.userName
+                        )
                         else commentObj.userName,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = Negro
                     )
+
+                    /**
+                     * Indicador visual de valoración por estrellas y fecha de publicación.
+                     */
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 2.dp)
@@ -82,18 +106,24 @@ fun CommentItem(
                         repeat(5) { i ->
                             Icon(
                                 imageVector = Icons.Default.Star,
-                                contentDescription = null, // Estrellas puramente visuales aquí
+                                contentDescription = null,
                                 modifier = Modifier.size(14.dp),
                                 tint = if (i < commentObj.rating) Naranja else GrisClaro
                             )
                         }
                         Spacer(Modifier.width(8.dp))
-                        Text(text = dateStr, fontSize = 11.sp, color = NegroSuave.copy(alpha = 0.7f))
+                        Text(
+                            text = dateStr,
+                            fontSize = 11.sp,
+                            color = NegroSuave.copy(alpha = 0.7f)
+                        )
                     }
                 }
 
+                /**
+                 * Bloque de acciones condicionales según permisos del usuario.
+                 */
                 Row {
-                    // DUEÑO DEL COMENTARIO
                     if (isMyComment) {
                         if (!commentObj.censored) {
                             IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
@@ -115,7 +145,6 @@ fun CommentItem(
                         }
                     }
 
-                    // OTRO USUARIO (Reportar)
                     if (!isMyComment && !isAdmin && !commentObj.censored) {
                         IconButton(onClick = onReport, modifier = Modifier.size(32.dp)) {
                             Icon(
@@ -127,7 +156,6 @@ fun CommentItem(
                         }
                     }
 
-                    // ADMINISTRADOR (Censurar)
                     if (isAdmin && !commentObj.censored) {
                         IconButton(onClick = onCensor, modifier = Modifier.size(32.dp)) {
                             Icon(
@@ -141,12 +169,16 @@ fun CommentItem(
                 }
             }
 
-            // CONTENIDO
+            /**
+             * Despliegue del cuerpo del comentario o aviso de censura.
+             */
             if (commentObj.censored) {
                 Surface(
                     color = Rojo.copy(alpha = 0.05f),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
                 ) {
                     Text(
                         text = stringResource(R.string.comment_censored),
@@ -167,7 +199,10 @@ fun CommentItem(
             }
         }
     }
-    // Separador sutil fuera de la Surface para no cortar el diseño
+
+    /**
+     * Divisor estructural para la coherencia visual de la lista.
+     */
     HorizontalDivider(
         modifier = Modifier.padding(horizontal = 8.dp),
         thickness = 0.5.dp,

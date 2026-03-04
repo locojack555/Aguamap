@@ -45,6 +45,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Clase de ayuda para gestionar la selección de imágenes desde la cámara o galería.
+ * Mantiene el estado del URI seleccionado y la visibilidad del diálogo de opciones.
+ */
 class ImagePickerHelper(
     val onImageSelected: (Uri?) -> Unit
 ) {
@@ -86,6 +90,10 @@ class ImagePickerHelper(
     fun getCameraUri(): Uri? = cameraUri
 }
 
+/**
+ * Composable que inicializa y recuerda el ImagePickerHelper.
+ * Gestiona los Launchers de actividad para obtener contenido y los estados de permisos.
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun rememberImagePickerHelper(
@@ -94,20 +102,19 @@ fun rememberImagePickerHelper(
     val context = LocalContext.current
     val helper = remember { ImagePickerHelper(onImageSelected) }
 
-    // Estado para el URI de la foto de cámara
+    // Estado temporal para el URI generado para la cámara
     var photoUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Launcher para galería
+    // Launcher para seleccionar contenido de la Galería
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         helper.setImageFromGallery(uri)
     }
 
-    // Crear archivo temporal para la foto
+    // Función interna para crear un archivo temporal donde se guardará la foto de la cámara
     fun createImageFile(): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        // Usar cache directory en lugar de externalMediaDirs
         val storageDir = context.cacheDir
         return File.createTempFile(
             "JPEG_${timeStamp}_",
@@ -116,7 +123,7 @@ fun rememberImagePickerHelper(
         )
     }
 
-    // Launcher para cámara
+    // Launcher para capturar foto con la Cámara
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -128,11 +135,12 @@ fun rememberImagePickerHelper(
         photoUri = null
     }
 
-    // Permisos individuales en lugar de múltiples
+    // Gestión de permisos mediante Accompanist Permissions
     val cameraPermissionState = rememberPermissionState(
         Manifest.permission.CAMERA
     )
 
+    // Adaptación de permisos de almacenamiento según la versión de Android (Tiramisu+)
     val storagePermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         rememberPermissionState(
             Manifest.permission.READ_MEDIA_IMAGES
@@ -143,30 +151,25 @@ fun rememberImagePickerHelper(
         )
     }
 
-    // Función para verificar y solicitar permisos
+    // Lógica de validación de permisos
     fun checkAndRequestCameraPermissions(onGranted: () -> Unit) {
-        when {
-            cameraPermissionState.status.isGranted -> {
-                onGranted()
-            }
-            else -> {
-                cameraPermissionState.launchPermissionRequest()
-            }
+        if (cameraPermissionState.status.isGranted) {
+            onGranted()
+        } else {
+            cameraPermissionState.launchPermissionRequest()
         }
     }
 
     fun checkAndRequestStoragePermissions(onGranted: () -> Unit) {
-        when {
-            storagePermissionState.status.isGranted -> {
-                onGranted()
-            }
-            else -> {
-                storagePermissionState.launchPermissionRequest()
-            }
+        if (storagePermissionState.status.isGranted) {
+            onGranted()
+        } else {
+            storagePermissionState.launchPermissionRequest()
         }
     }
 
-    // Diálogo de opciones
+
+    // Diálogo de selección: Aparece cuando el usuario solicita cambiar su imagen
     if (helper.showOptionsDialog) {
         Dialog(onDismissRequest = { helper.hideDialog() }) {
             Surface(
@@ -189,17 +192,14 @@ fun rememberImagePickerHelper(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        // Opción Galería
+                        // BOTÓN GALERÍA
                         Button(
                             onClick = {
                                 checkAndRequestStoragePermissions {
                                     galleryLauncher.launch("image/*")
                                 }
-                                helper.hideDialog()
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Blue10
-                            ),
+                            colors = ButtonDefaults.buttonColors(containerColor = Blue10),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(
@@ -211,11 +211,10 @@ fun rememberImagePickerHelper(
                             Text(stringResource(R.string.image_picker_gallery))
                         }
 
-                        // Opción Cámara
+                        // BOTÓN CÁMARA
                         Button(
                             onClick = {
                                 checkAndRequestCameraPermissions {
-                                    // Crear archivo para la foto
                                     val file = createImageFile()
                                     val uri = FileProvider.getUriForFile(
                                         context,
@@ -225,11 +224,8 @@ fun rememberImagePickerHelper(
                                     photoUri = uri
                                     cameraLauncher.launch(uri)
                                 }
-                                helper.hideDialog()
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Blue10
-                            ),
+                            colors = ButtonDefaults.buttonColors(containerColor = Blue10),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(

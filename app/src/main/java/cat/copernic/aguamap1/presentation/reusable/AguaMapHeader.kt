@@ -20,6 +20,14 @@ import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.ui.theme.Blanco
 
+/**
+ * Componente de cabecera reutilizable para la aplicación AguaMap.
+ * * @param modifier Modificador para personalizar el diseño del contenedor.
+ * @param logoSize Tamaño de la imagen del logo (gota).
+ * @param innerSpacing Espacio vertical entre el logo y el nombre de la aplicación.
+ * @param isSplash Indica si el componente se comporta como pantalla de bienvenida,
+ * controlando la visibilidad del selector de idioma y el subtítulo.
+ */
 @Composable
 fun AguaMapHeader(
     modifier: Modifier = Modifier,
@@ -28,7 +36,7 @@ fun AguaMapHeader(
     isSplash: Boolean = true
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        if (isSplash) {
+        if (!isSplash) {
             AguaMapLanguage(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -53,7 +61,7 @@ fun AguaMapHeader(
                 fontWeight = FontWeight.ExtraBold,
                 color = Blanco
             )
-            if (isSplash) {
+            if (!isSplash) {
                 Text(
                     text = stringResource(R.string.subtitle),
                     fontSize = 20.sp,

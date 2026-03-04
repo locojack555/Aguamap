@@ -20,8 +20,8 @@ import cat.copernic.aguamap1.domain.usecase.category.CreateCategoryUseCase
 import cat.copernic.aguamap1.domain.usecase.category.DeleteCategoryUseCase
 import cat.copernic.aguamap1.domain.usecase.category.GetCategoriesUseCase
 import cat.copernic.aguamap1.domain.usecase.category.UpdateCategoryUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.GetDistanceFountainsUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
-import cat.copernic.aguamap1.domain.usecase.fountain.GetDistanceFountainsUseCaseUseCase
 import cat.copernic.aguamap1.domain.usecase.validation.generateSearchRegex
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +33,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Gestiona el estado y la lógica de negocio de la pantalla de categorías.
+ * Implementa filtrado reactivo por texto y estado operativo, gestión de permisos de administrador
+ * y procesos asíncronos para la subida de imágenes y persistencia de datos.
+ */
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
     private val getCategoriesUseCase: GetCategoriesUseCase,
@@ -40,23 +45,22 @@ class CategoryViewModel @Inject constructor(
     private val updateCategoryUseCase: UpdateCategoryUseCase,
     private val deleteCategoryUseCase: DeleteCategoryUseCase,
     private val getFountainsUseCase: GetFountainsUseCase,
-    private val getDistanceUseCase: GetDistanceFountainsUseCaseUseCase,
+    private val getDistanceUseCase: GetDistanceFountainsUseCase,
     private val cloudinaryService: CloudinaryService,
     private val authRepository: AuthRepository,
     private val getUserRoleUseCase: GetUserRoleUseCase,
-    application: Application // Cambiamos a AndroidViewModel para acceder a recursos
+    application: Application
 ) : AndroidViewModel(application) {
 
-    // Helper para obtener traducciones
     private fun getString(resId: Int): String = getApplication<Application>().getString(resId)
 
-    // --- ESTADO DE USUARIO ---
+    // --- ESTADO DE USUARIO Y PERMISOS ---
     var isAdmin by mutableStateOf(false)
         private set
     var currentUserId by mutableStateOf<String?>(null)
         private set
 
-    // --- FILTROS Y BÚSQUEDA ---
+    // --- FLUJOS DE BÚSQUEDA Y FILTRADO ---
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
@@ -65,11 +69,15 @@ class CategoryViewModel @Inject constructor(
 
     private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
 
-    // --- OPTIMIZACIÓN DE UBICACIÓN ---
+    // --- OPTIMIZACIÓN DE RENDIMIENTO POR UBICACIÓN ---
     private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
     private var lastFetchedLocation: Pair<Double, Double>? = null
-    private val MIN_DISTANCE_TO_REFETCH = 2000.0
+    private val MIN_DISTANCE_TO_REFETCH = 2000.0 // Evita recálculos constantes si el usuario no se mueve > 2km
 
+    /**
+     * Actualiza la ubicación del usuario y decide si debe disparar una nueva consulta a Firebase
+     * basándose en la distancia desplazada para optimizar el consumo de datos y batería.
+     */
     fun setLocation(lat: Double, lng: Double) {
         val lastLoc = lastFetchedLocation
         if (lastLoc == null) {
@@ -87,7 +95,12 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    // --- FLUJOS DE DATOS ---
+    // --- PROCESAMIENTO REACTIVO DE DATOS (UDF) ---
+
+    /**
+     * Lista de categorías filtrada dinámicamente mediante el buscador.
+     * Soporta búsquedas literales y mediante expresiones regulares con comodines.
+     */
     val categories: StateFlow<List<Category>> =
         combine(_allCategories, _searchQuery) { list, query ->
             if (query.isBlank()) {
@@ -102,6 +115,10 @@ class CategoryViewModel @Inject constructor(
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /**
+     * Mapa que agrupa las fuentes por su ID de categoría.
+     * Se actualiza automáticamente cuando cambia la ubicación, el filtro operativo o los datos de red.
+     */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = _userLocation
         .flatMapLatest { location ->
@@ -131,7 +148,7 @@ class CategoryViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    // --- ESTADO DEL FORMULARIO ---
+    // --- ESTADO TEMPORAL DEL FORMULARIO ---
     var name by mutableStateOf("")
     var description by mutableStateOf("")
     var selectedImageUri by mutableStateOf<Uri?>(null)
@@ -148,6 +165,9 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Verifica la identidad del usuario y su rol para habilitar privilegios administrativos.
+     */
     private fun loadUserData() {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUserUid()
@@ -159,35 +179,12 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    fun updateSearchQuery(query: String) { _searchQuery.value = query }
+    // --- LÓGICA DE PERSISTENCIA Y MULTIMEDIA ---
 
-    fun toggleOperationalFilter(isFilterActive: Boolean) {
-        _operationalFilter.value = if (isFilterActive) null else false
-    }
-
-    fun onEditCategory(category: Category) {
-        categoryToEdit = category
-        name = category.name
-        description = category.description
-        currentImageUrl = category.imageUrl
-        selectedImageUri = null
-    }
-
-    fun resetForm() {
-        name = ""; description = ""; selectedImageUri = null
-        currentImageUrl = ""; categoryToEdit = null
-        uploadProgress = 0; errorMessage = null
-    }
-
-    fun clearError() { errorMessage = null }
-
-    fun updateSelectedImage(uri: Uri?) { selectedImageUri = uri }
-
-    fun clearSelectedImage() {
-        selectedImageUri = null
-        currentImageUrl = ""
-    }
-
+    /**
+     * Procesa el guardado de una categoría. Si hay una nueva imagen, gestiona primero
+     * la subida a Cloudinary informando del progreso antes de actualizar Firestore.
+     */
     fun saveCategory(onSuccess: () -> Unit) {
         viewModelScope.launch {
             isUploading = true
@@ -224,6 +221,10 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Ejecuta el borrado de una categoría tras validar que no contiene fuentes asociadas,
+     * garantizando la integridad referencial de los datos.
+     */
     fun deleteCategory(id: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
@@ -239,4 +240,19 @@ class CategoryViewModel @Inject constructor(
             }
         }
     }
+
+    // Funciones de utilidad para el estado del UI
+    fun updateSearchQuery(query: String) { _searchQuery.value = query }
+    fun toggleOperationalFilter(isFilterActive: Boolean) { _operationalFilter.value = if (isFilterActive) null else false }
+    fun onEditCategory(category: Category) {
+        categoryToEdit = category; name = category.name; description = category.description
+        currentImageUrl = category.imageUrl; selectedImageUri = null
+    }
+    fun resetForm() {
+        name = ""; description = ""; selectedImageUri = null; currentImageUrl = ""
+        categoryToEdit = null; uploadProgress = 0; errorMessage = null
+    }
+    fun clearError() { errorMessage = null }
+    fun updateSelectedImage(uri: Uri?) { selectedImageUri = uri }
+    fun clearSelectedImage() { selectedImageUri = null; currentImageUrl = "" }
 }

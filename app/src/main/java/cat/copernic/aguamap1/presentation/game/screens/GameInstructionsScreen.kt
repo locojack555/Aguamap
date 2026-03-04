@@ -1,9 +1,25 @@
 package cat.copernic.aguamap1.presentation.game.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,8 +32,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.ui.theme.*
+import cat.copernic.aguamap1.ui.theme.AzulClaro
+import cat.copernic.aguamap1.ui.theme.AzulGradient
+import cat.copernic.aguamap1.ui.theme.AzulGrisaceo
+import cat.copernic.aguamap1.ui.theme.AzulOscuro
+import cat.copernic.aguamap1.ui.theme.AzulTurquesa
+import cat.copernic.aguamap1.ui.theme.Blanco
+import cat.copernic.aguamap1.ui.theme.Gris
+import cat.copernic.aguamap1.ui.theme.GrisOscuro
 
+/**
+ * Pantalla de bienvenida e instrucciones del juego.
+ * Actúa como el punto de entrada (onboarding) para el modo "Adivina la ubicación".
+ * Explica las reglas básicas y motiva al usuario mediante una interfaz visual atractiva
+ * con gradientes y elementos iconográficos.
+ *
+ * @param onStart Callback que inicia la lógica del juego y la carga de la partida.
+ */
 @Composable
 fun GameInstructionsScreen(onStart: () -> Unit) {
     Column(
@@ -25,11 +56,14 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
             .fillMaxSize()
             .background(Blanco)
     ) {
-        // --- CABECERA ---
+        /**
+         * --- CABECERA ---
+         * Presenta el título del juego sobre un fondo con el gradiente corporativo.
+         */
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.20f) // Ajustado un poco para que respire más la cabecera
+                .weight(0.20f)
                 .background(AzulGradient)
                 .padding(24.dp)
         ) {
@@ -57,7 +91,10 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
             }
         }
 
-        // --- CUERPO CENTRAL ---
+        /**
+         * --- CUERPO CENTRAL ---
+         * Contiene la ilustración (trofeo), el mensaje motivador y la lista de reglas.
+         */
         Column(
             modifier = Modifier
                 .weight(0.60f)
@@ -65,7 +102,9 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Icono de Trofeo con Gradiente
+            /**
+             * Icono de Trofeo resaltado con un contenedor de gradiente vertical.
+             */
             Surface(
                 modifier = Modifier.size(100.dp),
                 shape = RoundedCornerShape(24.dp),
@@ -111,7 +150,9 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            // Caja de reglas
+            /**
+             * Caja de reglas con fondo contrastado (AzulClaro) para facilitar la lectura.
+             */
             Surface(
                 modifier = Modifier
                     .padding(horizontal = 32.dp)
@@ -139,7 +180,10 @@ fun GameInstructionsScreen(onStart: () -> Unit) {
             }
         }
 
-        // --- BOTÓN INFERIOR ---
+        /**
+         * --- BOTÓN INFERIOR ---
+         * Botón de acción principal para iniciar la partida.
+         */
         Box(
             modifier = Modifier
                 .fillMaxWidth()

@@ -43,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
@@ -54,11 +53,19 @@ import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Negro
 
+/**
+ * Barra de búsqueda superior con filtros integrados y alternancia de vista (Mapa/Lista).
+ * Esta barra flota sobre el mapa o encabeza la lista de fuentes.
+ *
+ * @param isMapView Define si la vista actual es el mapa (true) o la lista (false).
+ * @param onToggleView Callback para cambiar entre las dos visualizaciones principales.
+ * @param viewModel ViewModel compartido para gestionar la búsqueda y el estado de los filtros.
+ */
 @Composable
 fun MapTopBar(
     isMapView: Boolean,
     onToggleView: () -> Unit,
-    viewModel: MapViewModel // Quitamos el = hiltViewModel() para forzar el paso del VM del padre
+    viewModel: MapViewModel
 ) {
     Surface(
         modifier = Modifier
@@ -89,15 +96,19 @@ fun MapTopBar(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
+                    // Botón de Filtros
                     IconButton(onClick = { viewModel.toggleFilterMenu() }) {
                         Icon(
                             painter = painterResource(R.drawable.filter_alt_24px),
                             contentDescription = stringResource(R.string.filter),
-                            // El filtro está activo si el estado es distinto al inicial
-                            tint = if (viewModel.filterState != FilterState()) Blue10 else Negro.copy(alpha = 0.7f)
+                            // Color azul si hay algún filtro activo que no sea el por defecto
+                            tint = if (viewModel.filterState != FilterState()) Blue10 else Negro.copy(
+                                alpha = 0.7f
+                            )
                         )
                     }
 
+                    // Menú desplegable de filtros avanzado
                     FilterDropDown(
                         expanded = viewModel.showFilterMenu,
                         onDismiss = { viewModel.toggleFilterMenu() },
@@ -107,6 +118,7 @@ fun MapTopBar(
                         showSortOptions = !isMapView
                     )
 
+                    // Botón de cambio de vista (Icono dinámico)
                     IconButton(onClick = { onToggleView() }) {
                         Icon(
                             painter = painterResource(
@@ -131,6 +143,10 @@ fun MapTopBar(
     }
 }
 
+/**
+ * Menú de filtros detallado que permite filtrar por categoría, valoración mínima,
+ * estado operativo, distancia y criterios de ordenación.
+ */
 @Composable
 fun FilterDropDown(
     expanded: Boolean,
@@ -152,7 +168,7 @@ fun FilterDropDown(
                 .border(0.5.dp, Blanco.copy(alpha = 0.2f), menuShape)
                 .padding(16.dp)
         ) {
-            // Header
+            // --- CABECERA ---
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -166,6 +182,7 @@ fun FilterDropDown(
                     fontSize = 18.sp,
                     color = Blanco
                 )
+                // Botón para resetear todos los filtros
                 Surface(
                     color = Negro.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(12.dp),
@@ -181,14 +198,14 @@ fun FilterDropDown(
 
             HorizontalDivider(thickness = 0.5.dp, color = Blanco.copy(alpha = 0.3f))
 
-            // Body
+            // --- CUERPO ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // COLUMNA IZQUIERDA: Categorías
+                // COLUMNA IZQUIERDA: Categorías y Operatividad
                 Column(modifier = Modifier.weight(1f)) {
                     FilterSectionTitle(stringResource(R.string.filter_by_category), Blanco)
                     categories.forEach { category ->
@@ -211,7 +228,7 @@ fun FilterDropDown(
                     }
                 }
 
-                // COLUMNA DERECHA: Rating y Ordenación
+                // COLUMNA DERECHA: Rating y Ordenación (Solo en vista lista)
                 Column(modifier = Modifier.weight(1f)) {
                     FilterSectionTitle(stringResource(R.string.min_rating), Blanco)
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -231,7 +248,6 @@ fun FilterDropDown(
                         Spacer(modifier = Modifier.height(12.dp))
                         FilterSectionTitle(stringResource(R.string.sort_by), Blanco)
 
-                        // Lista de opciones de ordenación profesional
                         SortOption.entries.forEach { option ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -257,13 +273,12 @@ fun FilterDropDown(
                                         SortOption.DATE_DESC -> stringResource(R.string.sort_date_desc)
                                         SortOption.DATE_ASC -> stringResource(R.string.sort_date_asc)
                                     },
-                                    fontSize = 10.sp,
-                                    color = Blanco,
-                                    lineHeight = 12.sp
+                                    fontSize = 10.sp, color = Blanco, lineHeight = 12.sp
                                 )
                             }
                         }
                     } else {
+                        // Si es mapa, el switch de operatividad se mueve aquí por espacio
                         OperationalSwitch(state.onlyOperational) {
                             onFilterChanged(state.copy(onlyOperational = it))
                         }
@@ -271,7 +286,7 @@ fun FilterDropDown(
                 }
             }
 
-            // Slider Distancia
+            // --- SLIDER DE DISTANCIA ---
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(thickness = 0.5.dp, color = Blanco.copy(alpha = 0.3f))
             Row(
@@ -282,15 +297,11 @@ fun FilterDropDown(
             ) {
                 Text(
                     text = stringResource(R.string.max_distance),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = Blanco
+                    fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Blanco
                 )
                 Text(
                     text = "${state.maxDistanceKm.toInt()} km",
-                    color = Blanco,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                    color = Blanco, fontWeight = FontWeight.Bold, fontSize = 13.sp
                 )
             }
             Slider(
@@ -308,15 +319,16 @@ fun FilterDropDown(
     }
 }
 
+/**
+ * Switch especializado para filtrar solo fuentes operativas.
+ */
 @Composable
 fun OperationalSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Column {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = stringResource(R.string.only_operational),
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            color = Blanco
+            fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Blanco
         )
         Switch(
             checked = checked,
@@ -337,12 +349,13 @@ fun FilterSectionTitle(title: String, color: Color) {
     Text(
         text = title,
         modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
-        color = color
+        fontSize = 14.sp, fontWeight = FontWeight.Bold, color = color
     )
 }
 
+/**
+ * Chip de filtro personalizado para las categorías.
+ */
 @Composable
 fun FilterChip(
     label: String,
@@ -359,9 +372,7 @@ fun FilterChip(
         Text(
             text = label,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-            color = Blanco,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center
+            color = Blanco, fontSize = 12.sp, textAlign = TextAlign.Center
         )
     }
 }

@@ -5,19 +5,35 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.domain.model.*
+import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.domain.model.Report
+import cat.copernic.aguamap1.domain.model.StateFountain
+import cat.copernic.aguamap1.domain.model.UserRole
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.repository.RealtimeStatusRepository
 import cat.copernic.aguamap1.domain.usecase.auth.GetUserRoleUseCase
-import cat.copernic.aguamap1.domain.usecase.fountain.*
+import cat.copernic.aguamap1.domain.usecase.fountain.DeleteFountainUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.ProcessFountainVoteUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.UpdateFountainUseCase
 import cat.copernic.aguamap1.domain.usecase.report.SendReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
+/**
+ * ViewModel que gestiona la lógica de negocio para el detalle de una fuente.
+ * Implementa un sistema de votos (positivos/negativos), gestión de reportes
+ * y sincronización de estado operativo en tiempo real.
+ */
 @HiltViewModel
 class DetailFountainViewModel @Inject constructor(
     private val authRepository: AuthRepository,
@@ -33,16 +49,22 @@ class DetailFountainViewModel @Inject constructor(
     private fun getString(resId: Int): String =
         getApplication<android.app.Application>().getString(resId)
 
-    // --- ESTADOS ---
+    // --- ESTADOS REACTIVOS ---
     var isAdmin by mutableStateOf(false); private set
     var currentUserId by mutableStateOf<String?>(null); private set
     var creatorName by mutableStateOf<String?>(null); private set
     var selectedFountain by mutableStateOf<Fountain?>(null); private set
     var errorMessage by mutableStateOf<String?>(null); private set
-    var isActionLoading by mutableStateOf(false); private set
+    var isActionLoading by mutableStateOf(false); private set // Evita múltiples clics en acciones críticas
 
+    // Flujo interno para rastrear qué fuente se está observando en tiempo real
     private val _fountainIdFlow = MutableStateFlow<String?>(null)
 
+    /**
+     * Estado operativo en tiempo real. Utiliza [flatMapLatest] para que, cada vez que cambie
+     * el ID de la fuente, se cancele la suscripción anterior y se inicie una nueva
+     * hacia el nodo de estado en tiempo real (Realtime Database).
+     */
     val isOperationalRealtime: StateFlow<Boolean> = _fountainIdFlow
         .flatMapLatest { id ->
             if (id != null) realtimeStatusRepository.getFountainStatus(id)
@@ -50,8 +72,13 @@ class DetailFountainViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
-    init { loadUserData() }
+    init {
+        loadUserData()
+    }
 
+    /**
+     * Carga el UID del usuario actual y verifica si tiene rol de administrador.
+     */
     private fun loadUserData() {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUserUid()
@@ -63,6 +90,9 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Establece la fuente actual y dispara la búsqueda del nombre del creador.
+     */
     fun selectFountain(fountain: Fountain) {
         selectedFountain = fountain
         _fountainIdFlow.value = fountain.id
@@ -77,7 +107,11 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
-    // --- ESTADO OPERACIONAL ---
+    // --- LÓGICA DE ESTADO OPERACIONAL ---
+    /**
+     * Cambia el estado de la fuente (Disponible / Averiada).
+     * Actualiza tanto el repositorio en tiempo real como el documento principal en Firestore.
+     */
     fun toggleOperationalStatus(onSuccess: () -> Unit) {
         val fountain = selectedFountain ?: return
         viewModelScope.launch {
@@ -93,7 +127,11 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
-    // --- VOTO POSITIVO ---
+    // --- SISTEMA DE VOTOS Y VALIDACIÓN ---
+
+    /**
+     * Voto positivo: Si una fuente llega a 3 votos, cambia su estado a ACCEPTED.
+     */
     fun confirmFountain(onSuccess: () -> Unit) {
         val userId = currentUserId ?: return
         val fountain = selectedFountain ?: return
@@ -104,9 +142,9 @@ class DetailFountainViewModel @Inject constructor(
 
         val updatedVotes = fountain.positiveVotes + 1
         val updatedVoters = fountain.votedByPositive + userId
-        val newStatus =
-            if (updatedVotes >= 3) StateFountain.ACCEPTED else fountain.status
+        val newStatus = if (updatedVotes >= 3) StateFountain.ACCEPTED else fountain.status
 
+        // Optimistic Update: Actualizamos la UI antes de recibir confirmación del servidor
         selectedFountain = fountain.copy(
             positiveVotes = updatedVotes,
             votedByPositive = updatedVoters,
@@ -127,7 +165,7 @@ class DetailFountainViewModel @Inject constructor(
                         isActionLoading = false
                         onSuccess()
                     }.onFailure {
-                        selectedFountain = previousFountain
+                        selectedFountain = previousFountain // Rollback en caso de error
                         isActionLoading = false
                         errorMessage = getString(R.string.error_add_comment)
                     }
@@ -140,6 +178,9 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Voto negativo: Incrementa el contador de reportes por "no existe".
+     */
     fun reportNonExistent(onSuccess: () -> Unit) {
         val userId = currentUserId ?: return
         val fountain = selectedFountain ?: return
@@ -151,7 +192,7 @@ class DetailFountainViewModel @Inject constructor(
         val updatedVotes = fountain.negativeVotes + 1
         val updatedVoters = fountain.votedByNegative + userId
 
-        // 🔥 Optimistic update inmediata
+        // Optimistic update
         selectedFountain = fountain.copy(
             negativeVotes = updatedVotes,
             votedByNegative = updatedVoters
@@ -178,6 +219,9 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Revierte un voto negativo: Útil si un usuario reportó por error que no existía.
+     */
     fun confirmExistence(onSuccess: () -> Unit) {
         val userId = currentUserId ?: return
         val fountain = selectedFountain ?: return
@@ -187,10 +231,8 @@ class DetailFountainViewModel @Inject constructor(
         val previousFountain = selectedFountain
 
         val updatedVotes = (fountain.negativeVotes - 1).coerceAtLeast(0)
-        val updatedVotersNegative =
-            fountain.votedByNegative.filter { it != userId }
+        val updatedVotersNegative = fountain.votedByNegative.filter { it != userId }
 
-        // 🔥 Optimistic update inmediata
         selectedFountain = fountain.copy(
             negativeVotes = updatedVotes,
             votedByNegative = updatedVotersNegative
@@ -217,7 +259,7 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
-    // --- OTROS REPORTES ---
+    // --- GESTIÓN DE REPORTES ---
     fun reportOtherIssue(description: String, onSuccess: () -> Unit) {
         val userId = currentUserId ?: return
         val fountain = selectedFountain ?: return
@@ -229,6 +271,9 @@ class DetailFountainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Borra la fuente definitivamente.
+     */
     fun deleteFountain(onDeleted: () -> Unit) {
         val fountainId = selectedFountain?.id ?: return
         viewModelScope.launch {
@@ -238,13 +283,17 @@ class DetailFountainViewModel @Inject constructor(
                     onDeleted()
                 }
                 .onFailure {
-                    errorMessage =
-                        "${getString(R.string.error_delete_generic)}: ${it.message}"
+                    errorMessage = "${getString(R.string.error_delete_generic)}: ${it.message}"
                 }
         }
     }
 
-    // --- HELPERS ---
+    // --- MÉTODOS DE UTILIDAD (HELPERS) ---
+
+    /**
+     * Determina si el usuario actual tiene permisos para modificar la fuente.
+     * Solo Admins o el creador (si la fuente sigue pendiente).
+     */
     fun canUserModify(fountain: Fountain?): Boolean {
         val f = fountain ?: return false
         val userId = currentUserId ?: return false
@@ -258,6 +307,9 @@ class DetailFountainViewModel @Inject constructor(
     fun getFormattedCoordinates(lat: Double, lng: Double): String =
         String.format(Locale.US, "%.5f, %.5f", lat, lng)
 
+    /**
+     * Formatea la distancia para mostrar metros o kilómetros según el valor.
+     */
     fun getDistanceText(distance: Double?): String {
         return distance?.let {
             if (it < 1000) "${it.toInt()} m"
@@ -270,5 +322,7 @@ class DetailFountainViewModel @Inject constructor(
         _fountainIdFlow.value = null
     }
 
-    fun clearError() { errorMessage = null }
+    fun clearError() {
+        errorMessage = null
+    }
 }

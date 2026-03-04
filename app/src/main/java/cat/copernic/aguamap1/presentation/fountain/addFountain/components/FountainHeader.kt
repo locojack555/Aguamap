@@ -15,6 +15,10 @@ import androidx.compose.ui.unit.dp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.ui.theme.Negro
 
+/**
+ * Componente de cabecera simplificado para el formulario de añadir fuente.
+ * * @param onDismiss Callback para cerrar el formulario o diálogo actual.
+ */
 @Composable
 fun FountainHeader(onDismiss: () -> Unit) {
     Row(

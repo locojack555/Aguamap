@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource // IMPORTANTE
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -38,14 +38,23 @@ import cat.copernic.aguamap1.ui.theme.Gris
 import cat.copernic.aguamap1.ui.theme.GrisClaro
 import coil.compose.AsyncImage
 
+/**
+ * Representa un elemento de lista individual para una categoría de fuentes.
+ * * Presenta visualmente la imagen representativa, el nombre y el recuento de fuentes activas.
+ * * Implementa semántica de accesibilidad para lectores de pantalla, identificándose como un botón.
+ *
+ * @param category Objeto de dominio con los datos de la categoría (nombre, URL de imagen).
+ * @param count El número total de fuentes que pertenecen a esta categoría para mostrar al usuario.
+ * @param onClick Acción a ejecutar cuando se pulsa el elemento, normalmente para abrir el detalle.
+ */
 @Composable
 fun CategoryItem(category: Category, count: Int, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp) // Añadido un pequeño margen para que no respiren pegadas
+            .padding(horizontal = 16.dp, vertical = 6.dp)
             .clickable(
-                onClickLabel = stringResource(R.string.expand_info), // CORREGIDO: Indica qué hará el botón
+                onClickLabel = stringResource(R.string.expand_info),
                 onClick = onClick
             )
             .semantics { role = Role.Button },
@@ -59,9 +68,9 @@ fun CategoryItem(category: Category, count: Int, onClick: () -> Unit) {
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Imagen de la categoría con carga asíncrona mediante Coil
             AsyncImage(
                 model = category.imageUrl,
-                // CORREGIDO: Accesibilidad contextual
                 contentDescription = category.name,
                 modifier = Modifier
                     .size(56.dp)
@@ -74,25 +83,27 @@ fun CategoryItem(category: Category, count: Int, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                // Nombre de la categoría
                 Text(
                     text = category.name,
                     fontWeight = FontWeight.Bold,
                     color = AzulGrisaceo,
                     fontSize = 16.sp,
-                    maxLines = 1 // Evita que nombres muy largos rompan el diseño
+                    maxLines = 1
                 )
 
+                // Texto informativo con la cantidad de fuentes (inyecta %d del recurso string)
                 Text(
-                    // Aquí ya lo hacías perfecto: inyección de %d
                     text = stringResource(R.string.category_item_count, count),
                     fontSize = 13.sp,
                     color = Gris
                 )
             }
 
+            // Indicador visual de navegación (chevron)
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = null, // Visual solamente
+                contentDescription = null,
                 tint = GrisClaro,
                 modifier = Modifier.size(24.dp)
             )

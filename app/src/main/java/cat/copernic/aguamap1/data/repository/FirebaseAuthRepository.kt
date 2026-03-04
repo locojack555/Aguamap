@@ -8,21 +8,34 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
+/**
+ * Implementación del repositorio de autenticación utilizando Firebase.
+ * Gestiona tanto la autenticación de usuarios (Firebase Auth) como el almacenamiento
+ * de sus datos de perfil adicionales (Cloud Firestore).
+ */
 class FirebaseAuthRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) : AuthRepository {
 
-
+    /**
+     * Comprueba de forma síncrona si hay una sesión de usuario activa.
+     */
     override fun isUserLoggedIn(): Boolean {
         return auth.currentUser != null
     }
 
+    /**
+     * Realiza el inicio de sesión con email y contraseña.
+     * Incluye una validación de seguridad: si el email no ha sido verificado,
+     * cierra la sesión y devuelve un error específico.
+     */
     override suspend fun login(email: String, password: String): Result<Boolean> {
         return try {
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val user = result.user
             if (user != null) {
+                // Forzamos la recarga del usuario para obtener el estado actualizado de isEmailVerified
                 user.reload().await()
                 if (user.isEmailVerified) {
                     Result.success(true)
@@ -38,6 +51,9 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Envía un correo electrónico de recuperación de contraseña al email proporcionado.
+     */
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
         return try {
             auth.sendPasswordResetEmail(email).await()
@@ -47,6 +63,11 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Registra un nuevo usuario en Firebase Auth.
+     * Tras el registro, envía el correo de verificación y cierra la sesión para obligar
+     * al usuario a validar su cuenta antes de entrar.
+     */
     override suspend fun signUp(email: String, password: String): Result<Boolean> {
         return try {
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
@@ -54,12 +75,16 @@ class FirebaseAuthRepository @Inject constructor(
             auth.signOut()
             Result.success(true)
         } catch (e: FirebaseAuthUserCollisionException) {
+            // Error específico si el email ya está registrado
             Result.failure(Exception("ERROR_DUPLICATED"))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
+    /**
+     * Comprueba si el documento del usuario ya existe en la colección 'users' de Firestore.
+     */
     override suspend fun checkIfUserExists(uid: String): Boolean {
         return try {
             val document = firestore.collection("users").document(uid).get().await()
@@ -70,10 +95,17 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Obtiene el identificador único (UID) del usuario autenticado actualmente.
+     */
     override fun getCurrentUserUid(): String? {
         return auth.currentUser?.uid
     }
 
+    /**
+     * Recupera el rol del usuario (ADMIN, USER) desde Firestore.
+     * Si no se encuentra o hay error, se asigna el rol 'USER' por defecto.
+     */
     override suspend fun getUserRole(uid: String): UserRole {
         return try {
             val document = firestore.collection("users").document(uid).get().await()
@@ -84,6 +116,10 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Finaliza el proceso de registro creando el perfil del usuario en Firestore.
+     * Solo se ejecuta si el email ha sido verificado satisfactoriamente.
+     */
     override suspend fun completeRegistration(name: String): Result<Boolean> {
         return try {
             val user = auth.currentUser
@@ -108,19 +144,22 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Obtiene el nombre del usuario actual consultando su documento en Firestore.
+     */
     override suspend fun getCurrentUserName(): String? {
-        // Reutilizamos tu función existente para obtener el UID
         val uid = getCurrentUserUid() ?: return null
-
         return try {
             val document = firestore.collection("users").document(uid).get().await()
-            // Extraemos el campo "nom" que guardaste en completeRegistration
             document.getString("nom")
         } catch (e: Exception) {
             null
         }
     }
 
+    /**
+     * Obtiene el nombre de cualquier usuario a partir de su UID (útil para comentarios/listas).
+     */
     override suspend fun getUserNameById(uid: String): Result<String> {
         return try {
             val document = firestore.collection("users").document(uid).get().await()
@@ -131,32 +170,36 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Obtiene el email guardado en el perfil de Firestore del usuario actual.
+     */
     override suspend fun getCurrentUserEmail(): String? {
-        // Reutilizamos tu función existente para obtener el UID
         val uid = getCurrentUserUid() ?: return null
-
         return try {
             val document = firestore.collection("users").document(uid).get().await()
-            // Extraemos el campo "nom" que guardaste en completeRegistration
             document.getString("email")
         } catch (e: Exception) {
             null
         }
     }
 
+    /**
+     * Obtiene el email directamente desde el servicio de autenticación de Firebase.
+     */
     override suspend fun getCurrentUserEmailAuth(): String? {
         return auth.currentUser?.email
     }
 
+    /**
+     * Actualiza los datos de perfil (nombre y email) en la base de datos Firestore.
+     */
     override suspend fun updateUserProfile(userId: String, nombre: String, email: String): Result<Unit> {
         return try {
             val userRef = firestore.collection("users").document(userId)
-
             val updates = mapOf(
                 "nom" to nombre,
                 "email" to email
             )
-
             userRef.update(updates).await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -164,6 +207,10 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Envía una solicitud de actualización de email a Firebase Auth.
+     * Requiere que el usuario verifique el nuevo email antes de que el cambio sea efectivo.
+     */
     override suspend fun updateUserEmail(newEmail: String): Result<Unit> {
         return try {
             val user = auth.currentUser ?: throw Exception("Usuario no autenticado")
@@ -174,6 +221,9 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Actualiza el nombre del perfil directamente en el objeto de usuario de Firebase Auth.
+     */
     override suspend fun updateUserName(newName: String): Result<Unit> {
         return try {
             val user = auth.currentUser ?: throw Exception("Usuario no autenticado")
@@ -187,19 +237,31 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Recarga los datos del usuario actual desde el servidor para obtener cambios externos.
+     */
     override suspend fun refreshUser() {
         auth.currentUser?.reload()?.await()
     }
 
+    /**
+     * Cierra la sesión del usuario actual.
+     */
     override suspend fun signOut() {
         auth.signOut()
     }
 
+    /**
+     * Comprueba si el usuario tiene su dirección de correo electrónico verificada.
+     */
     override suspend fun isEmailVerified(): Boolean {
         auth.currentUser?.reload()?.await()
         return auth.currentUser?.isEmailVerified ?: false
     }
 
+    /**
+     * Actualiza la URL de la foto de perfil en el documento de Firestore del usuario.
+     */
     override suspend fun updateUserProfilePicture(userId: String, imageUrl: String): Result<Unit> {
         return try {
             val userRef = firestore.collection("users").document(userId)
@@ -210,6 +272,9 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * Recupera la URL de la foto de perfil guardada en Firestore para el usuario actual.
+     */
     override suspend fun getCurrentUserProfilePicture(): String? {
         val uid = getCurrentUserUid() ?: return null
         return try {

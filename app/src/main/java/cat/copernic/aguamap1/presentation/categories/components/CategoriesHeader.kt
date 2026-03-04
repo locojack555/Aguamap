@@ -40,6 +40,18 @@ import cat.copernic.aguamap1.ui.theme.Gris
 import cat.copernic.aguamap1.ui.theme.GrisClaro
 import cat.copernic.aguamap1.ui.theme.Rojo
 
+/**
+ * Renderiza la sección superior de la pantalla de categorías, integrando herramientas de búsqueda,
+ * filtrado por estado de funcionamiento y acciones administrativas.
+ *
+ * @param searchQuery El texto actual introducido en la barra de búsqueda.
+ * @param onSearchChange Callback disparado cada vez que el usuario modifica el texto de búsqueda.
+ * @param operationalFilter Estado del filtro de operatividad: false para filtrar por "averiadas",
+ * null o true para mostrar todas.
+ * @param onToggleFilter Función para alternar el filtro de fuentes fuera de servicio.
+ * @param isAdmin Booleano que determina si se debe mostrar el botón de añadir nuevas categorías.
+ * @param onAddClick Acción a ejecutar cuando el administrador pulsa el botón de creación.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoriesHeader(
@@ -72,7 +84,6 @@ fun CategoriesHeader(
                     ) {
                         Icon(
                             Icons.Default.Add,
-                            // CAMBIO: Añadido stringResource para accesibilidad
                             contentDescription = stringResource(R.string.new_category),
                             tint = Blue10
                         )
@@ -88,7 +99,6 @@ fun CategoriesHeader(
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
-                        // CAMBIO: Añadido stringResource (puedes usar search_placeholder o crear uno nuevo)
                         contentDescription = stringResource(R.string.search_fountains),
                         tint = AzulOscuro
                     )
@@ -115,7 +125,6 @@ fun CategoriesHeader(
                 leadingIcon = {
                     Icon(
                         Icons.Default.Warning,
-                        // CAMBIO: Añadido stringResource
                         contentDescription = stringResource(R.string.legend_averiada),
                         modifier = Modifier.size(16.dp),
                         tint = if (isSelected) Blanco else Rojo

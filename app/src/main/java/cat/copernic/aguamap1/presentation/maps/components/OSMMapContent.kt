@@ -39,8 +39,8 @@ import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewModel
 import cat.copernic.aguamap1.presentation.maps.mapView.MapViewModel
+import cat.copernic.aguamap1.presentation.util.getCategoryColor
 import cat.copernic.aguamap1.presentation.util.getMarkerColor
-import cat.copernic.aguamap1.presentation.util.getCategoryColor // IMPORTANTE: Usamos la nueva función
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Gris
 import cat.copernic.aguamap1.ui.theme.Naranja
@@ -57,6 +57,10 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
+/**
+ * Componente principal que integra la vista de mapa de OpenStreetMap (OSMDroid) en Jetpack Compose.
+ * Gestiona la renderización de marcadores de fuentes, la ubicación del usuario y la interacción táctil.
+ */
 @Composable
 fun OSMMapContent(
     viewModel: MapViewModel?,
@@ -72,6 +76,7 @@ fun OSMMapContent(
 
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
 
+    // Sincronización de la cámara con la ubicación inicial del usuario
     LaunchedEffect(viewModel?.userLat, viewModel?.userLng) {
         if (viewModel != null && viewModel.isFirstLocationUpdate && viewModel.isLocationAvailable) {
             mapViewRef?.let { map ->
@@ -82,27 +87,34 @@ fun OSMMapContent(
         }
     }
 
+
+
     AndroidView(
         factory = { ctx ->
             MapView(ctx).apply {
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
                 zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+
                 if (isHome && viewModel != null) {
                     setupHomeMap(viewModel)
                 }
+
                 mapViewRef = this
                 onMapLoad(this)
             }
         },
         update = { mapView ->
+            // Limpiar marcadores antiguos (excepto marcadores especiales de juego)
             mapView.overlays.removeAll { it is Marker && it.title != titleGuess && it.title != titleReal }
 
+            // Añadir marcadores para cada fuente en el estado actual
             fountains.forEach { fountain ->
                 val marker = Marker(mapView)
                 marker.position = GeoPoint(fountain.latitude, fountain.longitude)
                 marker.title = fountain.name
 
+                // Personalización del color del PIN según estado/categoría
                 val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
                 val wrapped = drawable?.let {
                     val w = DrawableCompat.wrap(it).mutate()
@@ -122,12 +134,16 @@ fun OSMMapContent(
                 }
                 mapView.overlays.add(marker)
             }
-            mapView.invalidate()
+            mapView.invalidate() // Forzar repintado
         },
         modifier = Modifier.fillMaxSize()
     )
 }
 
+/**
+ * Configuración específica para el mapa principal (Home).
+ * Activa el overlay de ubicación en tiempo real y los listeners de movimiento.
+ */
 fun MapView.setupHomeMap(viewModel: MapViewModel) {
     val ctx = context
     val sizeInPx = (28 * ctx.resources.displayMetrics.density).toInt()
@@ -145,6 +161,7 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
         customIcon?.let { setPersonIcon(it); setDirectionIcon(it) }
     }
 
+    // Posicionamiento inicial
     controller.setZoom(viewModel.zoomLevel)
     controller.setCenter(GeoPoint(viewModel.latitude, viewModel.longitude))
 
@@ -162,11 +179,13 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
     }
     overlays.add(locationOverlay)
 
+    // Sincronizar estado del ViewModel con el movimiento del mapa
     addMapListener(object : MapListener {
         override fun onScroll(event: ScrollEvent?): Boolean {
             viewModel.onMapMoved(mapCenter.latitude, mapCenter.longitude, zoomLevelDouble)
             return true
         }
+
         override fun onZoom(event: ZoomEvent?): Boolean {
             viewModel.onMapMoved(mapCenter.latitude, mapCenter.longitude, zoomLevelDouble)
             return true
@@ -174,6 +193,9 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
     })
 }
 
+/**
+ * Botonera flotante para acciones rápidas (Añadir fuente y Centrar ubicación).
+ */
 @Composable
 fun MapFloatingButtons(
     mapViewRef: MapView?,
@@ -187,6 +209,7 @@ fun MapFloatingButtons(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Botón Añadir Fuente
         FloatingActionButton(
             onClick = {
                 if (mapViewModel.isLocationAvailable) {
@@ -206,6 +229,7 @@ fun MapFloatingButtons(
             )
         }
 
+        // Botón Centrar Ubicación (Solo visible en modo Mapa)
         if (isMapView) {
             FloatingActionButton(
                 onClick = {
@@ -230,8 +254,9 @@ fun MapFloatingButtons(
     }
 }
 
-// --- SECCIÓN DE LEYENDA CORREGIDA ---
-
+/**
+ * Leyenda visual para ayudar al usuario a identificar los estados y categorías por color.
+ */
 @Composable
 fun MapLegend(
     categories: List<Category>,
@@ -247,13 +272,14 @@ fun MapLegend(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // Estados fijos
             LegendItem(color = Naranja, text = stringResource(R.string.legend_pendiente))
             LegendItem(color = Rojo, text = stringResource(R.string.legend_averiada))
 
-            // Aquí corregimos el color de las categorías
+            // Categorías dinámicas mapeadas a sus colores correspondientes
             categories.forEach { category ->
                 LegendItem(
-                    color = getCategoryColor(category.name, category.id), // Cambiado aquí
+                    color = getCategoryColor(category.name, category.id),
                     text = category.name
                 )
             }
@@ -261,6 +287,9 @@ fun MapLegend(
     }
 }
 
+/**
+ * Representación individual de un elemento en la leyenda.
+ */
 @Composable
 fun LegendItem(color: Color, text: String) {
     Row(

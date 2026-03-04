@@ -16,6 +16,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
+/**
+ * ViewModel que gestiona la lógica de moderación de comentarios.
+ * Interactúa con Firebase Firestore para recuperar reportes, enriquecer los datos
+ * con los comentarios originales y ejecutar acciones de limpieza o censura.
+ */
 @HiltViewModel
 class ModerationViewModel @Inject constructor(
     private val db: FirebaseFirestore,
@@ -29,7 +34,7 @@ class ModerationViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // Usamos Int? para almacenar el ID del recurso String (R.string...)
+    // Manejo de recursos de strings para localización (R.string...)
     private val _errorResId = MutableStateFlow<Int?>(null)
     val errorResId: StateFlow<Int?> = _errorResId.asStateFlow()
 
@@ -40,12 +45,16 @@ class ModerationViewModel @Inject constructor(
         loadReportedComments()
     }
 
+    /**
+     * Recupera la lista de reportes de la colección "reports_comments" y
+     * realiza un "join" manual con la subcolección de comentarios de cada fuente.
+     */
     fun loadReportedComments() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // 1. Obtener los reportes
-                val snapshot = db.collection("reports_comments")
+                // 1. Obtener los documentos de reporte (Metadatos del reporte)
+                val snapshot = db.collection("reportsComments")
                     .whereEqualTo("type", "COMMENT_REPORT")
                     .get()
                     .await()
@@ -63,7 +72,8 @@ class ModerationViewModel @Inject constructor(
                     )
                 }
 
-                // 2. Enriquecer con los datos del comentario original
+
+                // 2. Enriquecer con los datos del comentario original (Contenido del mensaje)
                 val enrichedItems = items.map { item ->
                     try {
                         val commentDoc = db.collection("fountains")
@@ -73,10 +83,11 @@ class ModerationViewModel @Inject constructor(
                             .get()
                             .await()
 
-                        val comment = commentDoc.toObject(Comment::class.java)?.copy(id = commentDoc.id)
+                        val comment =
+                            commentDoc.toObject(Comment::class.java)?.copy(id = commentDoc.id)
                         item.copy(comment = comment)
                     } catch (e: Exception) {
-                        item
+                        item // Si falla la carga del comentario, devolvemos el reporte sin info extra
                     }
                 }
 
@@ -90,6 +101,9 @@ class ModerationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Elimina físicamente el comentario de la fuente y borra el reporte.
+     */
     fun deleteComment(item: ReportedComment) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -105,6 +119,9 @@ class ModerationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Ejecuta el UseCase para ocultar el contenido del comentario (censura) sin borrarlo.
+     */
     fun censorComment(item: ReportedComment) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -120,11 +137,13 @@ class ModerationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Desestima el reporte, marcando el comentario como seguro y borrando el ticket de reporte.
+     */
     fun dismissReport(item: ReportedComment) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Marcamos el comentario como ya no reportado en la colección original
                 db.collection("fountains")
                     .document(item.fountainId)
                     .collection("comments")
@@ -142,15 +161,18 @@ class ModerationViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Función auxiliar para limpiar la cola de reportes tras una acción.
+     */
     private suspend fun deleteReportFromDb(reportId: String) {
-        db.collection("reports_comments")
+        db.collection("reportsComments")
             .document(reportId)
             .delete()
             .await()
     }
 
     /**
-     * Importante: Este método lo llama la Screen después de mostrar el Snackbar
+     * Limpia los IDs de recursos para que el Snackbar no se vuelva a mostrar tras una recomposición.
      */
     fun clearMessages() {
         _errorResId.value = null

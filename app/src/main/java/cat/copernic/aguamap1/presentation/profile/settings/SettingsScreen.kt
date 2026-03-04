@@ -50,22 +50,24 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.language.LanguageViewModel
 
+/**
+ * Pantalla de Ajustes de la aplicación.
+ * Permite la configuración del idioma de forma dinámica.
+ */
 @Composable
 fun SettingsScreen(
     onClose: () -> Unit = {},
     viewModel: LanguageViewModel = viewModel()
 ) {
+    // CORRECCIÓN: Lógica mejorada para detectar el idioma actual de la App
     var selectedLanguage by remember {
-        val current = AppCompatDelegate.getApplicationLocales()
-            .toLanguageTags()
-            .split(",")
-            .firstOrNull()
-            ?.split("-")
-            ?.firstOrNull()
-            ?.lowercase()
-            ?.takeIf { it.isNotBlank() }
-            ?: "es"
-        mutableStateOf(current)
+        // Obtenemos el locale actual (ej: "ca-ES" o "es-ES")
+        val currentLocale = AppCompatDelegate.getApplicationLocales().get(0)
+        val languageCode = currentLocale?.language?.lowercase() ?: "es"
+
+        // Validamos que sea uno de los soportados, si no, por defecto español
+        val initial = if (languageCode in listOf("es", "ca", "en")) languageCode else "es"
+        mutableStateOf(initial)
     }
 
     Column(
@@ -73,7 +75,7 @@ fun SettingsScreen(
             .fillMaxWidth()
             .background(Color(0xFFF1F3F4))
     ) {
-        // CABECERA con gradiente azul
+        // CABECERA: Gradiente azul y título
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -105,8 +107,10 @@ fun SettingsScreen(
             }
         }
 
-        // CUERPO
-        Column(modifier = Modifier.padding(16.dp).fillMaxHeight()) {
+        // CUERPO: Selección de idioma
+        Column(modifier = Modifier
+            .padding(16.dp)
+            .fillMaxHeight()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -146,18 +150,17 @@ fun AguaMapLanguageSelector(
         label = "arrow"
     )
 
-    // Lista de idiomas con etiquetas traducidas
     val languages = listOf(
         "es" to stringResource(id = R.string.lang_es),
         "ca" to stringResource(id = R.string.lang_ca),
         "en" to stringResource(id = R.string.lang_en)
     )
 
-    val selectedLabel = languages.firstOrNull { it.first == selectedLanguage }?.second
-        ?: stringResource(id = R.string.lang_es)
+    // Buscamos la etiqueta según el código seleccionado (ej: "ca" -> "Català")
+    val selectedLabel = languages.find { it.first == selectedLanguage }?.second
+        ?: languages.first().second
 
     Column {
-        // Selector principal
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -184,7 +187,8 @@ fun AguaMapLanguageSelector(
             )
         }
 
-        // Lista desplegable animada
+
+
         AnimatedVisibility(
             visible = expanded,
             enter = expandVertically() + fadeIn(),

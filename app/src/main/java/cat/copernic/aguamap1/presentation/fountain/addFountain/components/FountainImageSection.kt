@@ -23,6 +23,11 @@ import cat.copernic.aguamap1.ui.theme.*
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
+/**
+ * Sección del formulario para la gestión de la imagen de la fuente.
+ * * @param viewModel ViewModel que gestiona el estado de la imagen y el progreso de subida.
+ * @param imagePickerHelper Utilidad para la selección de imágenes desde la galería o cámara.
+ */
 @Composable
 fun FountainImageSection(
     viewModel: AddFountainViewModel,
@@ -31,6 +36,9 @@ fun FountainImageSection(
     val context = LocalContext.current
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        /**
+         * Etiqueta de la sección de fotografía.
+         */
         Text(
             text = stringResource(R.string.add_fountain_photo_label),
             fontWeight = FontWeight.Bold,
@@ -38,6 +46,9 @@ fun FountainImageSection(
             color = Negro
         )
 
+        /**
+         * Contenedor visual para la previsualización o selección de imagen.
+         */
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -48,6 +59,9 @@ fun FountainImageSection(
             val displayImage = viewModel.selectedImageUri ?: viewModel.currentImageUrl
 
             if (displayImage != null && displayImage != "") {
+                /**
+                 * Renderizado de la imagen seleccionada o actual.
+                 */
                 AsyncImage(
                     model = ImageRequest.Builder(context)
                         .data(displayImage)
@@ -58,6 +72,9 @@ fun FountainImageSection(
                     modifier = Modifier.fillMaxSize()
                 )
 
+                /**
+                 * Botón para eliminar la imagen seleccionada.
+                 */
                 IconButton(
                     onClick = {
                         imagePickerHelper.clearSelection()
@@ -71,6 +88,9 @@ fun FountainImageSection(
                     Icon(Icons.Default.Close, null, tint = Rojo)
                 }
 
+                /**
+                 * Overlay de carga con progreso porcentual durante la subida a la nube.
+                 */
                 if (viewModel.isUploading) {
                     Box(
                         modifier = Modifier.fillMaxSize().background(Negro.copy(alpha = 0.5f)),
@@ -83,6 +103,9 @@ fun FountainImageSection(
                     }
                 }
             } else {
+                /**
+                 * Estado vacío que solicita al usuario la selección de una fotografía.
+                 */
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)

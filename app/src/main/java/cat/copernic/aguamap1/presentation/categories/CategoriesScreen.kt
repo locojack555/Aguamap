@@ -33,6 +33,18 @@ import cat.copernic.aguamap1.presentation.categories.components.CategoryItem
 import cat.copernic.aguamap1.ui.theme.BgGray50
 import cat.copernic.aguamap1.ui.theme.Rojo
 
+/**
+ * Pantalla principal de Categorías de AguaMap.
+ * * Orquesta la visualización de grupos de fuentes, permitiendo filtrar por nombre o estado
+ * operativo. Gestiona el ciclo de vida de múltiples diálogos (detalle, creación, edición, borrado)
+ * y sincroniza la ubicación del usuario para cálculos de proximidad.
+ *
+ * @param viewModel Instancia del ViewModel inyectada por Hilt.
+ * @param userLat Latitud actual del usuario para el cálculo de distancias.
+ * @param userLng Longitud actual del usuario para el cálculo de distancias.
+ * @param onFountainClick Callback de navegación que se dispara cuando el usuario selecciona
+ * una fuente específica dentro de una categoría.
+ */
 @Composable
 fun CategoriesScreen(
     viewModel: CategoryViewModel = hiltViewModel(),
@@ -40,20 +52,22 @@ fun CategoriesScreen(
     userLng: Double?,
     onFountainClick: (Fountain) -> Unit
 ) {
-    // Sincronización de ubicación
+    // Sincronización de ubicación: Actualiza el estado del VM cuando cambian las coordenadas
     LaunchedEffect(userLat, userLng) {
         if (userLat != null && userLng != null) {
             viewModel.setLocation(userLat, userLng)
         }
     }
 
+    // Observación de estados reactivos del ViewModel
     val isAdmin = viewModel.isAdmin
     val categories by viewModel.categories.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val operationalFilter by viewModel.operationalFilter.collectAsState()
     val fountainsByCategory by viewModel.fountainsByCategory.collectAsState()
-    val errorMessage = viewModel.errorMessage // Ya viene del ViewModel
+    val errorMessage = viewModel.errorMessage
 
+    // Estados locales para el control de la visibilidad de los diálogos
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var showDetailDialog by remember { mutableStateOf(false) }
     var showCreateDialog by remember { mutableStateOf(false) }
@@ -66,6 +80,7 @@ fun CategoriesScreen(
             .background(BgGray50)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Cabecera interactiva con búsqueda y filtros
             CategoriesHeader(
                 searchQuery = searchQuery,
                 onSearchChange = { viewModel.updateSearchQuery(it) },
@@ -78,6 +93,7 @@ fun CategoriesScreen(
                 }
             )
 
+            // Lista eficiente de categorías
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -101,7 +117,7 @@ fun CategoriesScreen(
 
     // --- SECCIÓN DE DIÁLOGOS LOCALIZADOS ---
 
-    // Diálogo de error global (ej: Fallo de red o restricción de borrado)
+    // Diálogo de error global: Muestra fallos de validación o red
     if (errorMessage != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearError() },
@@ -111,11 +127,11 @@ fun CategoriesScreen(
                 }
             },
             title = { Text(stringResource(R.string.error_title)) },
-            text = { Text(errorMessage) } // Importante: El VM debe enviar el texto ya traducido
+            text = { Text(errorMessage) }
         )
     }
 
-    // Crear nueva categoría
+    // Formulario para añadir una nueva categoría
     if (showCreateDialog) {
         CategoryFormDialog(
             title = stringResource(R.string.category_new_title),
@@ -125,7 +141,7 @@ fun CategoriesScreen(
         )
     }
 
-    // Editar categoría existente
+    // Formulario para editar una categoría existente
     if (showEditDialog && selectedCategory != null) {
         CategoryFormDialog(
             title = stringResource(R.string.category_edit_title),
@@ -135,7 +151,7 @@ fun CategoriesScreen(
         )
     }
 
-    // Detalle de fuentes dentro de una categoría
+    // Vista detallada de las fuentes de la categoría seleccionada
     if (showDetailDialog && selectedCategory != null) {
         CategoryDetailDialog(
             category = selectedCategory!!,
@@ -144,17 +160,17 @@ fun CategoriesScreen(
             onDismiss = { showDetailDialog = false },
             onDeleteCategory = {
                 val categoryId = selectedCategory!!.id
+                // Validación previa: No permitir borrar si contiene fuentes
                 if (viewModel.fountainsByCategory.value[categoryId].isNullOrEmpty()) {
                     showDetailDialog = false
                     showDeleteConfirmation = true
                 } else {
-                    // El VM disparará R.string.error_category_not_empty automáticamente
                     viewModel.deleteCategory(categoryId) {}
                 }
             },
             onEditCategory = {
                 viewModel.onEditCategory(selectedCategory!!)
-                showDetailDialog = false // Cerramos detalle antes de abrir edición
+                showDetailDialog = false
                 showEditDialog = true
             },
             onFountainClick = { id ->
@@ -167,7 +183,7 @@ fun CategoriesScreen(
         )
     }
 
-    // Confirmación de borrado (Solo si está vacía)
+    // Diálogo de confirmación destructiva para eliminación de categorías
     if (showDeleteConfirmation && selectedCategory != null) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
@@ -184,7 +200,6 @@ fun CategoriesScreen(
                         }
                     }
                 ) {
-                    // Usamos "Eliminar" en lugar de "Desar/Save" para confirmaciones destructivas
                     Text(stringResource(R.string.delete_confirm), color = Rojo)
                 }
             },

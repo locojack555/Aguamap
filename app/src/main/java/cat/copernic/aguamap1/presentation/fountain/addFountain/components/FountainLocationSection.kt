@@ -16,9 +16,17 @@ import cat.copernic.aguamap1.presentation.fountain.addFountain.AddFountainViewMo
 import cat.copernic.aguamap1.ui.theme.*
 import java.util.Locale
 
+/**
+ * Sección del formulario encargada de la gestión de coordenadas geográficas.
+ * Permite alternar entre la obtención automática mediante GPS o la introducción manual de datos.
+ * * @param viewModel Instancia del ViewModel que controla la lógica de ubicación y validación.
+ */
 @Composable
 fun FountainLocationSection(viewModel: AddFountainViewModel) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        /**
+         * Título principal de la sección de ubicación.
+         */
         Text(
             text = stringResource(R.string.location_title),
             fontWeight = FontWeight.Bold,
@@ -26,6 +34,9 @@ fun FountainLocationSection(viewModel: AddFountainViewModel) {
             color = Negro
         )
 
+        /**
+         * Selector de fuente de datos (GPS vs Manual).
+         */
         Surface(color = NegroMinimal, shape = RoundedCornerShape(16.dp)) {
             Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -44,6 +55,9 @@ fun FountainLocationSection(viewModel: AddFountainViewModel) {
             }
         }
 
+        /**
+         * Visualización de coordenadas automáticas o campos de entrada manual.
+         */
         if (viewModel.useGpsLocation) {
             Surface(color = GrisClaro.copy(alpha = 0.3f), shape = RoundedCornerShape(12.dp)) {
                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -78,6 +92,15 @@ fun FountainLocationSection(viewModel: AddFountainViewModel) {
     }
 }
 
+/**
+ * Componente interno reutilizable para la entrada de coordenadas individuales.
+ * Incluye gestión de errores visuales y formato de borde dinámico.
+ * * @param value Valor actual del campo.
+ * @param onValueChange Callback para la actualización del estado.
+ * @param label Etiqueta flotante del campo.
+ * @param error Mensaje de error a mostrar si la validación falla.
+ * @param modifier Modificador de diseño.
+ */
 @Composable
 private fun CoordInput(value: String, onValueChange: (String) -> Unit, label: String, error: String?, modifier: Modifier) {
     Column(modifier = modifier) {

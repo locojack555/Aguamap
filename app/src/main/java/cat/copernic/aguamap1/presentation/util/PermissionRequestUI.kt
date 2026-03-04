@@ -30,9 +30,16 @@ import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.NegroSuave
 
+/**
+ * Interfaz de usuario informativa para solicitar permisos de ubicación.
+ * Se muestra cuando la aplicación no tiene los permisos necesarios para centrar el mapa
+ * o calcular distancias a las fuentes.
+ *
+ * @param onPermissionRequest Callback que dispara el sistema de solicitud de permisos de Android.
+ */
 @Composable
 fun PermissionRequestUI(onPermissionRequest: () -> Unit) {
-    // Usamos Surface para forzar el fondo blanco en esta pantalla de permiso
+    // Usamos Surface para forzar el fondo blanco y elevar el contenido visualmente
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Blanco
@@ -40,23 +47,25 @@ fun PermissionRequestUI(onPermissionRequest: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Icono visual
+            // ICONO VISUAL: Refuerza la idea de localización
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = null,
-                modifier = Modifier.size(100.dp),
+                modifier = Modifier.size(120.dp),
                 tint = Blue10
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
+
+            // TÍTULO: Directo y con peso visual
             Text(
                 text = stringResource(R.string.ubi_on),
-                fontSize = 24.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = Negro,
                 textAlign = TextAlign.Center
@@ -64,16 +73,18 @@ fun PermissionRequestUI(onPermissionRequest: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // EXPLICACIÓN: Justifica por qué AguaMap necesita la ubicación (UX de confianza)
             Text(
                 text = stringResource(R.string.txt_permiss),
                 fontSize = 16.sp,
                 color = NegroSuave,
                 textAlign = TextAlign.Center,
-                lineHeight = 22.sp
+                lineHeight = 24.sp
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(56.dp))
 
+            // BOTÓN DE ACCIÓN: Dispara el launcher de permisos del sistema
             Button(
                 onClick = onPermissionRequest,
                 modifier = Modifier
