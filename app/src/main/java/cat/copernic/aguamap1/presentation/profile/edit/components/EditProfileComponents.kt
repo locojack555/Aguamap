@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.presentation.util.AzulAgua
 import cat.copernic.aguamap1.ui.theme.*
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -196,7 +197,7 @@ fun EditProfileBottomBar(isEnabled: Boolean, isLoading: Boolean, onSave: () -> U
             modifier = Modifier.fillMaxWidth().height(48.dp),
             enabled = isEnabled,
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro)
+            colors = ButtonDefaults.buttonColors(containerColor = AzulAgua)
         ) {
             if (isLoading) {
                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
