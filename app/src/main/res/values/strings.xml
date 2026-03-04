@@ -2,7 +2,7 @@
     <string name="app_name">AguaMap</string>
     <string name="pass_on">Mostrar</string>
     <string name="pass_off">Ocultar</string>
-    <string name="subtitle">Encuentra fuentes en Terrassa</string>
+    <string name="subtitle">Encuentra fuentes</string>
     <string name="error_email_duplicated">El correo ya está registrado por otro usuario.</string>
     <string name="error_email_generic">Existe un error al crear el usuario.</string>
     <string name="error_email_empty">El correo no puede estar vacío.</string>

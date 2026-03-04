@@ -18,6 +18,7 @@ import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.GrisClaro
 import cat.copernic.aguamap1.ui.theme.Negro
+import cat.copernic.aguamap1.ui.theme.NegroSuave
 import cat.copernic.aguamap1.ui.theme.Rojo
 
 @Composable
@@ -40,7 +41,8 @@ fun FountainActionButtons(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Blue10,
                     disabledContainerColor = GrisClaro,
-                    contentColor = Negro
+                    contentColor = Negro,
+                    disabledContentColor = Negro
                 ),
                 shape = RoundedCornerShape(14.dp)
             ) {

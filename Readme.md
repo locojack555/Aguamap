@@ -13,7 +13,7 @@
 
 ---
 
-**[Fecha de entrega: 11/03/2026]**
+**Fecha de entrega: 11/03/2026**
 
 ---
 

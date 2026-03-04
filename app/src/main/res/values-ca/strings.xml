@@ -2,7 +2,7 @@
     <string name="app_name">AguaMap</string>
     <string name="pass_on">Mostrar</string>
     <string name="pass_off">Amagar</string>
-    <string name="subtitle">Troba fonts a Terrassa</string>
+    <string name="subtitle">Troba fonts</string>
     <string name="error_email_duplicated">Aquest correu ja està registrat per un altre usuari.</string>
     <string name="error_email_generic">Hi ha hagut un error en crear l\'usuari.</string>
     <string name="error_email_empty">El correu no pot estar buit.</string>

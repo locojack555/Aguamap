@@ -2,7 +2,7 @@
     <string name="app_name">AguaMap</string>
     <string name="pass_on">Show</string>
     <string name="pass_off">Hide</string>
-    <string name="subtitle">Find fountains in Terrassa</string>
+    <string name="subtitle">Find fountains</string>
     <string name="error_email_duplicated">This email is already registered by another user.</string>
     <string name="error_email_generic">There was an error creating the user.</string>
     <string name="error_email_empty">Email cannot be empty.</string>

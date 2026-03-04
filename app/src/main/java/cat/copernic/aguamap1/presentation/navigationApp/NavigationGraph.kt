@@ -1,6 +1,7 @@
 package cat.copernic.aguamap1.presentation.navigationApp
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ import cat.copernic.aguamap1.presentation.profile.ProfileScreen
 import cat.copernic.aguamap1.presentation.profile.ProfileViewModel
 import cat.copernic.aguamap1.presentation.profile.settings.SettingsScreen
 import cat.copernic.aguamap1.presentation.ranking.RankingScreen
+import cat.copernic.aguamap1.ui.theme.Blanco
 
 @Composable
 fun NavigationGraph(
@@ -62,189 +64,187 @@ fun NavigationGraph(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        NavHost(
-            navController = navController,
-            startDestination = BottomNavItem.Map.route,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // --- MAPA ---
-            composable(BottomNavItem.Map.route) {
-                MapScreen(
-                    isHome = true,
-                    viewModel = mapViewModel,
-                    onFountainClick = { fountain ->
-                        mapViewModel.selectFountain(fountain)
-                        navController.navigate("fountain_detail")
-                    }
-                )
-            }
-
-            // --- DETALLE DE FUENTE ---
-            composable("fountain_detail") {
-                val detailViewModel: DetailFountainViewModel = hiltViewModel()
-                val commentsViewModel: FountainCommentsViewModel = hiltViewModel()
-                val selectedFountain = mapViewModel.selectedFountainForDetail
-
-                // Strings localizados para Toasts
-                val toastConfirm = stringResource(R.string.toast_fountain_confirmed)
-                val toastError = stringResource(R.string.toast_error_fountain_not_found)
-
-                if (selectedFountain != null) {
-                    LaunchedEffect(selectedFountain) {
-                        detailViewModel.selectFountain(selectedFountain)
-                    }
-
-                    DetailFountainScreen(
-                        fountain = selectedFountain,
-                        viewModel = detailViewModel,
-                        // El ViewModel de comentarios se inyecta mediante hiltViewModel() por defecto,
-                        // pero puedes pasarlo si ya lo tienes instanciado
-                        commentsViewModel = commentsViewModel,
-                        onBack = {
-                            navController.popBackStack()
-                            mapViewModel.clearSelectedFountain()
-                        },
-                        onEdit = {
-                            addFountainViewModel.openAddFountain(
-                                selectedFountain.latitude,
-                                selectedFountain.longitude,
-                                selectedFountain
-                            )
-                        },
-                        onConfirm = {
-                            detailViewModel.confirmFountain {
-                                detailViewModel.selectedFountain?.let { updated ->
-                                    mapViewModel.updateSingleFountainInList(updated)
-                                }
-                                Toast.makeText(context, toastConfirm, Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        onDelete = {
-                            detailViewModel.deleteFountain {
-                                mapViewModel.loadFountains()
-                                navController.popBackStack()
-                            }
-                        },
-                        onReportNoExiste = {
-                            detailViewModel.reportNonExistent {
-                                // Si la fuente se elimina por exceso de reportes negativos, refrescamos y volvemos
-                                mapViewModel.loadFountains()
-                                navController.popBackStack()
-                            }
-                        }
-                    )
-                }
-            }
-
-            // --- CATEGORÍAS ---
-            composable(BottomNavItem.Categories.route) {
-                CategoriesScreen(
-                    userLat = currentLatitude,
-                    userLng = currentLongitude,
-                    onFountainClick = { fountain ->
-                        mapViewModel.selectFountain(fountain)
-                        navController.navigate("fountain_detail")
-                    }
-                )
-            }
-
-            // --- JUEGO ---
-            composable(BottomNavItem.Game.route) {
-                val gameKey = remember { "game_${System.currentTimeMillis()}" }
-                val gameViewModel: GameViewModel = hiltViewModel(key = gameKey)
-
-                if (currentLatitude != null && currentLongitude != null) {
-                    GameScreen(
-                        viewModel = gameViewModel,
-                        userLat = currentLatitude,
-                        userLng = currentLongitude,
-                        onBackToHome = {
-                            gameViewModel.clearGameState()
-                            soundManager.stopAllSounds()
-                            navController.navigate(BottomNavItem.Map.route) {
-                                popUpTo(BottomNavItem.Map.route) { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        },
-                        onFountainClick = { fountain ->
-                            mapViewModel.selectFountain(fountain)
-                            navController.navigate("fountain_detail")
-                        }
-                    )
-                } else {
-                    cat.copernic.aguamap1.presentation.game.components.LoadingPartida()
-                }
-            }
-
-            composable(BottomNavItem.Ranking.route) { RankingScreen() }
-
-            composable(BottomNavItem.Profile.route) {
-                ProfileScreen(
-                    navigateToLogin = {
-                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-                        soundManager.stopAllSounds()
-                        rootNavController.navigate(RootScreen.Login.route) {
-                            popUpTo(RootScreen.Home.route) { inclusive = true }
-                        }
-                    },
-                    navigateToEditProfile = { navController.navigate("edit_profile") },
-                    navigateToSettings = { navController.navigate("settings") },
-                    navigateToModeration = { navController.navigate("moderation") },
-                    navigateToFountainReports = { navController.navigate("fountain_reports") }
-                )
-            }
-
-            composable("edit_profile") { backStackEntry ->
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry(BottomNavItem.Profile.route)
-                }
-                val profileViewModel: ProfileViewModel = hiltViewModel(parentEntry)
-
-                EditProfileScreen(
-                    viewModel = profileViewModel,
-                    onBack = { navController.popBackStack() },
-                    onSaveComplete = {
-                        profileViewModel.loadUserData()
-                        navController.popBackStack()
-                    }
-                )
-            }
-
-            composable("settings") { SettingsScreen(onClose = { navController.popBackStack() }) }
-            composable("moderation") { ModerationScreen(onBack = { navController.popBackStack() }) }
-
-            composable("fountain_reports") {
-                val reportsViewModel: FountainReportsViewModel = hiltViewModel()
-                val toastError = stringResource(R.string.toast_error_fountain_not_found)
-
-                FountainReportsScreen(
-                    onBack = { navController.popBackStack() },
-                    onGoToFountain = { fountainId ->
-                        reportsViewModel.getFountainById(fountainId) { fountain ->
-                            if (fountain != null) {
-                                mapViewModel.selectFountain(fountain)
-                                navController.navigate("fountain_detail")
-                            } else {
-                                Toast.makeText(context, toastError, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                )
-            }
-        }
-
-        // --- PANTALLA ADD FOUNTAIN ---
-        if (addFountainViewModel.isAdding) {
-            AddFountainScreen(
-                onDismiss = { addFountainViewModel.closeAddFountain() },
-                latitude = addFountainViewModel.selectedLocationForNewFountain?.latitude ?: 0.0,
-                longitude = addFountainViewModel.selectedLocationForNewFountain?.longitude ?: 0.0,
-                viewModel = addFountainViewModel,
-                onFountainCreated = {
-                    mapViewModel.loadFountains()
+    // Quitamos el Box y aplicamos el fondo directamente al NavHost
+    NavHost(
+        navController = navController,
+        startDestination = BottomNavItem.Map.route,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Blanco) // Fondo blanco para evitar el negro en transiciones
+    ) {
+        // --- MAPA ---
+        composable(BottomNavItem.Map.route) {
+            MapScreen(
+                isHome = true,
+                viewModel = mapViewModel,
+                onFountainClick = { fountain ->
+                    mapViewModel.selectFountain(fountain)
+                    navController.navigate("fountain_detail")
                 }
             )
         }
+
+        // --- DETALLE DE FUENTE ---
+        composable("fountain_detail") {
+            val detailViewModel: DetailFountainViewModel = hiltViewModel()
+            val commentsViewModel: FountainCommentsViewModel = hiltViewModel()
+            val selectedFountain = mapViewModel.selectedFountainForDetail
+
+            // Strings localizados para Toasts
+            val toastConfirm = stringResource(R.string.toast_fountain_confirmed)
+            val toastError = stringResource(R.string.toast_error_fountain_not_found)
+
+            if (selectedFountain != null) {
+                LaunchedEffect(selectedFountain) {
+                    detailViewModel.selectFountain(selectedFountain)
+                }
+
+                DetailFountainScreen(
+                    fountain = selectedFountain,
+                    viewModel = detailViewModel,
+                    commentsViewModel = commentsViewModel,
+                    onBack = {
+                        navController.popBackStack()
+                        mapViewModel.clearSelectedFountain()
+                    },
+                    onEdit = {
+                        addFountainViewModel.openAddFountain(
+                            selectedFountain.latitude,
+                            selectedFountain.longitude,
+                            selectedFountain
+                        )
+                    },
+                    onConfirm = {
+                        detailViewModel.confirmFountain {
+                            detailViewModel.selectedFountain?.let { updated ->
+                                mapViewModel.updateSingleFountainInList(updated)
+                            }
+                            Toast.makeText(context, toastConfirm, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onDelete = {
+                        detailViewModel.deleteFountain {
+                            mapViewModel.loadFountains()
+                            navController.popBackStack()
+                        }
+                    },
+                    onReportNoExiste = {
+                        detailViewModel.reportNonExistent {
+                            mapViewModel.loadFountains()
+                            navController.popBackStack()
+                        }
+                    }
+                )
+            }
+        }
+
+        // --- CATEGORÍAS ---
+        composable(BottomNavItem.Categories.route) {
+            CategoriesScreen(
+                userLat = currentLatitude,
+                userLng = currentLongitude,
+                onFountainClick = { fountain ->
+                    mapViewModel.selectFountain(fountain)
+                    navController.navigate("fountain_detail")
+                }
+            )
+        }
+
+        // --- JUEGO ---
+        composable(BottomNavItem.Game.route) {
+            val gameKey = remember { "game_${System.currentTimeMillis()}" }
+            val gameViewModel: GameViewModel = hiltViewModel(key = gameKey)
+
+            if (currentLatitude != null && currentLongitude != null) {
+                GameScreen(
+                    viewModel = gameViewModel,
+                    userLat = currentLatitude,
+                    userLng = currentLongitude,
+                    onBackToHome = {
+                        gameViewModel.clearGameState()
+                        soundManager.stopAllSounds()
+                        navController.navigate(BottomNavItem.Map.route) {
+                            popUpTo(BottomNavItem.Map.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    onFountainClick = { fountain ->
+                        mapViewModel.selectFountain(fountain)
+                        navController.navigate("fountain_detail")
+                    }
+                )
+            } else {
+                cat.copernic.aguamap1.presentation.game.components.LoadingPartida()
+            }
+        }
+
+        composable(BottomNavItem.Ranking.route) { RankingScreen() }
+
+        composable(BottomNavItem.Profile.route) {
+            ProfileScreen(
+                navigateToLogin = {
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                    soundManager.stopAllSounds()
+                    rootNavController.navigate(RootScreen.Login.route) {
+                        popUpTo(RootScreen.Home.route) { inclusive = true }
+                    }
+                },
+                navigateToEditProfile = { navController.navigate("edit_profile") },
+                navigateToSettings = { navController.navigate("settings") },
+                navigateToModeration = { navController.navigate("moderation") },
+                navigateToFountainReports = { navController.navigate("fountain_reports") }
+            )
+        }
+
+        composable("edit_profile") { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(BottomNavItem.Profile.route)
+            }
+            val profileViewModel: ProfileViewModel = hiltViewModel(parentEntry)
+
+            EditProfileScreen(
+                viewModel = profileViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveComplete = {
+                    profileViewModel.loadUserData()
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("settings") { SettingsScreen(onClose = { navController.popBackStack() }) }
+        composable("moderation") { ModerationScreen(onBack = { navController.popBackStack() }) }
+
+        composable("fountain_reports") {
+            val reportsViewModel: FountainReportsViewModel = hiltViewModel()
+            val toastError = stringResource(R.string.toast_error_fountain_not_found)
+
+            FountainReportsScreen(
+                onBack = { navController.popBackStack() },
+                onGoToFountain = { fountainId ->
+                    reportsViewModel.getFountainById(fountainId) { fountain ->
+                        if (fountain != null) {
+                            mapViewModel.selectFountain(fountain)
+                            navController.navigate("fountain_detail")
+                        } else {
+                            Toast.makeText(context, toastError, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            )
+        }
+    }
+
+    // --- PANTALLA ADD FOUNTAIN (ahora fuera del NavHost pero dentro del mismo ámbito) ---
+    if (addFountainViewModel.isAdding) {
+        AddFountainScreen(
+            onDismiss = { addFountainViewModel.closeAddFountain() },
+            latitude = addFountainViewModel.selectedLocationForNewFountain?.latitude ?: 0.0,
+            longitude = addFountainViewModel.selectedLocationForNewFountain?.longitude ?: 0.0,
+            viewModel = addFountainViewModel,
+            onFountainCreated = {
+                mapViewModel.loadFountains()
+            }
+        )
     }
 }
