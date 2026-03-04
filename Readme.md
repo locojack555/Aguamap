@@ -19,8 +19,6 @@
 
 ## Índice
 
-**Equipo de desarrollo**
-
 **1. INTRODUCCIÓN**
 
 1.1 Objetivos de la aplicación
@@ -431,7 +429,7 @@ Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado s
 En este apartado se facilitará el enlace al repositorio en GitHub donde se ha alojado el código fuente del proyecto, permitiendo consultar el historial de versiones y la colaboración entre los desarrolladores.
 
 **Control de versiones**
-- Repositorio en GitHub: [ https://github.com/locojack555/Aguamap ] (enlace)
+- Repositorio en GitHub: [ https://github.com/locojack555/Aguamap ]
 
 ---
 
@@ -443,10 +441,10 @@ En este apartado se recopilarán los materiales complementarios, incluyendo un v
 
 
 **Portafolio**
-- Desarollador 1 (Jack Santiago Arévalo Montesinos): [ https://github.com/locojack555/Aguamap ] (enlace)
-- Desarollador 2 (Luis Alfredo Mariño): [  ] (enlace)
-- Desarollador 3 (Cristina Jiménez Cardoso): [ ] (enlace)
-- Desarollador 4 (Adrià González Consuegra): [  ] (enlace)
+- Desarollador 1 (Jack Santiago Arévalo Montesinos): [ https://github.com/locojack555/Aguamap ] 
+- Desarollador 2 (Luis Alfredo Mariño): [ https://github.com/lamarinog/AguaMap ] 
+- Desarollador 3 (Cristina Jiménez Cardoso): [ https://github.com/CristinaJimenez2006/AguaMap ] 
+- Desarollador 4 (Adrià González Consuegra): [ https://github.com/Deleuze58/AguaMap.git ] 
 
 
 
