@@ -18,6 +18,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel encargado de orquestar la lógica de interacción social (comentarios y valoraciones).
+ * Gestiona el ciclo de vida de la observación en tiempo real, la moderación de contenido
+ * y las operaciones CRUD sobre los comentarios de las fuentes.
+ */
 @HiltViewModel
 class FountainCommentsViewModel @Inject constructor(
     private val getFountainsUseCase: GetFountainsUseCase,
@@ -30,14 +35,22 @@ class FountainCommentsViewModel @Inject constructor(
     application: Application
 ) : AndroidViewModel(application) {
 
+    /**
+     * Accede a recursos de cadenas de texto del sistema para internacionalización de errores.
+     */
     private fun getString(resId: Int): String = getApplication<Application>().getString(resId)
 
+    // --- ESTADO DE LA INTERFAZ ---
     var comments by mutableStateOf<List<Comment>>(emptyList()) ; private set
     var reportSuccess by mutableStateOf(false) ; private set
     var errorMessage by mutableStateOf<String?>(null) ; private set
 
     private var commentsJob: Job? = null
 
+    /**
+     * Inicia la observación reactiva de comentarios para una fuente específica.
+     * Cancela suscripciones previas para evitar fugas de memoria y ordena por fecha descendente.
+     */
     fun observeComments(fountainId: String) {
         commentsJob?.cancel()
         commentsJob = viewModelScope.launch {
@@ -51,6 +64,9 @@ class FountainCommentsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Registra un nuevo comentario asociándolo a la identidad del usuario actual.
+     */
     fun addComment(fountain: Fountain, rating: Int, text: String) {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUserUid() ?: return@launch
@@ -70,6 +86,9 @@ class FountainCommentsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Actualiza el contenido y la valoración de un comentario preexistente.
+     */
     fun editComment(fountain: Fountain, oldComment: Comment, newRating: Int, newText: String) {
         viewModelScope.launch {
             updateCommentUseCase(fountain, oldComment, newRating, newText).onFailure {
@@ -78,6 +97,9 @@ class FountainCommentsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Elimina de forma permanente un comentario de la base de datos.
+     */
     fun deleteComment(fountain: Fountain, comment: Comment) {
         viewModelScope.launch {
             deleteCommentUseCase(fountain, comment).onFailure {
@@ -86,6 +108,9 @@ class FountainCommentsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Envía una notificación de reporte por contenido inapropiado a los administradores.
+     */
     fun onReportComment(fountainId: String, commentId: String) {
         if (fountainId.isEmpty() || commentId.isEmpty()) return
         viewModelScope.launch {
@@ -95,6 +120,9 @@ class FountainCommentsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Aplica restricciones de visibilidad (censura) sobre un comentario, actualizando el estado local.
+     */
     fun censorComment(fountainId: String, commentId: String) {
         viewModelScope.launch {
             censorCommentUseCase(fountainId, commentId)
@@ -107,7 +135,18 @@ class FountainCommentsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Finaliza la observación de datos y limpia la lista de comentarios.
+     */
     fun stopObserving() { commentsJob?.cancel(); comments = emptyList() }
+
+    /**
+     * Reinicia el estado de confirmación de reporte.
+     */
     fun clearReportSuccess() { reportSuccess = false }
+
+    /**
+     * Elimina mensajes de error pendientes en la UI.
+     */
     fun clearError() { errorMessage = null }
 }

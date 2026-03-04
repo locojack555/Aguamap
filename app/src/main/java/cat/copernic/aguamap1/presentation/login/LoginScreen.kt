@@ -2,11 +2,25 @@ package cat.copernic.aguamap1.presentation.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -20,15 +34,33 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.reusable.AguaMapHeader
 import cat.copernic.aguamap1.presentation.reusable.AguaMapInput
-import cat.copernic.aguamap1.ui.theme.*
+import cat.copernic.aguamap1.ui.theme.AguaMapGradient
+import cat.copernic.aguamap1.ui.theme.Blanco
+import cat.copernic.aguamap1.ui.theme.Blue10
+import cat.copernic.aguamap1.ui.theme.Negro
+import cat.copernic.aguamap1.ui.theme.PurpleGrey40
+import cat.copernic.aguamap1.ui.theme.Rojo
 
+/**
+ * Pantalla de inicio de sesión principal.
+ * Gestiona la autenticación de usuarios existentes y ofrece un flujo para completar
+ * el perfil (nombre y apellidos) en caso de que los datos sean insuficientes tras el login.
+ *
+ * @param viewModel Lógica de estado y validación de credenciales.
+ * @param navigateToForgotPassword Redirección para recuperar contraseña.
+ * @param navigateToSingUp Redirección al flujo de registro de nuevos usuarios.
+ * @param onLoginSuccess Callback ejecutado tras una autenticación exitosa.
+ */
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
     navigateToForgotPassword: () -> Unit = {},
-    navigateToSingUp: () -> Unit = {}, // Mantengo tu nombre de función 'SingUp'
+    navigateToSingUp: () -> Unit = {},
     onLoginSuccess: () -> Unit = {}
 ) {
+    /**
+     * Escucha eventos de navegación exitosa emitidos por el ViewModel.
+     */
     LaunchedEffect(Unit) {
         viewModel.resetState()
         viewModel.navigateToHome.collect {
@@ -36,10 +68,14 @@ fun LoginScreen(
         }
     }
 
-    // Diálogo para completar el nombre tras el primer login (Social o Registro incompleto)
+    /**
+     * DIÁLOGO DE COMPLETAR REGISTRO:
+     * Se activa si el usuario se ha logueado pero su perfil en la base de datos
+     * carece de un nombre válido. Obliga a introducir Nombre y Apellido.
+     */
     if (viewModel.needsName) {
         AlertDialog(
-            onDismissRequest = { /* Bloqueado hasta completar */ },
+            onDismissRequest = { /* Bloqueado para asegurar integridad de datos */ },
             shape = RoundedCornerShape(28.dp),
             title = {
                 Text(
@@ -50,7 +86,10 @@ fun LoginScreen(
             },
             text = {
                 Column {
-                    Text(text = stringResource(R.string.login_dialog_welcome_message), color = Blanco)
+                    Text(
+                        text = stringResource(R.string.login_dialog_welcome_message),
+                        color = Blanco
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     AguaMapInput(
                         label = stringResource(R.string.login_label_full_name),
@@ -64,7 +103,7 @@ fun LoginScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.onCompleteRegistration() },
-                    // Validación: Nombre y al menos un apellido
+                    // Validación: El nombre debe contener al menos dos palabras
                     enabled = viewModel.name.trim().split(" ").filter { it.isNotEmpty() }.size >= 2,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Negro.copy(alpha = 0.8f),
@@ -79,16 +118,20 @@ fun LoginScreen(
         )
     }
 
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(AguaMapGradient)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Cabecera con Logo
             AguaMapHeader()
 
             Spacer(modifier = Modifier.height(56.dp))
 
+            // Contenedor de formulario con bordes redondeados superiores
             Card(
                 modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
@@ -109,6 +152,7 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Campo de Email
                     AguaMapInput(
                         label = stringResource(R.string.login_label_email),
                         placeholder = stringResource(R.string.login_placeholder_email),
@@ -117,6 +161,7 @@ fun LoginScreen(
                         isError = viewModel.isError
                     )
 
+                    // Campo de Contraseña
                     AguaMapInput(
                         label = stringResource(R.string.login_label_password),
                         placeholder = stringResource(R.string.login_placeholder_password),
@@ -126,7 +171,9 @@ fun LoginScreen(
                         isError = viewModel.isError
                     )
 
-                    // Errores dinámicos
+                    /**
+                     * Gestión de Errores: Credenciales o Verificación de Email.
+                     */
                     if (viewModel.isError) {
                         Text(
                             text = stringResource(R.string.login_error_invalid_credentials),
@@ -154,6 +201,7 @@ fun LoginScreen(
                             .clickable { navigateToForgotPassword() }
                     )
 
+                    // Botón principal de entrada
                     Button(
                         onClick = { viewModel.onLoginClick() },
                         modifier = Modifier
@@ -171,6 +219,7 @@ fun LoginScreen(
                         )
                     }
 
+                    // Enlace a Registro
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

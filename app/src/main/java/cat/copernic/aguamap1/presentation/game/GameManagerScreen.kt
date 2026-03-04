@@ -37,6 +37,17 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import org.osmdroid.util.GeoPoint
 
+/**
+ * Orquestador principal del módulo de Juego.
+ * Gestiona el ciclo de vida de la partida, los permisos de ubicación en tiempo real
+ * y la navegación interna entre los diferentes estados del juego (Instrucciones -> Jugando -> Resultados).
+ *
+ * @param viewModel ViewModel encargado de la lógica de puntuación y estados.
+ * @param userLat Latitud inicial proporcionada por el flujo de navegación.
+ * @param userLng Longitud inicial proporcionada por el flujo de navegación.
+ * @param onBackToHome Callback para cerrar el juego y volver al mapa principal.
+ * @param onFountainClick Navegación al detalle de una fuente específica.
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun GameScreen(
@@ -46,6 +57,7 @@ fun GameScreen(
     onBackToHome: () -> Unit,
     onFountainClick: (Fountain) -> Unit
 ) {
+    // Suscripción a los flujos de estado del ViewModel
     val gameState by viewModel.gameState.collectAsState()
     val currentFountain by viewModel.currentFountain.collectAsState()
     val remainingTime by viewModel.remainingTime.collectAsState()
@@ -59,11 +71,15 @@ fun GameScreen(
 
     val context = LocalContext.current
 
-    // PRIORIDAD: Usamos las coordenadas que vienen del NavGraph (MapViewModel)
+    /**
+     * GESTIÓN DE UBICACIÓN:
+     * El juego requiere saber dónde está el usuario para seleccionar fuentes cercanas.
+     * Prioriza las coordenadas del NavGraph, pero tiene un fallback al GPS local.
+     */
     var currentUserLat by remember { mutableDoubleStateOf(userLat) }
     var currentUserLng by remember { mutableDoubleStateOf(userLng) }
 
-    // Bandera para saber si ya tenemos una ubicación válida
+    // Bandera para asegurar que no iniciamos la lógica sin coordenadas válidas
     var isLocationReady by remember {
         mutableStateOf(userLat != 0.0 && String.format("%.4f", userLat) != "41.5632")
     }
@@ -72,29 +88,29 @@ fun GameScreen(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-    // CORRECCIÓN: Si cambian las coordenadas en el NavGraph, actualizamos aquí
+    // Sincronización de ubicación desde el grafo de navegación
     LaunchedEffect(userLat, userLng) {
         if (userLat != 0.0 && String.format("%.4f", userLat) != "41.5632") {
             currentUserLat = userLat
             currentUserLng = userLng
             isLocationReady = true
-            Log.d("GAME_DEBUG", "Ubicación sincronizada desde Nav: $userLat, $userLng")
         }
     }
 
+    // Lógica de recuperación (Fallback) si los permisos se conceden en caliente
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (locationPermissionState.status.isGranted && !isLocationReady) {
-            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val locationManager =
+                context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             try {
-                // Solo pedimos al GPS si el NavGraph no nos dio nada útil
-                val lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                    ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                val lastLocation =
+                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                        ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
 
                 lastLocation?.let {
                     currentUserLat = it.latitude
                     currentUserLng = it.longitude
                     isLocationReady = true
-                    Log.d("GAME_DEBUG", "Ubicación fallback GPS local: ${it.latitude}, ${it.longitude}")
                 }
             } catch (e: SecurityException) {
                 Log.e("GAME_DEBUG", "Error de permisos", e)
@@ -102,19 +118,24 @@ fun GameScreen(
         }
     }
 
-    // Disparar lógica de juego
+    /**
+     * DISPARADOR DE LÓGICA DE NEGOCIO:
+     * Una vez tenemos ubicación, comprobamos si el usuario puede jugar (límites diarios y proximidad).
+     */
     LaunchedEffect(isLocationReady) {
         if (isLocationReady && gameState == GameViewModel.GameState.Initial) {
-            Log.d("GAME_DEBUG", "Iniciando checkCanPlay con: $currentUserLat, $currentUserLng")
             viewModel.checkCanPlay(currentUserLat, currentUserLng)
         }
     }
 
+    // Limpieza al salir de la pantalla
     DisposableEffect(Unit) {
         onDispose {
             viewModel.onBackToHomePressed()
         }
     }
+
+
 
     Box(
         modifier = Modifier
@@ -122,10 +143,17 @@ fun GameScreen(
             .background(Blanco)
     ) {
         if (!locationPermissionState.status.isGranted) {
+            /**
+             * Estado: Bloqueo por Permisos.
+             */
             PermissionRequestUI {
                 locationPermissionState.launchPermissionRequest()
             }
         } else {
+            /**
+             * MÁQUINA DE ESTADOS DE LA UI:
+             * Renderiza la pantalla correspondiente según el flujo del juego.
+             */
             when (gameState) {
                 GameViewModel.GameState.Initial -> {
                     LoadingPartida()
@@ -140,7 +168,10 @@ fun GameScreen(
                         GamePlayScreen(
                             fountain = it,
                             remainingTime = remainingTime,
-                            userLocation = if (isLocationReady) GeoPoint(currentUserLat, currentUserLng) else null,
+                            userLocation = if (isLocationReady) GeoPoint(
+                                currentUserLat,
+                                currentUserLng
+                            ) else null,
                             onGuess = { lat, lng -> viewModel.setUserGuess(lat, lng) },
                             onFinish = { viewModel.finishGame() }
                         )
@@ -153,7 +184,12 @@ fun GameScreen(
                             fountain = it,
                             score = score,
                             distance = distance,
-                            userGuessPos = userGuessPos?.let { pos -> GeoPoint(pos.first, pos.second) },
+                            userGuessPos = userGuessPos?.let { pos ->
+                                GeoPoint(
+                                    pos.first,
+                                    pos.second
+                                )
+                            },
                             hasLost = hasLost,
                             onBackToHome = {
                                 viewModel.onBackToHomePressed()
@@ -198,6 +234,9 @@ fun GameScreen(
                 )
             }
 
+            /**
+             * Overlay de carga para procesos en segundo plano (ej: guardando puntuación en Firebase).
+             */
             if (isLoading && gameState != GameViewModel.GameState.Initial) {
                 Box(
                     Modifier

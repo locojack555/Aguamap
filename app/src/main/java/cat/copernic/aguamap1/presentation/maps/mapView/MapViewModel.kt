@@ -10,7 +10,7 @@ import cat.copernic.aguamap1.data.location.DefaultLocationProvider
 import cat.copernic.aguamap1.domain.model.Category
 import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.usecase.category.GetCategoriesUseCase
-import cat.copernic.aguamap1.domain.usecase.fountain.GetDistanceFountainsUseCaseUseCase
+import cat.copernic.aguamap1.domain.usecase.fountain.GetDistanceFountainsUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
 import cat.copernic.aguamap1.domain.usecase.validation.generateSearchRegex
 import cat.copernic.aguamap1.presentation.util.FilterState
@@ -23,28 +23,38 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel central para la gestión del mapa y la lista de fuentes.
+ * Se encarga de la lógica de filtrado reactivo, cálculo de distancias en tiempo real
+ * y sincronización con el proveedor de ubicación del dispositivo.
+ */
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val getFountainsUseCase: GetFountainsUseCase,
-    private val getDistanceUseCase: GetDistanceFountainsUseCaseUseCase,
+    private val getDistanceUseCase: GetDistanceFountainsUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val locationProvider: DefaultLocationProvider
 ) : ViewModel() {
 
-    // Coordenadas iniciales (Terrassa)
-    var latitude by mutableDoubleStateOf(41.5632)
+    // --- ESTADO DE LA CÁMARA Y MAPA ---
+    var latitude by mutableDoubleStateOf(41.5632) // Coordenadas por defecto (Terrassa)
     var longitude by mutableDoubleStateOf(2.0089)
     var zoomLevel by mutableDoubleStateOf(15.0)
     var isFirstLocationUpdate by mutableStateOf(true)
 
+    /**
+     * Estado inmutable de la UI que contiene la lista de fuentes procesada (filtrada y ordenada).
+     */
     var uiState by mutableStateOf(MapUiState())
         private set
 
     private val _isMapView = MutableStateFlow(true)
     val isMapView: StateFlow<Boolean> = _isMapView.asStateFlow()
 
+    // Fuente de datos original (sin filtros) para realizar operaciones en memoria
     private var allFountainsList = emptyList<Fountain>()
 
+    // --- DATOS DE USUARIO Y LOCALIZACIÓN ---
     var userLat by mutableStateOf<Double?>(null)
         private set
     var userLng by mutableStateOf<Double?>(null)
@@ -52,6 +62,7 @@ class MapViewModel @Inject constructor(
 
     val isLocationAvailable: Boolean get() = userLat != null && userLng != null
 
+    // --- ESTADOS DE FILTRADO Y BÚSQUEDA ---
     var searchQuery by mutableStateOf("")
         private set
     var showFilterMenu by mutableStateOf(false)
@@ -69,6 +80,10 @@ class MapViewModel @Inject constructor(
         loadCategories()
     }
 
+    /**
+     * Se subscribe al flujo de ubicación del GPS. Cada vez que la posición cambia,
+     * actualizamos las distancias relativas de todas las fuentes.
+     */
     private fun observeLocationUpdates() {
         viewModelScope.launch {
             locationProvider.getLocationUpdates().collect { location ->
@@ -83,6 +98,9 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Carga las fuentes desde el repositorio (Firebase) basándose en la ubicación actual.
+     */
     fun loadFountains() {
         val lat = userLat ?: return
         val lng = userLng ?: return
@@ -91,14 +109,17 @@ class MapViewModel @Inject constructor(
             getFountainsUseCase(lat, lng).collect { result ->
                 result.onSuccess { list ->
                     allFountainsList = list
-                    updateDistances() // Esto ya llama internamente a applyFilterAndSort()
+                    updateDistances()
                 }
             }
         }
     }
 
+    /**
+     * Gestiona la llegada de la primera ubicación válida.
+     * Implementa un umbral de 2 metros para evitar recalcular la UI con micro-movimientos.
+     */
     fun onFirstLocationFound(lat: Double, lng: Double) {
-        // Evitar coordenadas nulas o por defecto si ya tenemos una posición real
         if (lat == 0.0) return
         if (lat == 41.5632 && lng == 2.0089 && !isFirstLocationUpdate) return
 
@@ -107,7 +128,6 @@ class MapViewModel @Inject constructor(
             val lastLng = userLng ?: 0.0
             val distanceMoved = getDistanceUseCase(lastLat, lastLng, lat, lng)
 
-            // Umbral de 2 metros para no sobrecargar la UI
             if (distanceMoved < 2.0) return
         }
 
@@ -125,6 +145,9 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Recalcula la distancia de cada fuente respecto a la posición actual del usuario.
+     */
     private fun updateDistances() {
         val lat = userLat ?: run { applyFilterAndSort(); return }
         val lng = userLng ?: run { applyFilterAndSort(); return }
@@ -142,6 +165,8 @@ class MapViewModel @Inject constructor(
         applyFilterAndSort()
     }
 
+    // --- ACCIONES DE USUARIO ---
+
     fun onSearchQueryChanged(query: String) {
         searchQuery = query
         applyFilterAndSort()
@@ -156,10 +181,15 @@ class MapViewModel @Inject constructor(
         applyFilterAndSort()
     }
 
+
+    /**
+     * MOTOR DE FILTRADO Y ORDENACIÓN PROFESIONAL:
+     * Aplica de forma secuencial: Búsqueda -> Categoría -> Estado -> Valoración/Distancia -> Orden.
+     */
     private fun applyFilterAndSort() {
         var filtered = allFountainsList
 
-        // 1. Filtro de búsqueda por texto/regex
+        // 1. Filtro de búsqueda (Soporte para Regex generado dinámicamente)
         if (searchQuery.isNotBlank()) {
             val regex = generateSearchRegex(searchQuery)
             filtered = if (regex != null) {
@@ -169,30 +199,26 @@ class MapViewModel @Inject constructor(
             }
         }
 
-        // 2. Filtro por categoría seleccionada
+        // 2. Filtro por categoría
         filterState.selectedCategory?.let { cat ->
             filtered = filtered.filter { it.category.id == cat.id }
         }
 
-        // 3. Filtro de fuentes operativas
+        // 3. Filtro de operatividad
         if (filterState.onlyOperational) {
             filtered = filtered.filter { it.operational }
         }
 
-        // 4. Filtro de Rating y Distancia (CORRECCIÓN KM A METROS)
+        // 4. Filtro combinado: Rating mínimo y Distancia máxima (Conversión Km a Metros)
         filtered = filtered.filter { fountain ->
             val ratingMatch = fountain.ratingAverage >= filterState.minRating
-
-            // Comparamos metros con (Kilómetros del slider * 1000)
             val distanceInMeters = fountain.distanceFromUser ?: 0.0
             val maxAllowedMeters = filterState.maxDistanceKm * 1000.0
 
-            val distanceMatch = distanceInMeters <= maxAllowedMeters
-
-            ratingMatch && distanceMatch
+            ratingMatch && (distanceInMeters <= maxAllowedMeters)
         }
 
-        // 5. Ordenación profesional
+        // 5. Lógica de Ordenación
         val sorted = when (filterState.sortBy) {
             SortOption.DISTANCE_ASC -> filtered.sortedBy { it.distanceFromUser ?: Double.MAX_VALUE }
             SortOption.DISTANCE_DESC -> filtered.sortedByDescending { it.distanceFromUser ?: 0.0 }
@@ -202,6 +228,7 @@ class MapViewModel @Inject constructor(
             SortOption.DATE_ASC -> filtered.sortedBy { it.dateCreated }
         }
 
+        // Actualizamos el estado de la UI para disparar la recomposición en Compose
         uiState = uiState.copy(fountains = sorted)
     }
 
@@ -223,6 +250,10 @@ class MapViewModel @Inject constructor(
         selectedFountainForDetail = null
     }
 
+    /**
+     * Actualiza una fuente específica en la lista sin necesidad de recargar desde el servidor.
+     * Útil tras calificar una fuente o reportar un error.
+     */
     fun updateSingleFountainInList(updatedFountain: Fountain) {
         allFountainsList = allFountainsList.map {
             if (it.id == updatedFountain.id) updatedFountain else it

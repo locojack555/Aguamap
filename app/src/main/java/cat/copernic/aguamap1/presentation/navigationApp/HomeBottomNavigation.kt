@@ -19,8 +19,16 @@ import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Negro
 
+/**
+ * Componente visual de la barra de navegación inferior.
+ * Se encarga de renderizar los iconos y etiquetas de las secciones principales
+ * y gestionar la lógica de navegación para mantener el estado de cada pestaña.
+ *
+ * @param navController Controlador de navegación encargado de realizar las transiciones.
+ */
 @Composable
 fun HomeBottomNavigation(navController: NavHostController) {
+    // Definición de los elementos que aparecerán en la barra inferior
     val items = listOf(
         BottomNavItem.Map,
         BottomNavItem.Categories,
@@ -29,14 +37,20 @@ fun HomeBottomNavigation(navController: NavHostController) {
         BottomNavItem.Profile
     )
 
+
+
     NavigationBar(
         containerColor = Blanco,
         tonalElevation = 8.dp
     ) {
-        //Observa la pila de navegación en tiempo real para la sincronización
+        /**
+         * Observamos la entrada actual de la pila de navegación (BackStack).
+         * Esto permite que la UI se actualice automáticamente cuando la ruta cambia,
+         * marcando el icono correspondiente como "seleccionado".
+         */
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        //Obtiene la ruta actual para saber en que pantalla estamos
         val currentRoute = navBackStackEntry?.destination?.route
+
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
@@ -46,22 +60,35 @@ fun HomeBottomNavigation(navController: NavHostController) {
                         modifier = Modifier.size(24.dp)
                     )
                 },
-                label = { Text(text = stringResource(item.label), fontSize = 10.sp) },
+                label = {
+                    Text(
+                        text = stringResource(item.label),
+                        fontSize = 10.sp
+                    )
+                },
                 selected = currentRoute == item.route,
                 onClick = {
                     if (currentRoute != item.route) {
                         navController.navigate(item.route) {
-                            //guarda el estado de la pantalla anterior
+                            /**
+                             * popUpTo: Limpia la pila hasta el destino inicial para evitar
+                             * una acumulación masiva de pantallas en memoria.
+                             */
                             popUpTo(navController.graph.startDestinationId) {
                                 saveState = true
                             }
-                            //Mantiene una sola instancia de cada pantalla
+                            // Evita múltiples copias del mismo destino en la parte superior
                             launchSingleTop = true
-                            //Restaura el estado de la pantalla anterior
+                            // Restaura el estado (scroll, filtros, etc.) al volver a una pestaña
                             restoreState = true
                         }
                     }
-                    // Para volver a perfil estando en editar o config
+
+                    /**
+                     * Lógica especial para el Perfil:
+                     * Si el usuario está en una subpantalla (como editar perfil) y vuelve
+                     * a pulsar el icono de Perfil en la barra, lo devolvemos a la raíz del perfil.
+                     */
                     if (item.route == BottomNavItem.Profile.route && currentRoute == "edit_profile") {
                         navController.popBackStack(BottomNavItem.Profile.route, inclusive = false)
                     }

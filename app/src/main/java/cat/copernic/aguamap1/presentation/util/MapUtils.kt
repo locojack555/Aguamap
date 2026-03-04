@@ -1,35 +1,82 @@
 package cat.copernic.aguamap1.presentation.util
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 
+/**
+ * Utilidades para la manipulación de elementos gráficos sobre el mapa.
+ * Proporciona métodos para generar recursos visuales dinámicos (como etiquetas de distancia)
+ * que no pueden ser simples recursos estáticos.
+ */
 object MapUtils {
+
+    /**
+     * Crea una etiqueta (tag) visual que muestra la distancia a una fuente.
+     * Genera un Bitmap con un fondo redondeado azul claro, borde azul oscuro y texto centrado.
+     *
+     * @param context Contexto de la aplicación para acceder a los recursos y densidad de pantalla.
+     * @param text El texto a mostrar (ej: "150 m" o "1.2 km").
+     * @return Un BitmapDrawable listo para ser usado como marcador o superposición en Google Maps.
+     */
     fun createDistanceTag(context: Context, text: String): BitmapDrawable {
         val density = context.resources.displayMetrics.density
-        val paintText = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.BLACK
+
+        // 1. Configuración del pincel para el texto
+        val paintText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
             textSize = 14 * density
-            textAlign = android.graphics.Paint.Align.CENTER
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.DEFAULT_BOLD
         }
-        val bounds = android.graphics.Rect()
+
+        // 2. Cálculo de dimensiones dinámicas según el tamaño del texto
+        val bounds = Rect()
         paintText.getTextBounds(text, 0, text.length, bounds)
-        val width = bounds.width() + (24 * density).toInt()
-        val height = bounds.height() + (12 * density).toInt()
-        val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bitmap)
-        val paintRect = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.parseColor("#E3F2FD")
+
+        val paddingHorizontal = 24 * density
+        val paddingVertical = 12 * density
+
+        val width = bounds.width() + paddingHorizontal.toInt()
+        val height = bounds.height() + paddingVertical.toInt()
+
+        // 3. Creación del lienzo (Canvas)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        // 4. Configuración de pinceles para el fondo y el borde
+        val paintRect = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#E3F2FD") // Azul muy claro (fondo)
         }
-        val paintStroke = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.parseColor("#2196F3")
-            style = android.graphics.Paint.Style.STROKE
+
+        val paintStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#2196F3") // Azul Google (borde)
+            style = Paint.Style.STROKE
             strokeWidth = 2 * density
         }
-        val rectF = android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat())
-        canvas.drawRoundRect(rectF, 8 * density, 8 * density, paintRect)
-        canvas.drawRoundRect(rectF, 8 * density, 8 * density, paintStroke)
-        canvas.drawText(text, width / 2f, (height / 2f) - bounds.exactCenterY(), paintText)
+
+
+        // 5. Dibujo del fondo redondeado y el borde
+        val rectF = RectF(0f, 0f, width.toFloat(), height.toFloat())
+        val cornerRadius = 8 * density
+        canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, paintRect)
+        canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, paintStroke)
+
+        // 6. Dibujo del texto centrado vertical y horizontalmente
+        // Se usa exactCenterY para corregir el desfase de la línea base del texto
+        canvas.drawText(
+            text,
+            width / 2f,
+            (height / 2f) - bounds.exactCenterY(),
+            paintText
+        )
+
         return BitmapDrawable(context.resources, bitmap)
     }
 }

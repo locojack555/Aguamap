@@ -4,7 +4,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.R
-import kotlinx.coroutines.flow.update
+import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
+import cat.copernic.aguamap1.data.cloudinary.UploadProgress
+import cat.copernic.aguamap1.domain.model.ProfileState
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import cat.copernic.aguamap1.domain.usecase.profile.GetCurrentUserHistoricStatsUseCase
 import cat.copernic.aguamap1.domain.usecase.profile.GetUserCommentsCountUseCase
@@ -13,12 +15,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
-import cat.copernic.aguamap1.data.cloudinary.UploadProgress
-import cat.copernic.aguamap1.domain.model.ProfileState
 
+/**
+ * ViewModel que gestiona toda la lógica del perfil de usuario.
+ * Coordina la obtención de estadísticas, la actualización de datos personales y
+ * la gestión de imágenes de perfil integrando Cloudinary y Firebase.
+ */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
@@ -34,7 +39,6 @@ class ProfileViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // Cambiado de String? a Int? para usar IDs de recursos (R.string)
     private val _errorResId = MutableStateFlow<Int?>(null)
     val errorResId: StateFlow<Int?> = _errorResId.asStateFlow()
 
@@ -57,6 +61,9 @@ class ProfileViewModel @Inject constructor(
         loadUserData()
     }
 
+    /**
+     * Carga todos los datos relacionados con el perfil: info básica, estadísticas e historial.
+     */
     fun loadUserData() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -91,15 +98,16 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Actualiza el nombre del perfil en Firestore y Firebase Auth.
+     */
     fun updateProfile(nombre: String, onComplete: () -> Unit) {
         viewModelScope.launch {
             _isSaving.value = true
             _errorResId.value = null
 
             try {
-                val userId = authRepository.getCurrentUserUid()
-                    ?: throw Exception()
-
+                val userId = authRepository.getCurrentUserUid() ?: throw Exception()
                 val currentName = authRepository.getCurrentUserName()
                 val currentEmail = authRepository.getCurrentUserEmail() ?: ""
 
@@ -113,7 +121,6 @@ class ProfileViewModel @Inject constructor(
                 loadUserData()
                 _isSuccess.value = true
                 onComplete()
-
             } catch (e: Exception) {
                 _errorResId.value = R.string.error_updating_profile
             } finally {
@@ -122,22 +129,22 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Elimina la URL de la imagen de perfil para volver al avatar por defecto.
+     */
     fun deleteProfilePicture(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             _isSaving.value = true
             _errorResId.value = null
 
             try {
-                val userId = authRepository.getCurrentUserUid()
-                    ?: throw Exception()
-
+                val userId = authRepository.getCurrentUserUid() ?: throw Exception()
                 val result = authRepository.updateUserProfilePicture(userId, "")
                 if (result.isFailure) throw Exception()
 
                 loadUserData()
                 _isSuccess.value = true
                 onComplete()
-
             } catch (e: Exception) {
                 _errorResId.value = R.string.error_deleting_picture
             } finally {
@@ -146,6 +153,10 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+
+    /**
+     * Sube una imagen seleccionada a Cloudinary y guarda la URL resultante en el perfil del usuario.
+     */
     fun saveProfilePicture(onComplete: () -> Unit) {
         val imageUri = _selectedImageUri.value ?: return
         val userId = authRepository.getCurrentUserUid() ?: return
@@ -162,6 +173,7 @@ class ProfileViewModel @Inject constructor(
                             is UploadProgress.InProgress -> {
                                 _uploadProgress.value = progress.percentage
                             }
+
                             is UploadProgress.Success -> {
                                 val result = authRepository.updateUserProfilePicture(
                                     userId,
@@ -174,10 +186,12 @@ class ProfileViewModel @Inject constructor(
                                 _selectedImageUri.value = null
                                 onComplete()
                             }
+
                             is UploadProgress.Error -> {
                                 _errorResId.value = R.string.error_uploading_image
                                 _isUploadingPicture.value = false
                             }
+
                             else -> {}
                         }
                     }
@@ -188,8 +202,20 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun resetSuccess() { _isSuccess.value = false }
-    fun clearError() { _errorResId.value = null }
-    fun updateSelectedImage(uri: Uri?) { _selectedImageUri.value = uri }
-    fun clearSelectedImage() { _selectedImageUri.value = null }
+    // Métodos de utilidad para gestionar el estado de la UI
+    fun resetSuccess() {
+        _isSuccess.value = false
+    }
+
+    fun clearError() {
+        _errorResId.value = null
+    }
+
+    fun updateSelectedImage(uri: Uri?) {
+        _selectedImageUri.value = uri
+    }
+
+    fun clearSelectedImage() {
+        _selectedImageUri.value = null
+    }
 }

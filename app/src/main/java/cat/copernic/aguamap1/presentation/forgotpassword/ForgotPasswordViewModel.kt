@@ -12,12 +12,18 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Gestiona el estado y la lógica de negocio para la recuperación de contraseñas.
+ * * Hereda de [AndroidViewModel] para permitir la traducción de mensajes de error
+ * directamente desde el ViewModel utilizando el contexto de la aplicación.
+ */
 @HiltViewModel
 class ForgotPasswordViewModel @Inject constructor(
     private val repository: AuthRepository,
-    application: Application // Inyectamos Application para acceder a recursos
+    application: Application
 ) : AndroidViewModel(application) {
 
+    // --- ESTADO DE LA INTERFAZ (UI STATE) ---
     var email by mutableStateOf("")
         private set
 
@@ -33,9 +39,15 @@ class ForgotPasswordViewModel @Inject constructor(
     var isLoading by mutableStateOf(false)
         private set
 
-    // Helper para obtener traducciones
+    /**
+     * Helper privado para acceder de forma sencilla a los recursos de strings localizados.
+     */
     private fun getString(resId: Int): String = getApplication<Application>().getString(resId)
 
+    /**
+     * Actualiza el valor del correo y reinicia los estados de error y éxito para
+     * permitir una nueva validación limpia.
+     */
     fun onEmailChanged(newValue: String) {
         email = newValue
         isError = false
@@ -43,7 +55,14 @@ class ForgotPasswordViewModel @Inject constructor(
         isSent = false
     }
 
+    /**
+     * Procesa la solicitud de restablecimiento de contraseña.
+     * * Realiza una validación previa del formato mediante [android.util.Patterns].
+     * * Gestiona la llamada al repositorio dentro de una corrutina.
+     * * Mapea las excepciones de Firebase (como usuario no encontrado) a mensajes amigables.
+     */
     fun onResetPasswordClick() {
+        // Validación de formato antes de tocar la red
         if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             isError = true
             errorMessage = getString(R.string.incorrect_email)
@@ -55,6 +74,7 @@ class ForgotPasswordViewModel @Inject constructor(
             isError = false
             errorMessage = null
 
+            // Petición al repositorio de autenticación
             val result = repository.sendPasswordResetEmail(email)
 
             if (result.isSuccess) {
@@ -63,10 +83,11 @@ class ForgotPasswordViewModel @Inject constructor(
             } else {
                 isError = true
                 isSent = false
-                // Aquí capturamos el error real de Firebase y lo traducimos
+
+                // Lógica de traducción de errores técnicos de Firebase
                 errorMessage = when (result.exceptionOrNull()?.message) {
                     "com.google.firebase.auth.FirebaseAuthInvalidUserException" ->
-                        getString(R.string.error_user_not_found) // Asegúrate de tener esta clave
+                        getString(R.string.error_user_not_found)
                     else -> getString(R.string.error_email_generic)
                 }
             }

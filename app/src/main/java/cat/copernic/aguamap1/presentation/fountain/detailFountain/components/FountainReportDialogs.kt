@@ -30,8 +30,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.ui.theme.*
+import cat.copernic.aguamap1.ui.theme.Blanco
+import cat.copernic.aguamap1.ui.theme.Blue10
+import cat.copernic.aguamap1.ui.theme.Gris
+import cat.copernic.aguamap1.ui.theme.GrisClaro
+import cat.copernic.aguamap1.ui.theme.GrisOscuro
+import cat.copernic.aguamap1.ui.theme.Negro
+import cat.copernic.aguamap1.ui.theme.NegroMinimal
+import cat.copernic.aguamap1.ui.theme.NegroSuave
+import cat.copernic.aguamap1.ui.theme.Rojo
+import cat.copernic.aguamap1.ui.theme.Verde
 
+/**
+ * Diálogo principal de reporte de incidencias para una fuente.
+ * Permite a los usuarios notificar si una fuente no existe, si está averiada
+ * o confirmar su existencia para revertir reportes negativos previos.
+ *
+ * @param negativeVotes Número actual de votos negativos/reportes de inexistencia.
+ * @param hasVotedNegative Indica si el usuario actual ya ha reportado que la fuente no existe.
+ * @param isOperational Estado operativo actual de la fuente (para alternar el reporte de avería).
+ * @param onDismiss Cierra el diálogo.
+ * @param onConfirmExistence Acción para validar que la fuente SÍ existe (revertir negativos).
+ * @param onReportNoExiste Acción para reportar que la fuente no se encuentra en el lugar.
+ * @param onReportAveria Acción para notificar un cambio en el estado de funcionamiento.
+ * @param onShowOther Acción para abrir el diálogo secundario de motivos personalizados.
+ */
 @Composable
 fun MainReportDialog(
     negativeVotes: Int,
@@ -55,12 +78,15 @@ fun MainReportDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                // --- SECCIÓN: REVERTIR REPORTE (Aparece si hay votos negativos previos) ---
+                /**
+                 * SECCIÓN: REVERTIR REPORTE.
+                 * Solo se muestra si la comunidad ha reportado negativamente la fuente.
+                 * Permite una "validación positiva" que contrarresta el proceso de borrado automático.
+                 */
                 if (negativeVotes > 0) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Button(
                             onClick = {
-                                // Ejecuta la actualización optimista en el ViewModel y cierra ya
                                 onConfirmExistence()
                                 onDismiss()
                             },
@@ -81,10 +107,15 @@ fun MainReportDialog(
                             fontSize = 12.sp,
                             color = NegroSuave,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp)
                         )
                     }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = NegroMinimal)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = NegroMinimal
+                    )
                 }
 
                 Text(
@@ -93,11 +124,14 @@ fun MainReportDialog(
                     fontSize = 14.sp
                 )
 
-                // --- BOTÓN: NO EXISTE ---
+                /**
+                 * BOTÓN: NO EXISTE.
+                 * Envía un voto negativo. Si se alcanza un umbral, la fuente puede ser eliminada.
+                 */
                 TextButton(
                     onClick = {
                         onReportNoExiste()
-                        onDismiss() // Cierre inmediato para que se vea el cambio local
+                        onDismiss()
                     },
                     enabled = !hasVotedNegative,
                     modifier = Modifier.fillMaxWidth()
@@ -117,7 +151,10 @@ fun MainReportDialog(
                     )
                 }
 
-                // --- BOTÓN: AVERÍA / ARREGLADA ---
+                /**
+                 * BOTÓN: AVERÍA / ARREGLADA.
+                 * Cambia el estado 'operational' de la fuente en la base de datos.
+                 */
                 TextButton(
                     onClick = {
                         onReportAveria()
@@ -135,15 +172,22 @@ fun MainReportDialog(
                     )
                 }
 
-                // --- BOTÓN: OTROS ---
+                /**
+                 * BOTÓN: OTROS.
+                 * Abre un campo de texto libre para incidencias no categorizadas.
+                 */
                 TextButton(
                     onClick = {
                         onShowOther()
-                        // Aquí NO cerramos onDismiss() porque queremos que se abra el OtherReportDialog
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.Info, null, tint = NegroSuave, modifier = Modifier.size(20.dp))
+                    Icon(
+                        Icons.Default.Info,
+                        null,
+                        tint = NegroSuave,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(Modifier.width(12.dp))
                     Text(
                         stringResource(R.string.report_other_reason),
@@ -167,12 +211,21 @@ fun MainReportDialog(
     )
 }
 
+/**
+ * Diálogo secundario para reportes con motivo personalizado.
+ * Incluye un campo de texto y validación de contenido no vacío.
+ *
+ * @param textValue Contenido actual del reporte.
+ * @param onValueChange Actualiza el estado del texto en el ViewModel.
+ * @param onDismiss Cierra el diálogo.
+ * @param onSend Envía el reporte personalizado a los administradores.
+ */
 @Composable
 fun OtherReportDialog(
     textValue: String,
     onValueChange: (String) -> Unit,
     onDismiss: () -> Unit,
-    onSend: () -> Unit // <--- Este es el nombre que manda
+    onSend: () -> Unit
 ) {
     AlertDialog(
         containerColor = Blanco,
@@ -205,7 +258,7 @@ fun OtherReportDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onSend() // <--- Se ejecuta aquí
+                    onSend()
                     onDismiss()
                 },
                 enabled = textValue.isNotBlank(),

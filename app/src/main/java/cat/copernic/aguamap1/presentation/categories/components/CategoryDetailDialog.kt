@@ -52,6 +52,20 @@ import cat.copernic.aguamap1.ui.theme.Naranja
 import cat.copernic.aguamap1.ui.theme.Rojo
 import coil.compose.AsyncImage
 
+/**
+ * Renderiza un cuadro de diálogo modal que muestra la información detallada de una categoría
+ * y la lista de fuentes asociadas a la misma.
+ * * Incluye controles administrativos condicionales (editar/eliminar) y una lista scrollable
+ * de fuentes con acceso directo a sus detalles.
+ *
+ * @param category Objeto de dominio con los datos de la categoría (nombre, imagen, descripción).
+ * @param fountains Lista de fuentes filtradas que pertenecen a esta categoría.
+ * @param isAdmin Determina si se habilitan los iconos de gestión para administradores.
+ * @param onDismiss Callback para cerrar el diálogo.
+ * @param onDeleteCategory Callback para iniciar el proceso de borrado de la categoría.
+ * @param onEditCategory Callback para abrir el formulario de edición.
+ * @param onFountainClick Callback que recibe el ID de una fuente para navegar a su detalle.
+ */
 @Composable
 fun CategoryDetailDialog(
     category: Category,
@@ -75,7 +89,7 @@ fun CategoryDetailDialog(
                 ) {
                     AsyncImage(
                         model = category.imageUrl,
-                        contentDescription = category.name, // Mejor usar el nombre de la categoría que null
+                        contentDescription = category.name,
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(8.dp)),
@@ -94,7 +108,6 @@ fun CategoryDetailDialog(
                         IconButton(onClick = onEditCategory) {
                             Icon(
                                 Icons.Default.Edit,
-                                // CORREGIDO: Usamos el recurso de texto para accesibilidad
                                 contentDescription = stringResource(R.string.edit),
                                 tint = InfoBlue
                             )
@@ -102,7 +115,6 @@ fun CategoryDetailDialog(
                         IconButton(onClick = onDeleteCategory) {
                             Icon(
                                 Icons.Default.Delete,
-                                // CORREGIDO: Usamos el recurso de texto para accesibilidad
                                 contentDescription = stringResource(R.string.delete),
                                 tint = Rojo
                             )
@@ -153,6 +165,13 @@ fun CategoryDetailDialog(
     }
 }
 
+/**
+ * Componente interno que representa una fila simplificada de información para una fuente.
+ * Muestra el nombre, el estado operativo (si está averiada) y la valoración media.
+ *
+ * @param fountain Datos de la fuente a renderizar.
+ * @param onClick Acción a ejecutar al pulsar sobre la fila.
+ */
 @Composable
 private fun FountainRow(fountain: Fountain, onClick: () -> Unit) {
     Row(
@@ -193,7 +212,6 @@ private fun FountainRow(fountain: Fountain, onClick: () -> Unit) {
             modifier = Modifier.size(14.dp)
         )
         Text(
-            // CORREGIDO: Usamos el locale del sistema para que el punto/coma decimal sea correcto
             text = "%.1f".format(fountain.ratingAverage),
             fontSize = 12.sp,
             color = GrisOscuro,

@@ -25,6 +25,16 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import org.osmdroid.views.MapView
 
+/**
+ * Pantalla principal que orquesta la visualización del Mapa y la Lista de fuentes.
+ * Gestiona los permisos de ubicación en tiempo real y decide qué capa de UI mostrar
+ * (Filtros, Mapa, Lista o el formulario de Añadir Fuente).
+ *
+ * @param viewModel Lógica de estado para la búsqueda, filtros y datos de fuentes.
+ * @param addViewModel Lógica para el proceso de creación de nuevas fuentes.
+ * @param onFountainClick Navegación al detalle de una fuente específica.
+ * @param isHome Define si se deben mostrar los controles de navegación superior (TopBar).
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapScreen(
@@ -33,16 +43,24 @@ fun MapScreen(
     onFountainClick: (cat.copernic.aguamap1.domain.model.Fountain) -> Unit,
     isHome: Boolean
 ) {
+    // Gestión de permisos mediante la librería Accompanist
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+
+    // Referencia al objeto MapView de OSMDroid para centrar la cámara manualmente
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
 
+    // Observación de estados reactivos
     val isMapView by viewModel.isMapView.collectAsState()
     val isAdding = addViewModel.isAdding
     val categories = viewModel.categories
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
-            // 1. Capa Superior: Pantalla Agregar (Los textos internos de AddFountainScreen deben estar en su propia clase)
+            /**
+             * 1. CAPA DE EDICIÓN:
+             * Si el usuario ha pulsado el botón '+' y tenemos su ubicación,
+             * superponemos la pantalla de registro de fuente.
+             */
             isAdding && viewModel.isLocationAvailable -> {
                 AddFountainScreen(
                     latitude = viewModel.userLat!!,
@@ -51,14 +69,18 @@ fun MapScreen(
                     onDismiss = { addViewModel.closeAddFountain() },
                     onFountainCreated = {
                         addViewModel.closeAddFountain()
-                        viewModel.loadFountains()
+                        viewModel.loadFountains() // Refrescar puntos tras la creación
                     }
                 )
             }
 
-            // 2. Capa Base: Mapa o Lista si hay permisos
+            /**
+             * 2. CAPA PRINCIPAL (MAPA O LISTA):
+             * Se renderiza solo si el usuario ha concedido permisos de GPS.
+             */
             locationPermissionState.status.isGranted -> {
                 if (isMapView) {
+                    // Vista de Mapa (OpenStreetMap)
                     OSMMapContent(
                         viewModel = viewModel,
                         isHome = isHome,
@@ -67,12 +89,14 @@ fun MapScreen(
                             onFountainClick(fountain)
                         }
                     )
-                    // La leyenda ya usa stringResource internamente según lo que hicimos antes
+
+                    // Leyenda de colores explicativa
                     MapLegend(
                         categories = categories,
                         modifier = Modifier.align(Alignment.BottomStart)
                     )
                 } else {
+                    // Vista de Lista (Scroll vertical con detalles)
                     ListScreen(
                         viewModel = viewModel,
                         onFountainClick = { fountain ->
@@ -81,7 +105,10 @@ fun MapScreen(
                     )
                 }
 
-                // UI flotante (Botones de añadir y centrar con descripciones localizadas)
+                /**
+                 * ELEMENTOS FLOTANTES:
+                 * Botones de acción rápida y Barra de búsqueda (si estamos en Home).
+                 */
                 MapFloatingButtons(
                     mapViewRef = mapViewRef,
                     addViewModel = addViewModel,
@@ -90,7 +117,6 @@ fun MapScreen(
                     modifier = Modifier.align(Alignment.BottomEnd)
                 )
 
-                // Barra de búsqueda y filtros
                 if (isHome) {
                     MapTopBar(
                         isMapView = isMapView,
@@ -100,7 +126,10 @@ fun MapScreen(
                 }
             }
 
-            // 3. Caso sin permisos: Se muestra la UI de solicitud
+            /**
+             * 3. ESTADO DE PERMISOS:
+             * Si el usuario deniega o no ha solicitado permisos, mostramos una UI informativa.
+             */
             else -> {
                 PermissionRequestUI {
                     locationPermissionState.launchPermissionRequest()

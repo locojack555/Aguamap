@@ -1,9 +1,26 @@
 package cat.copernic.aguamap1.presentation.game.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,11 +38,21 @@ import cat.copernic.aguamap1.presentation.game.components.GameMapView
 import cat.copernic.aguamap1.presentation.util.VerdeHoja
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Rojo
-import cat.copernic.aguamap1.ui.theme.VerdeClaro
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import org.osmdroid.util.GeoPoint
 
+/**
+ * Pantalla activa de juego donde el usuario interactúa con el mapa para adivinar la posición.
+ * Orquesta la visualización del mapa interactivo, el cronómetro de cuenta atrás y
+ * la pista visual (imagen de la fuente).
+ *
+ * @param fountain La fuente objetivo que el usuario debe localizar.
+ * @param remainingTime Segundos restantes antes de que la partida finalice automáticamente.
+ * @param userLocation Ubicación actual para centrar el mapa al inicio.
+ * @param onGuess Callback invocado cada vez que el usuario coloca o mueve el marcador.
+ * @param onFinish Acción para confirmar la selección y pasar a la pantalla de resultados.
+ */
 @Composable
 fun GamePlayScreen(
     fountain: Fountain,
@@ -34,10 +61,18 @@ fun GamePlayScreen(
     onGuess: (Double, Double) -> Unit,
     onFinish: () -> Unit
 ) {
+    /**
+     * Estado local para controlar si el usuario ya ha interactuado con el mapa.
+     * Permite alternar entre el texto de ayuda y el botón de confirmación.
+     */
     var hasPlacedPin by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {
 
+        /**
+         * 1. CAPA INFERIOR: Mapa Interactivo.
+         * Se configura en modo "no finalizado" para permitir la colocación de marcadores.
+         */
         GameMapView(
             fountain = fountain,
             userLocation = userLocation,
@@ -48,6 +83,10 @@ fun GamePlayScreen(
             }
         )
 
+        /**
+         * 2. CAPA SUPERIOR: Panel de Información.
+         * Contiene el cronómetro y la pista visual (Imagen o Nombre).
+         */
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -57,12 +96,12 @@ fun GamePlayScreen(
             shadowElevation = 8.dp
         ) {
             Column(Modifier.padding(12.dp)) {
+                // Fila de Estado: Tiempo y Título
                 Row(
                     Modifier.fillMaxWidth(),
                     Arrangement.SpaceBetween,
                     Alignment.CenterVertically
                 ) {
-                    // Texto del tiempo con la unidad localizada (ej: 30s)
                     Text(
                         text = "${remainingTime}${stringResource(R.string.unit_seconds_short)}",
                         fontSize = 28.sp,
@@ -83,10 +122,11 @@ fun GamePlayScreen(
                     )
                 }
 
+                // Sección de Pista Visual
                 if (fountain.imageUrl.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = stringResource(R.string.game_play_question), // Corregido a multiidioma
+                        text = stringResource(R.string.game_play_question),
                         fontSize = 14.sp,
                         color = Color.Gray,
                         fontWeight = FontWeight.Medium
@@ -105,6 +145,7 @@ fun GamePlayScreen(
                             .clip(RoundedCornerShape(8.dp))
                     )
                 } else {
+                    // Placeholder si la fuente no tiene imagen
                     Spacer(modifier = Modifier.height(8.dp))
                     Surface(
                         modifier = Modifier
@@ -135,6 +176,11 @@ fun GamePlayScreen(
             }
         }
 
+        /**
+         * 3. CAPA INFERIOR: Acciones del Jugador.
+         * Si ha puesto un pin, se muestra el botón de confirmar.
+         * Si no, se muestra un mensaje instructivo flotante.
+         */
         if (hasPlacedPin) {
             Button(
                 onClick = onFinish,

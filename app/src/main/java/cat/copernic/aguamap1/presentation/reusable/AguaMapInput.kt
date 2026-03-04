@@ -28,6 +28,17 @@ import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.ui.theme.Negro
 
+/**
+ * Componente de entrada de texto personalizado para AguaMap.
+ * Soporta campos de texto normales (Email) y campos de contraseña con visibilidad conmutable.
+ * * @param label Etiqueta superior del campo.
+ * @param placeholder Texto de ayuda dentro del campo.
+ * @param value Valor actual del texto.
+ * @param onValueChange Callback cuando el texto cambia.
+ * @param isError Indica si el campo debe mostrar un estado de error.
+ * @param isPasswordField Define si el campo debe tratar el texto como contraseña.
+ * @param color Color temático para el texto y los bordes.
+ */
 @Composable
 fun AguaMapInput(
     label: String,
@@ -38,7 +49,9 @@ fun AguaMapInput(
     isPasswordField: Boolean = false,
     color: Color = Negro
 ) {
+    // Estado local para alternar la visibilidad de la contraseña
     var passwordVisible by remember { mutableStateOf(false) }
+
     Column {
         Text(
             text = label,
@@ -46,6 +59,9 @@ fun AguaMapInput(
             color = color,
             modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
         )
+
+
+
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -53,8 +69,9 @@ fun AguaMapInput(
             placeholder = { Text(text = placeholder) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
+            // Lógica de transformación visual para ocultar/mostrar caracteres
             visualTransformation = if (isPasswordField && !passwordVisible) {
-                PasswordVisualTransformation() // Ocultar la contraseña
+                PasswordVisualTransformation()
             } else {
                 VisualTransformation.None
             },
@@ -70,6 +87,7 @@ fun AguaMapInput(
                 keyboardType = if (isPasswordField) KeyboardType.Password else KeyboardType.Email
             ),
             singleLine = true,
+            // Configuración exhaustiva de colores para mantener la consistencia visual
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = color,
                 unfocusedTextColor = color,
@@ -88,6 +106,9 @@ fun AguaMapInput(
     }
 }
 
+/**
+ * Icono interactivo para alternar la visibilidad en campos de contraseña.
+ */
 @Composable
 private fun PasswordTrailingIcon(
     isVisible: Boolean,
@@ -102,9 +123,10 @@ private fun PasswordTrailingIcon(
         Icon(
             painter = image,
             modifier = Modifier.size(28.dp),
-            contentDescription = if (isVisible) stringResource(R.string.pass_off) else stringResource(
-                R.string.pass_on
-            ),
+            contentDescription = if (isVisible)
+                stringResource(R.string.pass_off)
+            else
+                stringResource(R.string.pass_on),
         )
     }
 }

@@ -42,6 +42,19 @@ import cat.copernic.aguamap1.ui.theme.Rojo
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
+/**
+ * Renderiza un diálogo interactivo para la gestión (alta/edición) de categorías.
+ * * Gestiona de forma integrada:
+ * 1. Selección de imágenes locales mediante un helper de galería.
+ * 2. Visualización de progreso de subida a la nube (Cloudinary).
+ * 3. Validación de campos de texto obligatorios (nombre y descripción).
+ * 4. Control de estados de carga para evitar acciones duplicadas durante la persistencia.
+ *
+ * @param title El encabezado del diálogo (ej: "Nueva Categoría" o "Editar Categoría").
+ * @param viewModel El [CategoryViewModel] que mantiene el estado temporal de los campos.
+ * @param onDismiss Callback para cancelar la operación y cerrar el diálogo.
+ * @param onConfirm Callback para disparar la lógica de guardado en el repositorio.
+ */
 @Composable
 fun CategoryFormDialog(
     title: String,
@@ -51,6 +64,7 @@ fun CategoryFormDialog(
 ) {
     val context = LocalContext.current
 
+    // Helper personalizado para abstraer la complejidad de los contratos de la galería/cámara
     val imagePickerHelper = rememberImagePickerHelper { uri ->
         viewModel.updateSelectedImage(uri)
     }
@@ -61,6 +75,7 @@ fun CategoryFormDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // --- SECCIÓN DE IMAGEN ---
+                // Espacio dedicado a la previsualización de la imagen seleccionada o actual
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -76,12 +91,12 @@ fun CategoryFormDialog(
                                 .data(displayImage)
                                 .crossfade(true)
                                 .build(),
-                            // CORREGIDO: Añadida descripción para accesibilidad
                             contentDescription = stringResource(R.string.add_fountain_preview),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
 
+                        // Botón para limpiar la selección actual
                         IconButton(
                             onClick = {
                                 imagePickerHelper.clearSelection()
@@ -95,13 +110,13 @@ fun CategoryFormDialog(
                         ) {
                             Icon(
                                 Icons.Default.Close,
-                                // CORREGIDO: Usamos el string de quitar imagen
                                 contentDescription = stringResource(R.string.add_fountain_remove_image),
                                 tint = Rojo,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
                     } else {
+                        // Estado vacío: incita a seleccionar una imagen
                         Button(
                             onClick = { imagePickerHelper.showPickerOptions() },
                             colors = ButtonDefaults.buttonColors(containerColor = Blue10)
@@ -114,11 +129,10 @@ fun CategoryFormDialog(
                     }
                 }
 
+                // Feedback visual de la subida a Cloudinary
                 if (viewModel.isUploading) {
-                    // Opcional: Podrías añadir un texto que diga "Pujant..."
-                    // usando stringResource(R.string.add_fountain_uploading)
                     LinearProgressIndicator(
-                        progress = viewModel.uploadProgress / 100f,
+                        progress = { viewModel.uploadProgress / 100f },
                         modifier = Modifier.fillMaxWidth(),
                         color = Blue10
                     )
@@ -131,7 +145,7 @@ fun CategoryFormDialog(
                     label = { Text(stringResource(R.string.category_form_name)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    singleLine = true // Recomendado para nombres
+                    singleLine = true
                 )
                 OutlinedTextField(
                     value = viewModel.description,
@@ -142,8 +156,7 @@ fun CategoryFormDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                // IMPORTANTE: Asegúrate de que viewModel.errorMessage devuelva
-                // un string ya localizado desde el ViewModel.
+                // Visualización de errores de validación o red
                 viewModel.errorMessage?.let {
                     Text(it, color = Rojo, fontSize = 12.sp)
                 }
@@ -152,6 +165,7 @@ fun CategoryFormDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
+                // El botón solo es accionable si hay un nombre y no hay una subida en curso
                 enabled = viewModel.name.isNotBlank() && !viewModel.isUploading,
                 colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro)
             ) { Text(stringResource(R.string.category_save), color = Blanco) }

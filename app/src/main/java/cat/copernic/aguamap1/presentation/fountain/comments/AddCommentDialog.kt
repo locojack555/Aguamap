@@ -37,6 +37,15 @@ import cat.copernic.aguamap1.ui.theme.Naranja
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.NegroSuave
 
+/**
+ * Diálogo modal para la creación y edición de comentarios y valoraciones.
+ * Implementa un selector interactivo de estrellas y un campo de texto con validación.
+ * * @param initialRating Valoración por defecto (estrellas).
+ * @param initialText Texto inicial del comentario.
+ * @param isEditing Define si el diálogo está en modo edición o creación.
+ * @param onDismiss Callback para cerrar el diálogo sin guardar.
+ * @param onConfirm Callback que devuelve la valoración y el texto final.
+ */
 @Composable
 fun AddCommentDialog(
     initialRating: Int = 5,
@@ -51,8 +60,10 @@ fun AddCommentDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
+            /**
+             * Título dinámico basado en el modo del diálogo.
+             */
             Text(
-                // Localizado: Título dinámico
                 text = if (!isEditing) stringResource(R.string.dialog_add_comment_title)
                 else stringResource(R.string.edit_comment),
                 fontWeight = FontWeight.Bold,
@@ -70,7 +81,9 @@ fun AddCommentDialog(
                     color = NegroSuave
                 )
 
-                // Selector de estrellas con accesibilidad
+                /**
+                 * Selector de valoración por estrellas.
+                 */
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically,
@@ -84,7 +97,6 @@ fun AddCommentDialog(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Star,
-                                // ACCESIBILIDAD: Importante para TalkBack
                                 contentDescription = stringResource(
                                     R.string.star_rating_description,
                                     currentStarValue
@@ -96,7 +108,9 @@ fun AddCommentDialog(
                     }
                 }
 
-                // Campo de texto
+                /**
+                 * Campo de entrada de texto para el cuerpo del comentario.
+                 */
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
@@ -119,9 +133,11 @@ fun AddCommentDialog(
             }
         },
         confirmButton = {
+            /**
+             * Botón de confirmación con lógica de habilitación proactiva.
+             */
             Button(
                 onClick = { onConfirm(rating, text) },
-                // El botón solo se activa si hay una valoración y el texto no está vacío
                 enabled = rating > 0 && text.isNotBlank(),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -137,6 +153,9 @@ fun AddCommentDialog(
             }
         },
         dismissButton = {
+            /**
+             * Botón de cancelación del diálogo.
+             */
             TextButton(onClick = onDismiss) {
                 Text(
                     text = stringResource(R.string.dialog_add_comment_cancel),

@@ -8,26 +8,27 @@ import cat.copernic.aguamap1.ui.theme.Naranja
 import cat.copernic.aguamap1.ui.theme.Rojo
 import kotlin.random.Random
 
-// 1. DEFINIR TUS COLORES PERSONALIZADOS
+// 1. DEFINICIÓN DE COLORES TEMÁTICOS POR CATEGORÍA
 val VerdeHoja = Color(0xFF4CAF50)
 val AzulAgua = Color(0xFF2196F3)
 
 /**
- * 2. CAMBIA ESTO PARA TUS CATEGORÍAS ACTUALES
- * Sustituye "NombreDeTuCategoria1" por el nombre exacto de tu categoría
+ * Mapa que vincula los nombres de las categorías con sus colores representativos.
+ * Asegúrate de que los nombres coincidan con los definidos en tu base de datos Firestore.
  */
 private val categoryColorMap = mapOf(
-    "Ornamental" to VerdeHoja, // Cámbialo por el nombre real que pusiste
-    "Potable" to AzulAgua    // Cámbialo por el nombre real que pusiste
+    "Ornamental" to VerdeHoja,
+    "Potable" to AzulAgua
 )
 
 /**
- * Obtiene el color de la categoría. Si no coincide con el mapa, genera uno aleatorio.
+ * Determina el color asociado a una categoría.
+ * Si la categoría no está mapeada, genera un color determinista basado en el ID
+ * para que la misma categoría siempre tenga el mismo color, pero evitando tonos muy oscuros o claros.
  */
 fun getCategoryColor(categoryName: String, categoryId: String): Color {
-    // Busca por nombre en el mapa de arriba
     return categoryColorMap[categoryName] ?: run {
-        // Fallback: Si no existe el nombre, genera uno aleatorio suave
+        // Generador de color aleatorio basado en el hash del ID para consistencia visual
         val seed = categoryId.hashCode()
         val random = Random(seed)
         Color(
@@ -39,8 +40,14 @@ fun getCategoryColor(categoryName: String, categoryId: String): Color {
     }
 }
 
+
 /**
- * Color para el Marcador del Mapa (Int ARGB).
+ * Obtiene el color del marcador para Google Maps.
+ * Devuelve un Int ARGB, que es el formato requerido por BitmapDescriptorFactory.
+ * * Prioridad de color:
+ * 1. Naranja si está pendiente de validación.
+ * 2. Rojo si la fuente no está operativa (averiada).
+ * 3. Color de categoría si todo es correcto.
  */
 fun Fountain.getMarkerColor(): Int {
     return when {
@@ -51,7 +58,8 @@ fun Fountain.getMarkerColor(): Int {
 }
 
 /**
- * Color para la UI de Compose (Color).
+ * Obtiene el color de estado para componentes de Compose (Chips, Iconos, Textos).
+ * Devuelve un objeto Color de Compose.
  */
 fun Fountain.getStatusColor(): Color {
     return when {
@@ -62,7 +70,8 @@ fun Fountain.getStatusColor(): Color {
 }
 
 /**
- * Texto de estado.
+ * Genera el texto descriptivo del estado actual de la fuente.
+ * Útil para etiquetas de información y BottomSheets.
  */
 fun Fountain.getStatusText(): String {
     return when {

@@ -36,6 +36,14 @@ import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.Rojo
 
+/**
+ * Pantalla de recuperación de contraseña.
+ * * Permite al usuario introducir su correo electrónico para recibir un enlace de restauración.
+ * Implementa feedback visual para estados de éxito (correo enviado) y error (formato inválido).
+ *
+ * @param viewModel Instancia de [ForgotPasswordViewModel] para gestionar la lógica de envío.
+ * @param navigateToLogin Callback para regresar a la pantalla de autenticación.
+ */
 @Composable
 fun ForgotPasswordScreen(
     viewModel: ForgotPasswordViewModel = hiltViewModel(),
@@ -49,10 +57,12 @@ fun ForgotPasswordScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
+            // Cabecera corporativa de AguaMap
             AguaMapHeader()
 
             Spacer(modifier = Modifier.height(56.dp))
 
+            // Contenedor principal con diseño de tarjeta elevado
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -64,7 +74,7 @@ fun ForgotPasswordScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp, vertical = 32.dp)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(rememberScrollState()) // Soporte para pantallas pequeñas o teclado abierto
                 ) {
                     Text(
                         text = stringResource(R.string.recovery_password),
@@ -81,6 +91,7 @@ fun ForgotPasswordScreen(
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                     )
 
+                    // Entrada de texto reutilizable con soporte para estados de error
                     AguaMapInput(
                         label = stringResource(R.string.email),
                         placeholder = stringResource(R.string.email_example),
@@ -89,6 +100,7 @@ fun ForgotPasswordScreen(
                         isError = viewModel.isError
                     )
 
+                    // Mensaje de éxito: Confirmación de envío de enlace
                     if (viewModel.isSent) {
                         Text(
                             text = stringResource(R.string.link_sent),
@@ -98,6 +110,7 @@ fun ForgotPasswordScreen(
                         )
                     }
 
+                    // Mensaje de error: Correo no encontrado o formato incorrecto
                     if (viewModel.isError) {
                         Text(
                             text = stringResource(R.string.incorrect_email),
@@ -107,9 +120,9 @@ fun ForgotPasswordScreen(
                         )
                     }
 
+                    // Botón de acción principal con validación de habilitación
                     Button(
                         onClick = { viewModel.onResetPasswordClick() },
-                        // DESHABILITADO si el email está vacío para evitar clics innecesarios
                         enabled = viewModel.email.isNotBlank(),
                         modifier = Modifier
                             .padding(top = 24.dp)
@@ -130,6 +143,7 @@ fun ForgotPasswordScreen(
                         )
                     }
 
+                    // Enlace de retorno a la pantalla de inicio de sesión
                     Text(
                         text = stringResource(R.string.back_home),
                         color = Blue10,

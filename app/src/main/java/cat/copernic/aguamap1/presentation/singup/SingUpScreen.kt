@@ -37,6 +37,11 @@ import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.Rojo
 
+/**
+ * Pantalla de registro de nuevos usuarios (SignUp).
+ * Utiliza el AguaMapHeader reutilizable y una Card inferior para el formulario,
+ * siguiendo la estética de "hoja deslizante" de la aplicación.
+ */
 @Composable
 fun SingUpScreen(
     viewModel: SingUpViewModel = hiltViewModel(),
@@ -50,8 +55,13 @@ fun SingUpScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
+            // CABECERA: Incluye logo y selector de idioma (isSplash = true por defecto)
             AguaMapHeader()
+
             Spacer(modifier = Modifier.height(56.dp))
+
+
+            // CUERPO: Formulario de registro en una Card con esquinas redondeadas superiores
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -71,25 +81,43 @@ fun SingUpScreen(
                         fontWeight = FontWeight.Bold,
                         color = Negro
                     )
+
+                    // INPUT: Correo electrónico
                     AguaMapInput(
-                        stringResource(R.string.email),
-                        stringResource(R.string.email_example),
-                        viewModel.email,
+                        label = stringResource(R.string.email),
+                        placeholder = stringResource(R.string.email_example),
+                        value = viewModel.email,
                         onValueChange = { viewModel.email = it },
                         isError = viewModel.emailError != null
                     )
-                    viewModel.emailError?.let { Text(stringResource(it), color = Color.Red) }
+                    viewModel.emailError?.let {
+                        Text(
+                            text = stringResource(it),
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                        )
+                    }
+
+                    // INPUT: Contraseña
                     AguaMapInput(
-                        stringResource(R.string.password),
-                        stringResource(R.string.password_example),
-                        viewModel.password,
-                        onValueChange = {
-                            viewModel.password = it
-                        },
+                        label = stringResource(R.string.password),
+                        placeholder = stringResource(R.string.password_example),
+                        value = viewModel.password,
+                        onValueChange = { viewModel.password = it },
                         isError = viewModel.passwordError != null,
                         isPasswordField = true
                     )
-                    viewModel.passwordError?.let { Text(stringResource(it), color = Color.Red) }
+                    viewModel.passwordError?.let {
+                        Text(
+                            text = stringResource(it),
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                        )
+                    }
+
+                    // Feedback de verificación (Si el registro fue exitoso pero falta confirmar email)
                     if (viewModel.isWaitingVerification) {
                         Text(
                             text = stringResource(R.string.link_sent),
@@ -101,6 +129,8 @@ fun SingUpScreen(
                                 .align(Alignment.CenterHorizontally)
                         )
                     }
+
+                    // BOTÓN: Ejecutar registro
                     Button(
                         onClick = { viewModel.onSingUpClick() },
                         modifier = Modifier
@@ -112,11 +142,13 @@ fun SingUpScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = Blue10)
                     ) {
                         Text(
-                            stringResource(R.string.text_sing_in_link),
+                            text = stringResource(R.string.text_sing_in_link),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
+
+                    // PIE DE PÁGINA: Enlace para volver al login
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -127,7 +159,7 @@ fun SingUpScreen(
                         Text(stringResource(R.string.has_acc), color = Color.Gray)
                         TextButton(onClick = { navigateToLogin() }) {
                             Text(
-                                stringResource(R.string.init),
+                                text = stringResource(R.string.init),
                                 fontWeight = FontWeight.Bold,
                                 color = Blue10
                             )
