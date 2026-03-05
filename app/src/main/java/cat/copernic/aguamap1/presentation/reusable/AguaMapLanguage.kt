@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel // IMPORTANTE: Importar hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.language.LanguageViewModel
 import cat.copernic.aguamap1.ui.theme.AguaMapGradient
@@ -32,7 +32,7 @@ import cat.copernic.aguamap1.ui.theme.Blanco
 @Composable
 fun AguaMapLanguage(
     modifier: Modifier = Modifier,
-    viewModel: LanguageViewModel = viewModel()
+    viewModel: LanguageViewModel = hiltViewModel() // CORRECCIÓN: Usar hiltViewModel() en lugar de viewModel()
 ) {
     // Estado para controlar si el menú desplegable está abierto
     var expanded by remember { mutableStateOf(false) }

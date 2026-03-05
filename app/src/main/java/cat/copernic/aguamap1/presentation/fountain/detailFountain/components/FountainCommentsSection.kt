@@ -42,7 +42,8 @@ fun FountainCommentsSection(
     onAddClick: () -> Unit,
     onEditComment: (Comment) -> Unit,
     onDeleteComment: (Comment) -> Unit,
-    onReportComment: (Comment) -> Unit
+    onReportComment: (Comment) -> Unit,
+    onCensorComment: (Comment) -> Unit
 ) {
     Column {
         /**
@@ -87,7 +88,7 @@ fun FountainCommentsSection(
                     commentObj = comment,
                     isMyComment = comment.userId == currentUserId,
                     isAdmin = isAdmin,
-                    onCensor = { /* Implementado en ViewModel superior */ },
+                    onCensor = { onCensorComment(comment) },
                     onDelete = { onDeleteComment(comment) },
                     onEdit = { onEditComment(comment) },
                     onReport = { onReportComment(comment) }

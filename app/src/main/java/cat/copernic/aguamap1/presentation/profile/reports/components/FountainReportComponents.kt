@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Report
+import cat.copernic.aguamap1.presentation.util.VerdeHoja
+import cat.copernic.aguamap1.ui.theme.Negro
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -162,7 +164,8 @@ fun FountainReportCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        color = Negro
                     )
                 }
             }
@@ -251,14 +254,15 @@ fun EmptyFountainReportsState() {
         Icon(
             Icons.Default.CheckCircle,
             null,
-            tint = Color(0xFF43A047),
+            tint = VerdeHoja,
             modifier = Modifier.size(64.dp)
         )
         Spacer(Modifier.height(16.dp))
         Text(
             stringResource(R.string.reports_empty_title),
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
+            fontSize = 18.sp,
+            color = Negro
         )
         Text(stringResource(R.string.reports_empty_desc), color = Color.Gray)
     }

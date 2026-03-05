@@ -1,8 +1,10 @@
 package cat.copernic.aguamap1.data.repository
 
+import android.util.Log
 import cat.copernic.aguamap1.domain.model.Report
 import cat.copernic.aguamap1.domain.repository.ReportRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -39,12 +41,17 @@ class FirebaseReportRepository @Inject constructor(
      */
     override suspend fun getPendingReports(): Result<List<Report>> = try {
         val snapshot = firestore.collection("reports")
-            .whereEqualTo("resolved", false) // Filtro para obtener solo los no resueltos
+            .whereEqualTo("resolved", false)
+            .orderBy(
+                "timestamp",
+                Query.Direction.ASCENDING
+            )// Filtro para obtener solo los no resueltos
             .get().await()
         // Convertimos los documentos directamente a una lista de objetos de tipo Report
         val reports = snapshot.toObjects(Report::class.java)
         Result.success(reports)
     } catch (e: Exception) {
+        Log.e("Reportes", "Error al obtener reportes ordenados: ${e.message}")
         Result.failure(e)
     }
 

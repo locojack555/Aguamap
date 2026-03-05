@@ -91,12 +91,33 @@ class DetailFountainViewModel @Inject constructor(
     }
 
     /**
-     * Establece la fuente actual y dispara la búsqueda del nombre del creador.
+     * Selecciona una fuente para mostrar su detalle y calcula la distancia
+     * si se proporcionan las coordenadas del usuario.
      */
-    fun selectFountain(fountain: Fountain) {
+    fun selectFountain(fountain: Fountain, userLat: Double? = null, userLng: Double? = null) {
         selectedFountain = fountain
         _fountainIdFlow.value = fountain.id
+
+        // Si recibimos coordenadas, calculamos la distancia inmediatamente
+        if (userLat != null && userLng != null) {
+            val distance = calculateDistance(
+                userLat, userLng,
+                fountain.latitude, fountain.longitude
+            )
+            // Suponiendo que tienes un estado para la distancia, lo actualizamos aquí
+            // p.ej: _fountainDistance.value = distance
+        }
+
         fetchCreatorName(fountain.createdBy)
+    }
+
+    /**
+     * Función auxiliar para calcular la distancia en metros entre dos puntos (Haversine).
+     */
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
+        val results = FloatArray(1)
+        android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, results)
+        return results[0]
     }
 
     private fun fetchCreatorName(uid: String) {
@@ -264,7 +285,15 @@ class DetailFountainViewModel @Inject constructor(
         val userId = currentUserId ?: return
         val fountain = selectedFountain ?: return
         viewModelScope.launch {
-            val report = Report(fountain.id, fountain.name, userId, description)
+            val report = Report(
+                id = "", // Se generará en el repositorio
+                fountainId = fountain.id,
+                fountainName = fountain.name,
+                userId = userId,
+                description = description,
+                timestamp = System.currentTimeMillis(),
+                resolved = false
+            )
             sendReportUseCase(report)
                 .onSuccess { onSuccess() }
                 .onFailure { errorMessage = getString(R.string.error_report_comment) }

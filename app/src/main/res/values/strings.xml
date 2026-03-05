@@ -270,7 +270,8 @@
     <string name="error_invalid_format">Formato inválido (ej: 41.123)</string>
     <string name="error_lat_range">Debe estar entre -90 y 90</string>
     <string name="error_lng_range">Debe estar entre -180 y 180</string>
-    <string name="error_location_invalid">No se ha podido determinar la ubicación</string><string name="star_rating_description">%1$d estrellas de 5</string>
+    <string name="error_location_invalid">No se ha podido determinar la ubicación</string>
+    <string name="star_rating_description">%1$d estrellas de 5</string>
     <string name="dialog_add_comment_placeholder">Escribe aquí tu experiencia...</string>
     <string name="error_sync_comments">Error al sincronizar comentarios.</string>
     <string name="error_add_comment">No se pudo publicar el comentario.</string>
@@ -302,7 +303,8 @@
     <string name="login_error_email_not_verified">Por favor, verifica tu correo antes de entrar.</string>
     <string name="login_btn_forgot_password">¿Has olvidado la contraseña?</string>
     <string name="login_btn_enter">ENTRAR</string>
-    <string name="login_text_no_account">¿No tienes cuenta?</string><string name="toast_fountain_confirmed">¡Fuente confirmada!</string>
+    <string name="login_text_no_account">¿No tienes cuenta?</string>
+    <string name="toast_fountain_confirmed">¡Fuente confirmada!</string>
     <string name="toast_error_fountain_not_found">Error: No se encontró la fuente</string>
     <string name="edit_profile_delete_selection">Eliminar imagen seleccionada</string>
     <string name="common_ok">Aceptar</string>
@@ -402,22 +404,23 @@
     <string name="lang_ca">Catalán</string>
     <string name="lang_en">Inglés</string>
     <string name="close_button_description">Cerrar</string>
+    <string name="reports_go_to_fountain">Ver fuente</string>
 
 
-        <string name="category_title">Categoría</string>
-        <string name="category_natural">Natural</string>
-        <string name="category_urban">Urbana</string>
-        <string name="category_park">Parque</string>
-        <string name="category_historical">Histórica</string>
+    <string name="category_title">Categoría</string>
+    <string name="category_natural">Natural</string>
+    <string name="category_urban">Urbana</string>
+    <string name="created_by">Creado por</string>
+    <string name="apply_filters">Aplicar</string>
+    <string name="category_park">Parque</string>
+    <string name="category_historical">Histórica</string>
 
 
+    <string name="fountain_operational_status">Estado de la fuente</string>
+    <string name="operational_yes">En funcionamiento</string>
+    <string name="operational_no">Fuera de servicio</string>
 
-
-        <string name="fountain_operational_status">Estado de la fuente</string>
-        <string name="operational_yes">En funcionamiento</string>
-        <string name="operational_no">Fuera de servicio</string>
-
-        <string name="btn_create_fountain">Crear fuente</string>
-        <string name="btn_update_fountain">Guardar cambios</string>
+    <string name="btn_create_fountain">Crear fuente</string>
+    <string name="btn_update_fountain">Guardar cambios</string>
 
 </resources>

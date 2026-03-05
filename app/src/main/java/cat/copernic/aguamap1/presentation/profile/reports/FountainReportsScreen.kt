@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +21,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -31,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -43,20 +42,33 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.profile.reports.components.EmptyFountainReportsState
 import cat.copernic.aguamap1.presentation.profile.reports.components.FountainReportCard
+import cat.copernic.aguamap1.ui.theme.Blanco
+import cat.copernic.aguamap1.ui.theme.PerfilGradient
 import kotlinx.coroutines.delay
 
 /**
  * Pantalla principal de gestión de reportes de fuentes.
- * Permite a los administradores visualizar una lista de problemas reportados,
- * refrescar los datos mediante gestos y navegar a la ubicación de la fuente reportada.
+ * Permite a los administradores visualizar una lista de problemas reportados.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FountainReportsScreen(
+    userLat: Double?, // NUEVO: Recibido desde el NavigationGraph
+    userLng: Double?, // NUEVO: Recibido desde el NavigationGraph
     onBack: () -> Unit,
     onGoToFountain: (fountainId: String) -> Unit,
     viewModel: FountainReportsViewModel = hiltViewModel()
 ) {
+    // Sincronización de ubicación igual que en CategoriesScreen
+    // Esto asegura que el ViewModel tenga la última ubicación conocida
+    LaunchedEffect(userLat, userLng) {
+        if (userLat != null && userLng != null) {
+            // Si tu ViewModel de reportes tiene setLocation, úsalo.
+            // Si no, al menos garantiza que las variables se propaguen al navegar.
+            viewModel.setLocation(userLat, userLng)
+        }
+    }
+
     // Suscripción reactiva a los estados del ViewModel
     val reports by viewModel.reports.collectAsStateWithLifecycle()
     val userNames by viewModel.userNames.collectAsStateWithLifecycle()
@@ -86,22 +98,21 @@ fun FountainReportsScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Blanco)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Cabecera manual
             ReportsHeader(
                 count = reports.size,
                 onBack = onBack,
                 onRefresh = { viewModel.loadReports() }
             )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFFF1F3F4))
-        ) {
+
             // Componente de refresco nativo de Material 3
             PullToRefreshBox(
                 isRefreshing = isLoading,
@@ -109,10 +120,10 @@ fun FountainReportsScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 if (!isLoading && reports.isEmpty()) {
-                    // Estado vacío cuando no hay reportes pendientes
                     EmptyFountainReportsState()
                 } else {
                     LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -122,14 +133,27 @@ fun FountainReportsScreen(
                                 reporterName = userNames[report.userId] ?: "...",
                                 onResolve = { viewModel.resolveReport(report.id) },
                                 onGoToFountain = { onGoToFountain(report.fountainId) }
+                                // Si FountainReportCard muestra distancia, pásale userLat y userLng aquí
                             )
                         }
-                        // Espacio de cortesía para no tapar el contenido con botones flotantes
-                        item { Spacer(Modifier.height(80.dp)) }
+                        item {
+                            Spacer(
+                                modifier = Modifier
+                                    .navigationBarsPadding()
+                                    .height(80.dp)
+                            )
+                        }
                     }
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+        )
     }
 }
 
@@ -146,11 +170,7 @@ private fun ReportsHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFF00B4DB), Color(0xFF0083B0))
-                )
-            )
+            .background(PerfilGradient)
             .statusBarsPadding()
     ) {
         Row(
@@ -172,7 +192,6 @@ private fun ReportsHeader(
                     fontWeight = FontWeight.Bold
                 )
 
-                // Uso de Plurals para adaptar el texto según la cantidad de reportes
                 val pendingText = context.resources.getQuantityString(
                     R.plurals.pending_count_short,
                     count,

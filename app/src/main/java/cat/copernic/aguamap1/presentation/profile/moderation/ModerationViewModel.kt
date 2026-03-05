@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Comment
+import cat.copernic.aguamap1.domain.model.Fountain
 import cat.copernic.aguamap1.domain.model.ReportedComment
 import cat.copernic.aguamap1.domain.repository.FountainRepository
 import cat.copernic.aguamap1.domain.usecase.comments.CensorCommentUseCase
@@ -41,12 +42,25 @@ class ModerationViewModel @Inject constructor(
     private val _successResId = MutableStateFlow<Int?>(null)
     val successResId: StateFlow<Int?> = _successResId.asStateFlow()
 
+    // --- LÓGICA DE UBICACIÓN PARA NAVEGACIÓN ---
+    private var _userLat: Double? = null
+    private var _userLng: Double? = null
+
+    /**
+     * Establece la ubicación actual del usuario para que esté disponible
+     * al navegar hacia el detalle de una fuente.
+     */
+    fun setLocation(lat: Double?, lng: Double?) {
+        _userLat = lat
+        _userLng = lng
+    }
+
     init {
         loadReportedComments()
     }
 
     /**
-     * Recupera la lista de reportes de la colección "reports_comments" y
+     * Recupera la lista de reportes de la colección "reportsComments" y
      * realiza un "join" manual con la subcolección de comentarios de cada fuente.
      */
     fun loadReportedComments() {
@@ -71,7 +85,6 @@ class ModerationViewModel @Inject constructor(
                         timestamp = doc.getLong("timestamp") ?: 0L
                     )
                 }
-
 
                 // 2. Enriquecer con los datos del comentario original (Contenido del mensaje)
                 val enrichedItems = items.map { item ->
@@ -169,6 +182,26 @@ class ModerationViewModel @Inject constructor(
             .document(reportId)
             .delete()
             .await()
+    }
+
+    /**
+     * Obtiene una fuente por su ID para permitir la navegación al detalle global.
+     * Se usa cuando el administrador pulsa en "Ver fuente" desde un comentario reportado.
+     */
+    fun getFountainById(fountainId: String, onResult: (Fountain?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val document = db.collection("fountains")
+                    .document(fountainId)
+                    .get()
+                    .await()
+
+                val fountain = document.toObject(Fountain::class.java)?.copy(id = document.id)
+                onResult(fountain)
+            } catch (e: Exception) {
+                onResult(null)
+            }
+        }
     }
 
     /**

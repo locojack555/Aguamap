@@ -23,10 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.domain.model.StateFountain
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.GrisClaro
 import cat.copernic.aguamap1.ui.theme.Negro
-import cat.copernic.aguamap1.ui.theme.NegroSuave
 import cat.copernic.aguamap1.ui.theme.Rojo
 
 /**
@@ -54,7 +54,7 @@ fun FountainActionButtons(
          * Botón de validación comunitaria.
          * Solo es visible mientras la fuente no haya alcanzado el quórum de validación (3 votos).
          */
-        if (uiFountain.positiveVotes < 3) {
+        if (uiFountain.status != StateFountain.ACCEPTED) {
             Button(
                 onClick = onConfirm,
                 enabled = !hasVotedPositive,

@@ -1,8 +1,10 @@
 package cat.copernic.aguamap1.presentation.login
 
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
@@ -115,15 +117,34 @@ class LoginViewModel @Inject constructor(
     /**
      * Verifica si el usuario autenticado tiene un documento de perfil creado.
      * Si no existe (caso típico de primer login social), activa el estado 'needsName'.
+     * AHORA: También recupera y aplica el idioma del usuario antes de navegar.
      */
     private suspend fun checkUserAndNavigate() {
         val uid = repository.getCurrentUserUid()
         if (uid != null) {
-            val exists = repository.checkIfUserExists(uid)
-            if (exists) {
+            val userResult = repository.getUserData(uid)
+
+            if (userResult.isSuccess) {
+                val user = userResult.getOrNull()
+
+                // --- SINCRONIZACIÓN DE IDIOMA ---
+                user?.language?.let { savedLanguage ->
+                    if (savedLanguage.isNotEmpty()) {
+                        val appLocale: LocaleListCompat =
+                            LocaleListCompat.forLanguageTags(savedLanguage)
+                        AppCompatDelegate.setApplicationLocales(appLocale)
+                    }
+                }
+
                 _navigateToHome.emit(true)
             } else {
-                needsName = true
+                // Si no se encuentran datos, comprobamos si es que no existe el documento
+                val exists = repository.checkIfUserExists(uid)
+                if (exists) {
+                    _navigateToHome.emit(true)
+                } else {
+                    needsName = true
+                }
             }
         }
     }

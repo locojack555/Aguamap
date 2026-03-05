@@ -1,31 +1,57 @@
 package cat.copernic.aguamap1.presentation.language
 
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import cat.copernic.aguamap1.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel encargado de la gestión de la internacionalización (i18n) de la aplicación.
- * Utiliza la API moderna de Android (AppCompatDelegate) para permitir al usuario
- * cambiar el idioma de forma dinámica sin necesidad de reiniciar manualmente la actividad
- * o gestionar la persistencia en SharedPreferences de forma rudimentaria.
- */
 @HiltViewModel
-class LanguageViewModel @Inject constructor() : ViewModel() {
+class LanguageViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     /**
-     * Cambia el idioma de la aplicación a nivel global.
-     * Android 13+ y las librerías de compatibilidad gestionan automáticamente
-     * el guardado de esta preferencia y la recreación de las vistas necesarias.
-     * * @param languageCode Código ISO del lenguaje (ej: "es", "ca", "en").
+     * Cambia el idioma manualmente (Menú desplegable) y lo guarda en Firestore.
      */
     fun onChangeLanguage(languageCode: String) {
-        // Creamos una lista de locales compatible con la API de Android
-        val appLocales = LocaleListCompat.forLanguageTags(languageCode)
+        applyLanguage(languageCode)
 
-        // Aplicamos el cambio de idioma globalmente en la aplicación
-        AppCompatDelegate.setApplicationLocales(appLocales)
+        viewModelScope.launch {
+            authRepository.getCurrentUserUid()?.let { uid ->
+                authRepository.updateLanguagePreference(uid, languageCode)
+            }
+        }
+    }
+
+    /**
+     * SINCRONIZACIÓN FORZADA: Recupera el idioma del perfil y lo aplica.
+     * Esto es lo que hará que el idioma de Firestore mande sobre el del Login.
+     */
+    fun syncUserLanguage() {
+        val uid = authRepository.getCurrentUserUid() ?: return
+
+        viewModelScope.launch {
+            authRepository.getUserData(uid).onSuccess { user ->
+                val userLanguage = user.language
+                val currentAppLocale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+
+                if (userLanguage.isNotEmpty() && userLanguage != currentAppLocale) {
+                    Log.d("LanguageVM", "Forzando idioma de Firestore: $userLanguage")
+                    applyLanguage(userLanguage)
+                }
+            }.onFailure {
+                Log.e("LanguageVM", "Error al sincronizar: ${it.message}")
+            }
+        }
+    }
+
+    private fun applyLanguage(languageCode: String) {
+        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
+        AppCompatDelegate.setApplicationLocales(appLocale)
     }
 }

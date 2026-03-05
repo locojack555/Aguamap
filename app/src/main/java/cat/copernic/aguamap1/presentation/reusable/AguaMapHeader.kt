@@ -33,7 +33,7 @@ fun AguaMapHeader(
     modifier: Modifier = Modifier,
     logoSize: Dp = 160.dp,
     innerSpacing: Dp = 0.dp,
-    isSplash: Boolean = true
+    isSplash: Boolean = false
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         if (!isSplash) {

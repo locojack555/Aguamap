@@ -46,26 +46,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.presentation.language.LanguageViewModel
 
 /**
  * Pantalla de Ajustes de la aplicación.
- * Permite la configuración del idioma de forma dinámica.
+ * Permite la configuración del idioma con persistencia en el perfil del usuario.
  */
 @Composable
 fun SettingsScreen(
     onClose: () -> Unit = {},
-    viewModel: LanguageViewModel = viewModel()
+    viewModel: LanguageViewModel = hiltViewModel() // Cambiado a hiltViewModel para inyección
 ) {
-    // CORRECCIÓN: Lógica mejorada para detectar el idioma actual de la App
+    // Detectamos el idioma actual de la App para inicializar el selector
     var selectedLanguage by remember {
-        // Obtenemos el locale actual (ej: "ca-ES" o "es-ES")
         val currentLocale = AppCompatDelegate.getApplicationLocales().get(0)
         val languageCode = currentLocale?.language?.lowercase() ?: "es"
-
-        // Validamos que sea uno de los soportados, si no, por defecto español
         val initial = if (languageCode in listOf("es", "ca", "en")) languageCode else "es"
         mutableStateOf(initial)
     }
@@ -75,7 +72,7 @@ fun SettingsScreen(
             .fillMaxWidth()
             .background(Color(0xFFF1F3F4))
     ) {
-        // CABECERA: Gradiente azul y título
+        // CABECERA
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -107,10 +104,12 @@ fun SettingsScreen(
             }
         }
 
-        // CUERPO: Selección de idioma
-        Column(modifier = Modifier
-            .padding(16.dp)
-            .fillMaxHeight()) {
+        // CUERPO
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxHeight()
+        ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -130,6 +129,7 @@ fun SettingsScreen(
                         selectedLanguage = selectedLanguage,
                         onLanguageSelected = { code ->
                             selectedLanguage = code
+                            // Esta llamada ahora cambia la UI y persiste en Firestore
                             viewModel.onChangeLanguage(code)
                         }
                     )
@@ -156,7 +156,6 @@ fun AguaMapLanguageSelector(
         "en" to stringResource(id = R.string.lang_en)
     )
 
-    // Buscamos la etiqueta según el código seleccionado (ej: "ca" -> "Català")
     val selectedLabel = languages.find { it.first == selectedLanguage }?.second
         ?: languages.first().second
 
@@ -186,8 +185,6 @@ fun AguaMapLanguageSelector(
                     .rotate(arrowRotation)
             )
         }
-
-
 
         AnimatedVisibility(
             visible = expanded,

@@ -20,22 +20,27 @@ fun NavigationWrapper(navHostController: NavHostController) {
 
     // Se define el NavHost que orquestará todas las pantallas de nivel raíz.
     // El 'startDestination' indica que la primera pantalla al abrir la app será 'Initial'.
-    NavHost(navController = navHostController, startDestination = RootScreen.Initial.route) {
+    NavHost(
+        navController = navHostController,
+        startDestination = RootScreen.Initial.route
+    ) {
 
         // 1. Pantalla Inicial / Bienvenida
         composable(RootScreen.Initial.route) {
-            InitialScreen(navHostController)
+            // El InitialScreen internamente ya usa hiltViewModel(),
+            // lo que asegura la inyección de AuthRepository.
+            InitialScreen(navController = navHostController)
         }
 
         // 2. Pantalla de Login
-        // Gestiona las navegaciones hacia el olvido de contraseña, registro o éxito en el acceso.
         composable(RootScreen.Login.route) {
             LoginScreen(
                 navigateToForgotPassword = { navHostController.navigate(RootScreen.ForgotPassword.route) },
                 navigateToSingUp = { navHostController.navigate(RootScreen.SignUp.route) },
                 onLoginSuccess = {
-                    // Al entrar al Home, se suele limpiar el historial previo para no volver al Login con 'atrás'
+                    // Limpieza del backstack para seguridad
                     navHostController.navigate(RootScreen.Home.route) {
+                        popUpTo(RootScreen.Initial.route) { inclusive = true }
                         popUpTo(RootScreen.Login.route) { inclusive = true }
                     }
                 }
@@ -45,18 +50,26 @@ fun NavigationWrapper(navHostController: NavHostController) {
         // 3. Pantalla de Registro (SignUp)
         composable(RootScreen.SignUp.route) {
             SingUpScreen(
-                navigateToLogin = { navHostController.navigate(RootScreen.Login.route) })
+                navigateToLogin = {
+                    navHostController.navigate(RootScreen.Login.route) {
+                        popUpTo(RootScreen.SignUp.route) { inclusive = true }
+                    }
+                }
+            )
         }
 
         // 4. Pantalla de Recuperación de Contraseña
         composable(RootScreen.ForgotPassword.route) {
             ForgotPasswordScreen(
-                navigateToLogin = { navHostController.navigate(RootScreen.Login.route) })
+                navigateToLogin = {
+                    navHostController.navigate(RootScreen.Login.route) {
+                        popUpTo(RootScreen.ForgotPassword.route) { inclusive = true }
+                    }
+                }
+            )
         }
 
         // 5. Pantalla Principal (Home)
-        // Recibe el 'rootNavController' para que las pantallas internas puedan, por ejemplo,
-        // cerrar sesión y volver al flujo de Login definido aquí.
         composable(RootScreen.Home.route) {
             HomeScreen(rootNavController = navHostController)
         }
