@@ -31,6 +31,19 @@ class FountainReportsViewModel @Inject constructor(
     private val _reports = MutableStateFlow<List<Report>>(emptyList())
     val reports: StateFlow<List<Report>> = _reports.asStateFlow()
 
+    // --- LÓGICA DE UBICACIÓN ---
+    private var _userLat: Double? = null
+    private var _userLng: Double? = null
+
+    /**
+     * Establece la ubicación actual del usuario para cálculos de distancia.
+     */
+    fun setLocation(lat: Double?, lng: Double?) {
+        _userLat = lat
+        _userLng = lng
+        // Si quisieras recalcular distancias en la lista de reportes, lo harías aquí.
+    }
+
     // Caché en memoria para evitar peticiones repetidas a Firebase Auth/Firestore por el mismo UID
     private val usernameCache = mutableMapOf<String, String>()
 

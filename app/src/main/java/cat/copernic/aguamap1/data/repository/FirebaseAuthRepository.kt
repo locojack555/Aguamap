@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.data.repository
 
+import cat.copernic.aguamap1.domain.model.User
 import cat.copernic.aguamap1.domain.model.UserRole
 import cat.copernic.aguamap1.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -23,6 +24,31 @@ class FirebaseAuthRepository @Inject constructor(
      */
     override fun isUserLoggedIn(): Boolean {
         return auth.currentUser != null
+    }
+
+    /**
+     * Actualiza la preferencia de idioma del usuario en Firestore  .
+     */
+    override suspend fun updateLanguagePreference(uid: String, languageCode: String): Result<Unit> {
+        return try {
+            firestore.collection("users").document(uid)
+                .update("language", languageCode).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Obtiene el usuario completo para conocer su idioma preferido al hacer login.
+     */
+    override suspend fun getUserData(uid: String): Result<User> = try {
+        val document = firestore.collection("users").document(uid).get().await()
+        val user = document.toObject(User::class.java)
+        if (user != null) Result.success(user)
+        else Result.failure(Exception("Usuario no encontrado"))
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
     /**
@@ -193,7 +219,11 @@ class FirebaseAuthRepository @Inject constructor(
     /**
      * Actualiza los datos de perfil (nombre y email) en la base de datos Firestore.
      */
-    override suspend fun updateUserProfile(userId: String, nombre: String, email: String): Result<Unit> {
+    override suspend fun updateUserProfile(
+        userId: String,
+        nombre: String,
+        email: String
+    ): Result<Unit> {
         return try {
             val userRef = firestore.collection("users").document(userId)
             val updates = mapOf(

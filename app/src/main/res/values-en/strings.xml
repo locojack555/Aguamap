@@ -13,12 +13,15 @@
     <string name="error_password_uppercase">Password must contain at least one uppercase letter.</string>
     <string name="recovery_password">Recover password</string>
     <string name="category_new_title">New Category</string>
+    <string name="reports_go_to_fountain">View fountain</string>
     <string name="category_edit_title">Edit Category</string>
     <string name="category_close">Close</string>
     <string name="category_no_fountains">No fountains available</string>
     <string name="category_only_broken">Only Broken</string>
     <string name="error_title">Attention</string>
     <string name="category_accept">Accept</string>
+    <string name="created_by">Created by</string>
+    <string name="apply_filters">Apply</string>
     <string name="category_save">Save</string>
     <string name="category_cancel">Cancel</string>
     <string name="category_form_select_image">Select image</string>
@@ -313,7 +316,8 @@
     <string name="common_delete">Delete</string>
     <string name="success_report_resolved">Report marked as resolved</string>
     <string name="reports_btn_resolve_short">Resolved</string>
-    <string name="reports_btn_view_fountain">View fountain</string><string name="success_comment_deleted">Comment deleted successfully</string>
+    <string name="reports_btn_view_fountain">View fountain</string>
+    <string name="success_comment_deleted">Comment deleted successfully</string>
     <string name="success_comment_censored">Comment censored successfully</string>
     <string name="success_report_dismissed">Report dismissed</string>
     <string name="error_deleting_comment">Error trying to delete comment</string>
@@ -404,18 +408,18 @@
     <string name="error_generic">An unexpected error occurred</string>
 
 
-        <string name="category_title">Category</string>
-        <string name="category_natural">Natural</string>
-        <string name="category_urban">Urban</string>
-        <string name="category_park">Park</string>
-        <string name="category_historical">Historical</string>
+    <string name="category_title">Category</string>
+    <string name="category_natural">Natural</string>
+    <string name="category_urban">Urban</string>
+    <string name="category_park">Park</string>
+    <string name="category_historical">Historical</string>
 
 
-        <string name="fountain_operational_status">Fountain status</string>
-        <string name="operational_yes">Operational</string>
-        <string name="operational_no">Out of order</string>
+    <string name="fountain_operational_status">Fountain status</string>
+    <string name="operational_yes">Operational</string>
+    <string name="operational_no">Out of order</string>
 
-        <string name="btn_create_fountain">Create fountain</string>
-        <string name="btn_update_fountain">Save changes</string>
+    <string name="btn_create_fountain">Create fountain</string>
+    <string name="btn_update_fountain">Save changes</string>
 
 </resources>

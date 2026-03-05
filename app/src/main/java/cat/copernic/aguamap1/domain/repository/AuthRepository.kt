@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.domain.repository
 
+import cat.copernic.aguamap1.domain.model.User
 import cat.copernic.aguamap1.domain.model.UserRole
 
 /**
@@ -21,6 +22,12 @@ interface AuthRepository {
 
     /** Envía un correo de recuperación de contraseña. */
     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
+
+    /** Actualiza la preferencia de idioma del usuario en Firestore. */
+    suspend fun updateLanguagePreference(uid: String, languageCode: String): Result<Unit>
+
+    /** Obtiene los datos del usuario desde Firestore. */
+    suspend fun getUserData(uid: String): Result<User>
 
     /** * Registra un nuevo usuario en el sistema de autenticación.
      * Normalmente requiere una posterior verificación de email.

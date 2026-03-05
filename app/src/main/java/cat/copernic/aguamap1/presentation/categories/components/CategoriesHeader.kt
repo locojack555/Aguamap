@@ -38,6 +38,7 @@ import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
 import cat.copernic.aguamap1.ui.theme.Gris
 import cat.copernic.aguamap1.ui.theme.GrisClaro
+import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.Rojo
 
 /**
@@ -111,7 +112,8 @@ fun CategoriesHeader(
                     unfocusedContainerColor = AzulClaro,
                     focusedContainerColor = AzulClaro,
                     unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Blue10
+                    focusedBorderColor = Blue10,
+                    focusedTextColor = Negro
                 )
             )
 

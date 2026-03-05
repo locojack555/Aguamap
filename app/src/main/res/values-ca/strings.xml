@@ -15,7 +15,10 @@
     <string name="category_new_title">Nova Categoria</string>
     <string name="category_edit_title">Editar Categoria</string>
     <string name="category_close">Tancar</string>
+    <string name="reports_go_to_fountain">Veure font</string>
     <string name="category_no_fountains">No hi ha fonts disponibles</string>
+    <string name="created_by">Creat per</string>
+    <string name="apply_filters">Aplicar</string>
     <string name="category_only_broken">Només Avariades</string>
     <string name="error_title">Atenció</string>
     <string name="category_accept">Acceptar</string>
@@ -403,18 +406,18 @@
     <string name="lang_en">Anglès</string>
     <string name="close_button_description">Tancar</string>
 
-        <string name="category_title">Categoria</string>
-        <string name="category_natural">Natural</string>
-        <string name="category_urban">Urbana</string>
-        <string name="category_park">Parc</string>
-        <string name="category_historical">Històrica</string>
+    <string name="category_title">Categoria</string>
+    <string name="category_natural">Natural</string>
+    <string name="category_urban">Urbana</string>
+    <string name="category_park">Parc</string>
+    <string name="category_historical">Històrica</string>
 
 
-        <string name="fountain_operational_status">Estat de la font</string>
-        <string name="operational_yes">En funcionament</string>
-        <string name="operational_no">Fora de servei</string>
+    <string name="fountain_operational_status">Estat de la font</string>
+    <string name="operational_yes">En funcionament</string>
+    <string name="operational_no">Fora de servei</string>
 
-        <string name="btn_create_fountain">Crear font</string>
-        <string name="btn_update_fountain">Desar canvis</string>
+    <string name="btn_create_fountain">Crear font</string>
+    <string name="btn_update_fountain">Desar canvis</string>
 
 </resources>

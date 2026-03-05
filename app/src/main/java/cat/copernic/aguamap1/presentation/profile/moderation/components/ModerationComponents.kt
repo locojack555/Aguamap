@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material.icons.filled.ThumbUp
@@ -50,21 +51,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.ReportedComment
+import cat.copernic.aguamap1.presentation.util.VerdeHoja
+import cat.copernic.aguamap1.ui.theme.Negro
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
  * Tarjeta interactiva para la gestión de comentarios reportados.
- * Permite a los administradores visualizar el motivo del reporte, el contenido
- * del comentario y tomar decisiones (Desestimar, Censurar o Eliminar).
+ * Ahora incluye la opción de navegar a la fuente para ver el detalle global.
  */
 @Composable
 fun ReportedCommentCard(
     item: ReportedComment,
     onDelete: () -> Unit,
     onCensor: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onGoToFountain: () -> Unit // NUEVO: Acción para navegar al detalle global
 ) {
     // Estados locales para controlar la visibilidad de los diálogos de confirmación
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -218,6 +221,23 @@ fun ReportedCommentCard(
             HorizontalDivider(color = Color(0xFFF0F0F0))
             Spacer(Modifier.height(10.dp))
 
+            // ACCIÓN: IR A LA FUENTE (DETALLE GLOBAL)
+            Button(
+                onClick = onGoToFountain,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0083B0))
+            ) {
+                Icon(Icons.Default.Map, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.reports_go_to_fountain), // Asegúrate de tener este string o similar
+                    fontSize = 13.sp
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
             // ACCIONES: Panel de botones de moderación
             OutlinedButton(
                 onClick = onDismiss,
@@ -309,15 +329,16 @@ fun EmptyModerationState() {
         Icon(
             Icons.Default.CheckCircle,
             null,
-            tint = Color(0xFF43A047),
+            tint = VerdeHoja,
             modifier = Modifier.size(64.dp)
         )
         Spacer(Modifier.height(16.dp))
         Text(
             stringResource(R.string.moderation_empty_title),
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
+            fontSize = 18.sp,
+            color = Negro
         )
-        Text(stringResource(R.string.moderation_empty_desc), color = Color.Gray)
+        Text(stringResource(R.string.moderation_empty_desc), color = Negro)
     }
 }

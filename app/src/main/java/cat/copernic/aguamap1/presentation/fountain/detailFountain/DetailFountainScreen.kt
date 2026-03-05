@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HourglassEmpty
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +51,8 @@ import cat.copernic.aguamap1.presentation.fountain.detailFountain.components.Oth
 import cat.copernic.aguamap1.presentation.fountain.detailFountain.components.ValidationCard
 import cat.copernic.aguamap1.presentation.util.getStatusColor
 import cat.copernic.aguamap1.ui.theme.Blanco
+import cat.copernic.aguamap1.ui.theme.Gris
+import cat.copernic.aguamap1.ui.theme.GrisOscuro
 import cat.copernic.aguamap1.ui.theme.Naranja
 import cat.copernic.aguamap1.ui.theme.Negro
 import cat.copernic.aguamap1.ui.theme.NegroSuave
@@ -54,13 +60,14 @@ import cat.copernic.aguamap1.ui.theme.Rojo
 
 /**
  * Pantalla de detalle de una fuente.
- * Gestiona la visualización de información, validación por votos, reportes y comentarios.
  */
 @Composable
 fun DetailFountainScreen(
     fountain: Fountain,
     viewModel: DetailFountainViewModel,
-    commentsViewModel: FountainCommentsViewModel = hiltViewModel(), // ViewModel especializado en comentarios
+    commentsViewModel: FountainCommentsViewModel = hiltViewModel(),
+    userLat: Double? = null, // NUEVO: Para recibir ubicación desde el NavGraph
+    userLng: Double? = null, // NUEVO: Para recibir ubicación desde el NavGraph
     onBack: () -> Unit,
     onDelete: () -> Unit,
     onConfirm: () -> Unit,
@@ -72,18 +79,16 @@ fun DetailFountainScreen(
     // Observa el estado operativo en tiempo real
     val isOpRealtime by viewModel.isOperationalRealtime.collectAsState()
 
-    // Prioriza la fuente cargada en el VM (actualizada) sobre la recibida por parámetro
+    // Prioriza la fuente cargada en el VM
     val uiFountain = viewModel.selectedFountain ?: fountain
     val currentUserId = viewModel.currentUserId
 
-    // Obtenemos el color de estado/categoría dinámico desde util
     val dynamicStatusColor = uiFountain.getStatusColor()
 
-    // Comprueba si el usuario actual ya ha reportado que esta fuente no existe
     val hasVotedNegative =
         currentUserId != null && uiFountain.votedByNegative.contains(currentUserId)
 
-    // --- ESTADOS LOCALES PARA CONTROLAR DIÁLOGOS ---
+    // --- ESTADOS LOCALES PARA DIÁLOGOS ---
     var showReportDialog by remember { mutableStateOf(false) }
     var showOtherReportDialog by remember { mutableStateOf(false) }
     var otherReportText by remember { mutableStateOf("") }
@@ -92,13 +97,12 @@ fun DetailFountainScreen(
     var commentToDelete by remember { mutableStateOf<Comment?>(null) }
     var editingComment by remember { mutableStateOf<Comment?>(null) }
 
-    // Al iniciar, selecciona la fuente en el VM e inicia la escucha de comentarios en tiempo real
-    LaunchedEffect(fountain.id) {
-        viewModel.selectFountain(fountain)
+    // Al iniciar, selecciona la fuente enviando las coordenadas recibidas para forzar el cálculo de distancia
+    LaunchedEffect(fountain.id, userLat, userLng) {
+        viewModel.selectFountain(fountain, userLat, userLng)
         commentsViewModel.observeComments(fountain.id)
     }
 
-    // Gestiona el botón de retroceso para limpiar los listeners de Firebase
     BackHandler {
         commentsViewModel.stopObserving()
         onBack()
@@ -111,11 +115,11 @@ fun DetailFountainScreen(
                 .verticalScroll(rememberScrollState())
         ) {
 
-            // 1. CABECERA
+            // 1. CABECERA (CORREGIDA con canUserModify)
             FountainDetailHeader(
                 imageUrl = uiFountain.imageUrl,
                 isAdmin = viewModel.isAdmin,
-                isOwner = currentUserId == uiFountain.createdBy,
+                isOwner = viewModel.canUserModify(uiFountain), // Uso de la lógica centralizada del ViewModel
                 isPending = uiFountain.status == StateFountain.PENDING,
                 onBack = { commentsViewModel.stopObserving(); onBack() },
                 onEdit = onEdit,
@@ -128,7 +132,7 @@ fun DetailFountainScreen(
                     .fillMaxWidth()
             ) {
 
-                // 2. INFO BÁSICA: Nombre y categoría con COLOR DINÁMICO
+                // 2. INFO BÁSICA
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         uiFountain.name,
@@ -138,7 +142,7 @@ fun DetailFountainScreen(
                         color = Negro
                     )
                     Surface(
-                        color = dynamicStatusColor, // Aplicamos el color de la categoría aquí
+                        color = dynamicStatusColor,
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
@@ -149,6 +153,25 @@ fun DetailFountainScreen(
                             fontWeight = FontWeight.Bold
                         )
                     }
+                }
+
+                // Creador
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Gris,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${stringResource(R.string.created_by)}: ${viewModel.creatorName ?: "..."}",
+                        fontSize = 13.sp,
+                        color = GrisOscuro
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -175,7 +198,6 @@ fun DetailFountainScreen(
                     }
                 }
 
-                // 4. DESCRIPCIÓN
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     stringResource(R.string.description_title),
@@ -190,7 +212,7 @@ fun DetailFountainScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // 5. ESPECIFICACIONES TÉCNICAS: Pasa el estado de funcionamiento real
+                // 5. ESPECIFICACIONES TÉCNICAS
                 FountainSpecs(uiFountain, viewModel, isOpRealtime)
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -207,7 +229,7 @@ fun DetailFountainScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // 7. SECCIÓN DE COMENTARIOS
+                // 7. SECCIÓN DE COMENTARIOS (CORREGIDA: Añadido onCensorComment)
                 FountainCommentsSection(
                     comments = commentsViewModel.comments,
                     currentUserId = currentUserId,
@@ -215,7 +237,10 @@ fun DetailFountainScreen(
                     onAddClick = { showAddCommentDialog = true },
                     onEditComment = { editingComment = it },
                     onDeleteComment = { commentToDelete = it },
-                    onReportComment = { commentsViewModel.onReportComment(uiFountain.id, it.id) }
+                    onReportComment = { commentsViewModel.onReportComment(uiFountain.id, it.id) },
+                    onCensorComment = { comment ->
+                        commentsViewModel.censorComment(uiFountain.id, comment.id)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(40.dp))
@@ -223,7 +248,7 @@ fun DetailFountainScreen(
         }
     }
 
-    // --- 8. GESTOR DE DIÁLOGOS ---
+    // --- 8. DIÁLOGOS ---
     FountainDetailDialogs(
         showAddComment = showAddCommentDialog,
         editingComment = editingComment,
@@ -236,25 +261,16 @@ fun DetailFountainScreen(
             editingComment = null
         },
         onAddCommentConfirm = { r, t ->
-            commentsViewModel.addComment(
-                uiFountain,
-                r,
-                t
-            ); showAddCommentDialog = false
+            commentsViewModel.addComment(uiFountain, r, t)
+            showAddCommentDialog = false
         },
         onEditCommentConfirm = { r, t ->
-            commentsViewModel.editComment(
-                uiFountain,
-                editingComment!!,
-                r,
-                t
-            ); editingComment = null
+            commentsViewModel.editComment(uiFountain, editingComment!!, r, t)
+            editingComment = null
         },
         onDeleteCommentConfirm = {
-            commentsViewModel.deleteComment(
-                uiFountain,
-                commentToDelete!!
-            ); commentToDelete = null
+            commentsViewModel.deleteComment(uiFountain, commentToDelete!!)
+            commentToDelete = null
         },
         onDeleteFountainConfirm = { onDelete(); showDeleteConfirm = false }
     )

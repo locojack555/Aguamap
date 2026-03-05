@@ -33,6 +33,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -55,11 +59,9 @@ import cat.copernic.aguamap1.ui.theme.Negro
 
 /**
  * Barra de búsqueda superior con filtros integrados y alternancia de vista (Mapa/Lista).
- * Esta barra flota sobre el mapa o encabeza la lista de fuentes.
- *
- * @param isMapView Define si la vista actual es el mapa (true) o la lista (false).
- * @param onToggleView Callback para cambiar entre las dos visualizaciones principales.
- * @param viewModel ViewModel compartido para gestionar la búsqueda y el estado de los filtros.
+ * * @param isMapView Indica si la vista actual es el mapa para cambiar el icono de alternancia.
+ * @param onToggleView Callback para cambiar entre modo mapa y modo lista.
+ * @param viewModel Instancia del ViewModel para gestionar el estado de búsqueda y filtros.
  */
 @Composable
 fun MapTopBar(
@@ -67,6 +69,7 @@ fun MapTopBar(
     onToggleView: () -> Unit,
     viewModel: MapViewModel
 ) {
+    // Contenedor principal redondeado con sombra para la barra de búsqueda
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -96,29 +99,33 @@ fun MapTopBar(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
-                    // Botón de Filtros
+                    // Botón para abrir/cerrar el menú de filtros
                     IconButton(onClick = { viewModel.toggleFilterMenu() }) {
                         Icon(
                             painter = painterResource(R.drawable.filter_alt_24px),
                             contentDescription = stringResource(R.string.filter),
-                            // Color azul si hay algún filtro activo que no sea el por defecto
+                            // El color cambia a azul si hay filtros activos (distintos al estado inicial)
                             tint = if (viewModel.filterState != FilterState()) Blue10 else Negro.copy(
                                 alpha = 0.7f
                             )
                         )
                     }
 
-                    // Menú desplegable de filtros avanzado
+                    // Componente que renderiza el menú desplegable de filtros
                     FilterDropDown(
                         expanded = viewModel.showFilterMenu,
                         onDismiss = { viewModel.toggleFilterMenu() },
-                        state = viewModel.filterState,
+                        currentState = viewModel.filterState,
                         categories = viewModel.categories,
-                        onFilterChanged = { viewModel.updateFilters(it) },
+                        onApplyFilters = {
+                            viewModel.updateFilters(it)
+                            viewModel.toggleFilterMenu()
+                        },
+                        // Las opciones de ordenación solo se muestran en la vista de lista
                         showSortOptions = !isMapView
                     )
 
-                    // Botón de cambio de vista (Icono dinámico)
+                    // Botón para alternar entre la vista de mapa y la vista de lista
                     IconButton(onClick = { onToggleView() }) {
                         Icon(
                             painter = painterResource(
@@ -144,20 +151,25 @@ fun MapTopBar(
 }
 
 /**
- * Menú de filtros detallado que permite filtrar por categoría, valoración mínima,
- * estado operativo, distancia y criterios de ordenación.
+ * Menú de filtros con estado local temporal y botón de aplicar.
+ * Utiliza un estado temporal (tempState) para que el usuario pueda previsualizar cambios
+ * antes de aplicarlos definitivamente al ViewModel.
  */
 @Composable
 fun FilterDropDown(
     expanded: Boolean,
     onDismiss: () -> Unit,
-    state: FilterState,
+    currentState: FilterState,
     categories: List<Category>,
-    onFilterChanged: (FilterState) -> Unit,
+    onApplyFilters: (FilterState) -> Unit,
     showSortOptions: Boolean
 ) {
+    // Sincroniza el estado temporal con el estado real cada vez que se abre el menú
+    var tempState by remember(expanded) { mutableStateOf(currentState) }
+
     val menuShape = RoundedCornerShape(28.dp)
 
+    // Ajuste del tema local para aplicar bordes redondeados al DropdownMenu
     MaterialTheme(shapes = MaterialTheme.shapes.copy(extraSmall = menuShape)) {
         DropdownMenu(
             expanded = expanded,
@@ -168,7 +180,7 @@ fun FilterDropDown(
                 .border(0.5.dp, Blanco.copy(alpha = 0.2f), menuShape)
                 .padding(16.dp)
         ) {
-            // --- CABECERA ---
+            // --- CABECERA DEL MENÚ ---
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -182,68 +194,94 @@ fun FilterDropDown(
                     fontSize = 18.sp,
                     color = Blanco
                 )
-                // Botón para resetear todos los filtros
-                Surface(
-                    color = Negro.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.clickable { onFilterChanged(FilterState()) }
-                ) {
-                    Text(
-                        text = stringResource(R.string.clear_filters),
-                        color = Blanco, fontWeight = FontWeight.Bold, fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                    )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Botón para limpiar todos los filtros (reset al estado inicial)
+                    Surface(
+                        color = Blue10,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable { tempState = FilterState() }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.clear_filters),
+                            color = Blanco, fontWeight = FontWeight.Bold, fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
+
+                    // Botón para aplicar los filtros seleccionados
+                    Surface(
+                        color = Blue10,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable { onApplyFilters(tempState) }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.apply_filters),
+                            color = Blanco, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
 
             HorizontalDivider(thickness = 0.5.dp, color = Blanco.copy(alpha = 0.3f))
 
-            // --- CUERPO ---
+            // --- CUERPO DEL MENÚ ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // COLUMNA IZQUIERDA: Categorías y Operatividad
+                // COLUMNA IZQUIERDA: Categorías y Switch Operacional
                 Column(modifier = Modifier.weight(1f)) {
                     FilterSectionTitle(stringResource(R.string.filter_by_category), Blanco)
                     categories.forEach { category ->
                         FilterChip(
                             label = category.name,
-                            selected = state.selectedCategory?.id == category.id,
+                            selected = tempState.selectedCategory?.id == category.id,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
                             onClick = {
-                                onFilterChanged(state.copy(selectedCategory = if (state.selectedCategory?.id == category.id) null else category))
+                                // Toggle de selección de categoría
+                                tempState = tempState.copy(
+                                    selectedCategory = if (tempState.selectedCategory?.id == category.id) null else category
+                                )
                             }
                         )
                     }
 
+                    // El switch se muestra aquí si estamos en modo lista (showSortOptions es true)
                     if (showSortOptions) {
-                        OperationalSwitch(state.onlyOperational) {
-                            onFilterChanged(state.copy(onlyOperational = it))
+                        OperationalSwitch(tempState.onlyOperational) {
+                            tempState = tempState.copy(onlyOperational = it)
                         }
                     }
                 }
 
-                // COLUMNA DERECHA: Rating y Ordenación (Solo en vista lista)
+                // COLUMNA DERECHA: Rating y Ordenación
                 Column(modifier = Modifier.weight(1f)) {
                     FilterSectionTitle(stringResource(R.string.min_rating), Blanco)
+                    // Sistema de selección por estrellas
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         (1..5).forEach { star ->
                             Icon(
-                                imageVector = if (star <= state.minRating) Icons.Default.Star else Icons.Default.StarBorder,
+                                imageVector = if (star <= tempState.minRating) Icons.Default.Star else Icons.Default.StarBorder,
                                 contentDescription = null,
-                                tint = if (star <= state.minRating) Blanco else Blanco.copy(alpha = 0.4f),
+                                tint = if (star <= tempState.minRating) Blanco else Blanco.copy(
+                                    alpha = 0.4f
+                                ),
                                 modifier = Modifier
                                     .size(20.dp)
-                                    .clickable { onFilterChanged(state.copy(minRating = star.toFloat())) }
+                                    .clickable {
+                                        tempState = tempState.copy(minRating = star.toFloat())
+                                    }
                             )
                         }
                     }
 
+                    // Opciones de ordenación (solo para modo lista)
                     if (showSortOptions) {
                         Spacer(modifier = Modifier.height(12.dp))
                         FilterSectionTitle(stringResource(R.string.sort_by), Blanco)
@@ -253,10 +291,10 @@ fun FilterDropDown(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onFilterChanged(state.copy(sortBy = option)) }
+                                    .clickable { tempState = tempState.copy(sortBy = option) }
                             ) {
                                 RadioButton(
-                                    selected = state.sortBy == option,
+                                    selected = tempState.sortBy == option,
                                     onClick = null,
                                     modifier = Modifier.size(28.dp),
                                     colors = RadioButtonDefaults.colors(
@@ -278,15 +316,15 @@ fun FilterDropDown(
                             }
                         }
                     } else {
-                        // Si es mapa, el switch de operatividad se mueve aquí por espacio
-                        OperationalSwitch(state.onlyOperational) {
-                            onFilterChanged(state.copy(onlyOperational = it))
+                        // En modo mapa, el switch operacional se coloca en la columna derecha
+                        OperationalSwitch(tempState.onlyOperational) {
+                            tempState = tempState.copy(onlyOperational = it)
                         }
                     }
                 }
             }
 
-            // --- SLIDER DE DISTANCIA ---
+            // --- SECCIÓN INFERIOR: DISTANCIA MÁXIMA ---
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(thickness = 0.5.dp, color = Blanco.copy(alpha = 0.3f))
             Row(
@@ -300,19 +338,20 @@ fun FilterDropDown(
                     fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Blanco
                 )
                 Text(
-                    text = "${state.maxDistanceKm.toInt()} km",
+                    text = "${tempState.maxDistanceKm.toInt()} km",
                     color = Blanco, fontWeight = FontWeight.Bold, fontSize = 13.sp
                 )
             }
+            // Control deslizante para ajustar el radio de búsqueda
             Slider(
-                value = state.maxDistanceKm,
-                onValueChange = { onFilterChanged(state.copy(maxDistanceKm = it)) },
+                value = tempState.maxDistanceKm,
+                onValueChange = { tempState = tempState.copy(maxDistanceKm = it) },
                 valueRange = 1f..10f,
                 steps = 8,
                 colors = SliderDefaults.colors(
                     activeTrackColor = Blanco,
                     inactiveTrackColor = Blanco.copy(alpha = 0.3f),
-                    thumbColor = Color.Transparent
+                    thumbColor = Blanco
                 )
             )
         }
@@ -320,7 +359,7 @@ fun FilterDropDown(
 }
 
 /**
- * Switch especializado para filtrar solo fuentes operativas.
+ * Componente de switch personalizado para filtrar solo fuentes operativas.
  */
 @Composable
 fun OperationalSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
@@ -334,16 +373,24 @@ fun OperationalSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Blue10,
+                // Estilo cuando está ACTIVO (filtrando operativas)
+                checkedThumbColor = Negro.copy(alpha = 0.8f),
                 checkedTrackColor = Blanco.copy(alpha = 0.5f),
-                uncheckedThumbColor = Blanco.copy(alpha = 0.6f),
-                uncheckedTrackColor = Negro.copy(alpha = 0.2f)
+                checkedBorderColor = Color.Transparent,
+
+                // Estilo cuando está DESACTIVADO (mostrando todas)
+                uncheckedThumbColor = Blue10,
+                uncheckedTrackColor = Negro.copy(alpha = 0.2f),
+                uncheckedBorderColor = Blanco.copy(alpha = 0.3f)
             ),
             modifier = Modifier.scale(0.8f)
         )
     }
 }
 
+/**
+ * Título estilizado para las secciones del menú de filtros.
+ */
 @Composable
 fun FilterSectionTitle(title: String, color: Color) {
     Text(
@@ -354,7 +401,8 @@ fun FilterSectionTitle(title: String, color: Color) {
 }
 
 /**
- * Chip de filtro personalizado para las categorías.
+ * Chip de selección individual para las categorías.
+ * Cambia a un fondo oscuro (Negro suave) al ser seleccionado.
  */
 @Composable
 fun FilterChip(
@@ -366,13 +414,20 @@ fun FilterChip(
     Surface(
         modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        color = if (selected) Blue10 else Blanco.copy(alpha = 0.15f),
-        border = BorderStroke(1.dp, if (selected) Blue10 else Blanco.copy(alpha = 0.3f))
+        // Color adaptativo según el estado de selección
+        color = if (selected) Negro.copy(alpha = 0.8f) else Blanco.copy(alpha = 0.15f),
+        border = BorderStroke(
+            1.dp,
+            if (selected) Negro.copy(alpha = 0.9f) else Blanco.copy(alpha = 0.3f)
+        )
     ) {
         Text(
             text = label,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-            color = Blanco, fontSize = 12.sp, textAlign = TextAlign.Center
+            color = Blanco,
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }

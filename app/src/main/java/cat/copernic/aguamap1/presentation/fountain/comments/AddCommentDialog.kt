@@ -138,7 +138,7 @@ fun AddCommentDialog(
              */
             Button(
                 onClick = { onConfirm(rating, text) },
-                enabled = rating > 0 && text.isNotBlank(),
+                enabled = rating > 0,
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Blue10,

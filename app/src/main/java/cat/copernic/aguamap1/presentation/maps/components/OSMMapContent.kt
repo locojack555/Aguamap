@@ -158,7 +158,17 @@ fun MapView.setupHomeMap(viewModel: MapViewModel) {
         enableMyLocation()
         enableFollowLocation()
         isDrawAccuracyEnabled = false
-        customIcon?.let { setPersonIcon(it); setDirectionIcon(it) }
+
+        // --- CAMBIO PARA EL ANCLAJE (ANCHOR) ---
+        // Esto asegura que el centro del icono sea el punto exacto del GPS.
+        // Sin esto, al hacer zoom out, el icono se desplaza visualmente.
+        setPersonHotspot(sizeInPx / 2f, sizeInPx / 2f)
+        //setDirectionHotspot(sizeInPx / 2f, sizeInPx / 2f)
+
+        customIcon?.let {
+            setPersonIcon(it)
+            setDirectionIcon(it)
+        }
     }
 
     // Posicionamiento inicial

@@ -35,8 +35,6 @@ import javax.inject.Inject
 
 /**
  * Gestiona el estado y la lógica de negocio de la pantalla de categorías.
- * Implementa filtrado reactivo por texto y estado operativo, gestión de permisos de administrador
- * y procesos asíncronos para la subida de imágenes y persistencia de datos.
  */
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
@@ -54,13 +52,9 @@ class CategoryViewModel @Inject constructor(
 
     private fun getString(resId: Int): String = getApplication<Application>().getString(resId)
 
-    // --- ESTADO DE USUARIO Y PERMISOS ---
-    var isAdmin by mutableStateOf(false)
-        private set
-    var currentUserId by mutableStateOf<String?>(null)
-        private set
+    var isAdmin by mutableStateOf(false); private set
+    var currentUserId by mutableStateOf<String?>(null); private set
 
-    // --- FLUJOS DE BÚSQUEDA Y FILTRADO ---
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
@@ -69,15 +63,10 @@ class CategoryViewModel @Inject constructor(
 
     private val _allCategories = MutableStateFlow<List<Category>>(emptyList())
 
-    // --- OPTIMIZACIÓN DE RENDIMIENTO POR UBICACIÓN ---
     private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
     private var lastFetchedLocation: Pair<Double, Double>? = null
-    private val MIN_DISTANCE_TO_REFETCH = 2000.0 // Evita recálculos constantes si el usuario no se mueve > 2km
+    private val MIN_DISTANCE_TO_REFETCH = 2000.0
 
-    /**
-     * Actualiza la ubicación del usuario y decide si debe disparar una nueva consulta a Firebase
-     * basándose en la distancia desplazada para optimizar el consumo de datos y batería.
-     */
     fun setLocation(lat: Double, lng: Double) {
         val lastLoc = lastFetchedLocation
         if (lastLoc == null) {
@@ -95,29 +84,19 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    // --- PROCESAMIENTO REACTIVO DE DATOS (UDF) ---
-
-    /**
-     * Lista de categorías filtrada dinámicamente mediante el buscador.
-     * Soporta búsquedas literales y mediante expresiones regulares con comodines.
-     */
     val categories: StateFlow<List<Category>> =
         combine(_allCategories, _searchQuery) { list, query ->
-            if (query.isBlank()) {
-                list
-            } else {
+            if (query.isBlank()) list
+            else {
                 val regex = generateSearchRegex(query)
-                if (regex != null) {
-                    list.filter { it.name.contains(regex) }
-                } else {
-                    list.filter { it.name.contains(query, ignoreCase = true) }
-                }
+                if (regex != null) list.filter { it.name.contains(regex) }
+                else list.filter { it.name.contains(query, ignoreCase = true) }
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
-     * Mapa que agrupa las fuentes por su ID de categoría.
-     * Se actualiza automáticamente cuando cambia la ubicación, el filtro operativo o los datos de red.
+     * CORRECCIÓN: Ahora las fuentes se ordenan por distancia (más cercanas primero)
+     * dentro de cada grupo de categoría.
      */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val fountainsByCategory: StateFlow<Map<String, List<Fountain>>> = _userLocation
@@ -143,8 +122,16 @@ class CategoryViewModel @Inject constructor(
                 }
             } else fountains
 
-            val filtered = if (isOp == null) fountainsWithDistance else fountainsWithDistance.filter { it.operational == isOp }
+            // 1. Filtramos por estado operacional
+            val filtered =
+                if (isOp == null) fountainsWithDistance else fountainsWithDistance.filter { it.operational == isOp }
+
+            // 2. Agrupamos y ORDENAMOS cada lista por distancia
             filtered.groupBy { it.category.id.trim() }
+                .mapValues { entry ->
+                    // Ordenamos de menor a mayor distancia
+                    entry.value.sortedBy { it.distanceFromUser ?: Double.MAX_VALUE }
+                }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
@@ -165,9 +152,6 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Verifica la identidad del usuario y su rol para habilitar privilegios administrativos.
-     */
     private fun loadUserData() {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUserUid()
@@ -179,12 +163,6 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    // --- LÓGICA DE PERSISTENCIA Y MULTIMEDIA ---
-
-    /**
-     * Procesa el guardado de una categoría. Si hay una nueva imagen, gestiona primero
-     * la subida a Cloudinary informando del progreso antes de actualizar Firestore.
-     */
     fun saveCategory(onSuccess: () -> Unit) {
         viewModelScope.launch {
             isUploading = true
@@ -221,10 +199,6 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Ejecuta el borrado de una categoría tras validar que no contiene fuentes asociadas,
-     * garantizando la integridad referencial de los datos.
-     */
     fun deleteCategory(id: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
@@ -241,18 +215,33 @@ class CategoryViewModel @Inject constructor(
         }
     }
 
-    // Funciones de utilidad para el estado del UI
-    fun updateSearchQuery(query: String) { _searchQuery.value = query }
-    fun toggleOperationalFilter(isFilterActive: Boolean) { _operationalFilter.value = if (isFilterActive) null else false }
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun toggleOperationalFilter(isFilterActive: Boolean) {
+        _operationalFilter.value = if (isFilterActive) null else false
+    }
+
     fun onEditCategory(category: Category) {
         categoryToEdit = category; name = category.name; description = category.description
         currentImageUrl = category.imageUrl; selectedImageUri = null
     }
+
     fun resetForm() {
         name = ""; description = ""; selectedImageUri = null; currentImageUrl = ""
         categoryToEdit = null; uploadProgress = 0; errorMessage = null
     }
-    fun clearError() { errorMessage = null }
-    fun updateSelectedImage(uri: Uri?) { selectedImageUri = uri }
-    fun clearSelectedImage() { selectedImageUri = null; currentImageUrl = "" }
+
+    fun clearError() {
+        errorMessage = null
+    }
+
+    fun updateSelectedImage(uri: Uri?) {
+        selectedImageUri = uri
+    }
+
+    fun clearSelectedImage() {
+        selectedImageUri = null; currentImageUrl = ""
+    }
 }

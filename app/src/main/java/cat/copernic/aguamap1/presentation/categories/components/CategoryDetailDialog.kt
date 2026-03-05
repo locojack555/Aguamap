@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -55,16 +56,6 @@ import coil.compose.AsyncImage
 /**
  * Renderiza un cuadro de diálogo modal que muestra la información detallada de una categoría
  * y la lista de fuentes asociadas a la misma.
- * * Incluye controles administrativos condicionales (editar/eliminar) y una lista scrollable
- * de fuentes con acceso directo a sus detalles.
- *
- * @param category Objeto de dominio con los datos de la categoría (nombre, imagen, descripción).
- * @param fountains Lista de fuentes filtradas que pertenecen a esta categoría.
- * @param isAdmin Determina si se habilitan los iconos de gestión para administradores.
- * @param onDismiss Callback para cerrar el diálogo.
- * @param onDeleteCategory Callback para iniciar el proceso de borrado de la categoría.
- * @param onEditCategory Callback para abrir el formulario de edición.
- * @param onFountainClick Callback que recibe el ID de una fuente para navegar a su detalle.
  */
 @Composable
 fun CategoryDetailDialog(
@@ -166,11 +157,7 @@ fun CategoryDetailDialog(
 }
 
 /**
- * Componente interno que representa una fila simplificada de información para una fuente.
- * Muestra el nombre, el estado operativo (si está averiada) y la valoración media.
- *
- * @param fountain Datos de la fuente a renderizar.
- * @param onClick Acción a ejecutar al pulsar sobre la fila.
+ * Componente interno que representa una fila simplificada con Nombre, Valoración y Distancia.
  */
 @Composable
 private fun FountainRow(fountain: Fountain, onClick: () -> Unit) {
@@ -189,6 +176,7 @@ private fun FountainRow(fountain: Fountain, onClick: () -> Unit) {
             modifier = Modifier.size(32.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 fountain.name,
@@ -196,26 +184,51 @@ private fun FountainRow(fountain: Fountain, onClick: () -> Unit) {
                 fontSize = 14.sp,
                 color = AzulGrisaceo
             )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // VALORACIÓN
+                Icon(
+                    Icons.Default.Star,
+                    contentDescription = null,
+                    tint = Naranja,
+                    modifier = Modifier.size(12.dp)
+                )
+                Text(
+                    text = "%.1f".format(fountain.ratingAverage),
+                    fontSize = 11.sp,
+                    color = GrisOscuro,
+                    modifier = Modifier.padding(start = 2.dp)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // DISTANCIA (Si está disponible)
+                fountain.distanceFromUser?.let { dist ->
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = InfoBlue,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    val distanceText = if (dist < 1000) "${dist.toInt()}m"
+                    else "%.1fkm".format(dist / 1000)
+                    Text(
+                        text = distanceText,
+                        fontSize = 11.sp,
+                        color = GrisOscuro,
+                        modifier = Modifier.padding(start = 2.dp)
+                    )
+                }
+            }
+
             if (!fountain.operational) {
                 Text(
                     stringResource(R.string.legend_averiada),
                     color = Rojo,
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
-        Icon(
-            Icons.Default.Star,
-            contentDescription = null,
-            tint = Naranja,
-            modifier = Modifier.size(14.dp)
-        )
-        Text(
-            text = "%.1f".format(fountain.ratingAverage),
-            fontSize = 12.sp,
-            color = GrisOscuro,
-            modifier = Modifier.padding(start = 4.dp)
-        )
     }
 }
