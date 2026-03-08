@@ -21,53 +21,69 @@
 
 **1. INTRODUCCIÓN**
 
-1.1 Objetivos de la aplicación
+    1.1 Objetivos de la aplicación
 
-1.2 Target (Público objetivo)
+    1.2 Target (Público objetivo)
 
 **2. DOCUMENTACIÓN TÉCNICA**
 
-2.1 Requisitos funcionales por roles
+    2.1 Requisitos funcionales por roles
 
-2.2 Diseño de la base de datos NoSQL (Firestore)
+    2.2 Diseño de la base de datos NoSQL (Firestore)
 
-2.3 Reglas de Firebase
+    2.3 Reglas de Firebase
+
+    2.4 Otras tecnologías utilizadas
 
 **3. PLANIFICACIÓN Y SEGUIMIENTO DE LAS TAREAS DE DESARROLLO**
 
-SPRINT 1
+    3.1 SPRINT 1
 
-SPRINT 2
+        3.1.1 Planificación inicial
 
-SPRINT 3
+        3.1.2 Release notes
+
+    3.2 SPRINT 2
+
+         3.2.1 Planificación inicial
+
+         3.2.2 Release notes
+
+    3.3 SPRINT 3
+
+         3.3.1 Planificación inicial
+
+         3.3.2 Release notes
 
 **4. CODIFICACIÓN**
 
-Control de versiones
+    4.1 Control de versiones
 
 **5. RECURSOS DEL PROYECTO**
 
-Video demo
+    5.1 Demo de la aplicación
 
-Portafolios
+    5.2 Portafolios
 
 **6. LÍNEAS FUTURAS**
 
-1. Sistema de notificaciones inteligentes
+    6.1 Notificaciones
 
-2. Gamificación y sistema de reputación
+    6.2 Juego y recompensas
 
-3. Funcionalidades sociales
+    6.3 Comunidad y comunicación
 
-4. Modo offline
+    6.4 Uso sin Internet
 
-5. Accesibilidad e internacionalización
+    6.5 Accesibilidad e idiomas
 
-6. Navegación avanzada
+    6.6 Navegación y rutas
 
-7. Estadísticas ambientales
+    6.7 Impacto ambiental
 
 **7. CONCLUSIÓN**
+
+---
 
 ## 1. INTRODUCCIÓN
 
@@ -75,7 +91,7 @@ En este apartado se presentará la aplicación AguaMap. Se expondrán los objeti
 
 ### 1.1 Objetivos de la aplicación
 
-**AguaMap** es una aplicación móvil que permitirá localizar puntos de acceso de agua potable en cualquier ciudad. Su objetivo principal es facilitar el acceso al agua de calidad, fomentar hábitos saludables y reducir el impacto ambiental asociado al consumo de agua embotellada. La app se alinea directamente con los siguientes Objetivos de Desarrollo Sostenible (ODS) de la Agenda 2030:
+**AguaMap** es una aplicación móvil que permitirá localizar puntos de acceso de agua potable en cualquier ciudad. Su objetivo principal es facilitar el acceso al agua de calidad, fomentar hábitos saludables y reducir el impacto ambiental asociado al consumo de agua embotellada. La app se alinea directamente con los siguientes **[Objetivos de Desarrollo Sostenible (ODS) de la Agenda 2030](https://sdgs.un.org/2030agenda)**:
 
 -   **ODS 6: “Agua limpia y saneamiento”**
     -   **Problema:** Muchas personas desconocen dónde se encuentran las fuentes públicas y puntos de agua potable. Esta falta de información dificulta el acceso al agua y fomenta el consumo de agua embotellada.
@@ -96,6 +112,10 @@ En este apartado se presentará la aplicación AguaMap. Se expondrán los objeti
 -   **ODS 13: “Acción para el clima”**
     -   **Problema:** La producción y el transporte de agua embotellada generan emisiones de CO₂, lo que conlleva un impacto negativo en el medio ambiente.
     -   **Solución:** AguaMap ayudará a disminuir la huella de carbono asociada al consumo de agua embotellada al apostar por recursos locales.
+
+Actualmente existen algunas aplicaciones similares que permiten localizar puntos de agua potable o lugares donde rellenar botellas, como [Refill](https://therefillconcept.com/?srsltid=AfmBOopCp_0Yq3Obu2XMOD3i3oDVsGbVNCBLdHlw0I3Ew44qGBBRlZ1H) o  [Tap](https://tappwater.co/es?tw_source=google&tw_adid=&tw_campaign=20963692788&tw_kwdid=&gad_source=1&gad_campaignid=20963699724&gbraid=0AAAAADRhM_U_AhlGJCXpRjG8Md7WfXwl-&gclid=CjwKCAiAtq_NBhA_EiwA78nNWNhx6kDnV5-uEpOxHK6-UJqGq1WnFKodpSZXlVXSrbgG9R6ofYEDHRoCcx4QAvD_BwE). Estas aplicaciones funcionan en diferentes ciudades del mundo y utilizan mapas para mostrar puntos de recarga de agua. Sin embargo, muchas de ellas dependen principalmente de establecimientos privados o tienen una cobertura limitada en determinadas zonas.
+
+En este contexto, AguaMap pretende diferenciarse ofreciendo una plataforma centrada en la localización de fuentes públicas de agua potable, con información clara, accesible y adaptada al entorno urbano. Además, la aplicación permitirá que los propios usuarios puedan contribuir a mantener actualizada la información sobre los puntos de agua, favoreciendo así una base de datos más completa y colaborativa.
 
 ### 1.2 Target (Público objetivo)
 
@@ -138,7 +158,7 @@ En este apartado se detallarán los requisitos funcionales de la aplicación, di
 | RF27   | Visualizar el Top 10 de puntuaciones del día.                                                           |    ✓    |       ✓       |
 | RF28   | Visualizar el Top 10 de puntuaciones del mes.                                                           |    ✓    |       ✓       |
 | RF29   | Visualizar el Top 10 de puntuaciones del año.                                                           |    ✓    |       ✓       |
-| RF30   | Gestionar el perfil propio (datos, fuentes, valoraciones, historial, favoritos, idioma).                |    ✓    |       ✓       |
+| RF30   | Gestionar el perfil propio (datos, fuentes, valoraciones, historial, idioma).                           |    ✓    |       ✓       |
 | RF31   | Tener un apartado de gestión para la aplicación.                                                        |         |       ✓       |
 
 *\*Los usuarios pueden modificar sus ítems no validados. Si el ítem está validado, sus modificaciones se convierten en sugerencias.*
@@ -266,97 +286,78 @@ A continuación, se propone la estructura de colecciones y documentos realizada 
 
 ### 2.3 Reglas del Firebase
     rules_version = '2';
+
     service cloud.firestore {
-    match /databases/{database}/documents {
-    
-        // --- FUNCIONES DE AYUDA ---
-        function isAuthenticated() {
-          return request.auth != null;
-        }
-    
-        function isAdmin() {
-          return isAuthenticated() && 
-                 get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
-        }
-    
-        // Valida que solo se toquen campos de votación o estado operativo
-        function isOnlyVoting() {
-          return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['positiveVotes', 'votedByPositive', 'negativeVotes', 'votedByNegative', 'status', 'operational', 'ratingAverage', 'totalRatings']);
-        }
-    
-        // Valida que solo se toquen campos de moderación de comentarios
-        function isCommentStatusChange() {
-          return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['reports', 'reportedBy', 'status', 'censored', 'reported']);
-        }
-    
-        // --- COLECCIONES ---
-    
-        // 1. CATEGORÍAS
-        match /categories/{categoryId} {
-          allow read: if true;
-          allow write: if isAdmin();
-        }
-    
-        // 2. FUENTES
-        match /fountains/{fountainId} {
-          allow read: if true;
-          allow create: if isAuthenticated();
-          
-          // PERMITIR BORRAR: Si es Admin O si ya tiene 2 votos negativos (el 3º activa el borrado)
-          allow delete: if isAdmin() || (isAuthenticated() && resource.data.negativeVotes >= 2);
-          
-          // ACTUALIZAR: Admin, Dueño (si está pendiente) o cualquier usuario que esté votando
-          allow update: if isAdmin() 
-            || (isAuthenticated() && resource.data.createdBy == request.auth.uid && resource.data.status == 'PENDING')
-            || (isAuthenticated() && isOnlyVoting());
-    
-          // --- SUBCOLECCIÓN DE COMENTARIOS ---
-          match /comments/{commentId} {
-            allow read: if true;
-            allow create: if isAuthenticated();
-            
-            // Borrar: Dueño o Admin
-            allow delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-            
-            // Editar: Dueño (todo) o Otros (solo reportar/censurar)
-            allow update: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid) 
-                         || (isAuthenticated() && isCommentStatusChange());
-          }
-        }
-    
-        // 3. USUARIOS
-        match /users/{userId} {
-          allow read: if isAuthenticated();
-          allow write: if isAuthenticated() && request.auth.uid == userId;
-        }
-    
-        // 4. OTROS (RANKINGS, SESIONES, STATS)
-        // Usamos wildcards recursivos para simplificar estas colecciones
-        match /gameSessions/{doc} { allow read, write: if isAuthenticated(); }
-        match /monthlyRanking/{doc} { allow read, write: if isAuthenticated(); }
-        match /historicRanking/{doc} { allow read, write: if isAuthenticated(); }
-        match /userStats/{doc} { allow read, write: if isAuthenticated(); }
+        match /databases/{database}/documents {
         
-        // 5. REPORTES DE COMENTARIOS
-        match /reports_comments/{reportId} {
-          allow read: if isAdmin();
-          allow create: if isAuthenticated();
-          allow update: if isAdmin();
-          allow delete: if isAdmin();
-        }
+            // --- FUNCIONES DE AYUDA ---
+            function isAuthenticated() {
+              return request.auth != null;
+            }
         
-        // 6. REPORTES DE FUENTES (GENERALES)
-        match /reports/{reportId} {
-          // Cualquier usuario logueado puede enviar un error o queja
-          allow create: if isAuthenticated();
-          
-          // Solo el admin puede ver la lista de quejas, marcarlas como resueltas o borrarlas
-          allow read, update, delete: if isAdmin();
+            // Verifica si el documento del usuario actual tiene el campo role como 'ADMIN'
+            function isAdmin() {
+              return isAuthenticated() &&
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+            }
+        
+            // --- REGLAS DE DESARROLLO ---
+            // Permite lectura y escritura general a usuarios autenticados temporalmente
+            match /{document=**} {
+              allow read, write: if isAuthenticated();
+            }
+        
+            // 1. CATEGORÍAS
+            match /categories/{categoryId} {
+              allow read: if true;
+              allow write: if isAdmin();
+            }
+        
+            // 2. FUENTES (FOUNTAINS)
+            match /fountains/{fountainId} {
+              allow read: if true;
+              allow create, update, delete: if isAuthenticated();
+        
+              match /comments/{commentId} {
+                allow read: if true;
+                allow create, update, delete: if isAuthenticated();
+              }
+            }
+        
+            // 3. USUARIOS
+            match /users/{userId} {
+              // Un usuario solo puede leer/escribir su propio documento, o si es ADMIN
+              allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+            }
+        
+            // 4. JUEGO Y RANKINGS
+            match /gameSessions/{doc} { allow read, write: if isAuthenticated(); }
+            match /monthlyRanking/{doc} { allow read, write: if isAuthenticated(); }
+            match /historicRanking/{doc} { allow read, write: if isAuthenticated(); }
+            match /userStats/{doc} { allow read, write: if isAuthenticated(); }
+        
+            // 5. REPORTES
+            match /reports_comments/{reportId} {
+              allow read, write: if isAuthenticated();
+            }
+        
+            match /reports/{reportId} {
+              allow read, write: if isAuthenticated();
+            }
         }
     }
-    }
+
+### 2.4 Otras tecnologías utilizadas
+
+Para complementar el desarrollo de **AguaMap**, se han incorporado diversas herramientas y servicios tecnológicos que facilitan la programación, el almacenamiento de recursos y el diseño de la interfaz de usuario:
+
+- **Android Studio**: Entorno de desarrollo integrado utilizado para la creación de la aplicación.
+
+- **Kotlin**: Lenguaje de programación elegido por su compatibilidad con Android y sus características modernas, como la seguridad de tipos y la concisión del código.
+
+- **Cloudinary**: Servicio en la nube para la gestión y optimización de imágenes asociadas a los puntos de agua y las fotos de perfiles de los usuarios.
+
+- **Jetpack Compose**: Librería para el diseño de interfaces de usuario de manera declarativa, moderna y eficiente.
 
 ## 3. PLANIFICACIÓN Y SEGUIMIENTO DE LOS TAREAS DE DESARROLLO
 
@@ -365,191 +366,194 @@ En este apartado se explicará la organización del trabajo mediante sprints rea
 
 Para garantizar un desarrollo ordenado y eficiente de AguaMap, se ha trabajado siguiendo una metodología ágil basada en **sprints**. Cada sprint ha tenido una duración definida con objetivos claros, permitiendo entregar funcionalidades completas y funcionales al final de cada ciclo.
 
-### SPRINT 1
-**Planificación inicial**
-- Infraestructura: Establecimiento de la base técnica del proyecto con Firebase.
-- Autenticación: Implementación del sistema de registro y acceso de usuarios.
-- Localización: Desarrollo de las funcionalidades nucleares de geolocalización.
-- Gamificación: Creación de las mecánicas principales de juego para la aplicación.
+### 3.1 SPRINT 1
 
-![Tablero de seguimiento](./assets/images/sprint1.png)
+### 3.1.1 Planificación inicial
+En este primer sprint se establecieron las bases técnicas del proyecto y se definieron las funcionalidades principales:
 
-*Figura: Tareas implementadas en Jira durante el Sprint 1.*
+- **Infraestructura:** Configuración inicial de Firebase como soporte técnico del proyecto.
+
+- **Autenticación:** Creación del sistema de registro y acceso de usuarios.
+
+- **Localización:** Desarrollo de la geolocalización básica para las fuentes de agua.
+
+- **Gamificación:** Implementación de las mecánicas principales de juego de la aplicación.
+
+![Tablero de seguimiento Sprint 1](./assets/images/sprint1.png)  
+
+*Figura: Tareas realizadas en el Jira durante el Sprint 1.*
+
+### 3.1.2 Release notes
+- **Funcionalidad básica:** Sistema de autenticación seguro integrado con Firebase y base del mapa interactivo.
+
+- **Juego:** Motor de juego con geolocalización, cálculo de distancias y sistema de rankings.
+
+- **Idiomas:** Interfaz multilingüe en tres idiomas (catalán, castellano e inglés).
 
 
-**Release Notes**
-- Core: Sistema de autenticación robusto integrado con Firebase y base del mapa interactivo.
-- Mecánicas: Motor de juego con geolocalización, cálculo de distancias y sistema de rankings.
-- Global: Interfaz multilingüe en tres idiomas gestionada mediante el Translations Editor.
+### 3.2 SPRINT 2
 
----
+### 3.2.1 Planificación inicial  
+En el segundo sprint se añadieron funcionalidades avanzadas y se desarrolló el panel de administración:
 
-### SPRINT 2
-**Planificación inicial**
-- Categorías: Desarrollo e implementación del sistema completo de categorías.
-- Fuentes: Gestión avanzada de fuentes mediante geolocalización en Firestore.
-- Administración: Implementación del panel de control para la gestión del sistema.
-- Seguridad: Configuración de roles de usuario y reglas de acceso a los datos.
+- **Categorías:** Implementación del sistema de clasificación y etiquetas de las fuentes.
 
-![Tablero de seguimiento Parte 1](./assets/images/sprint2_parte1.png)
-![Tablero de seguimiento Parte 2](./assets/images/sprint2_parte2.png)
+- **Fuentes:** Gestión avanzada de las fuentes de agua con geolocalización en Firestore.
 
-*Figuras: Tareas implementadas en Jira durante el Sprint 2.*
+- **Administración:** Desarrollo del panel de control para gestionar la aplicación.
 
-**Release Notes**
+- **Seguridad:** Configuración de roles de usuario y reglas de acceso a los datos.
 
-- Funcionalidades: Gestión de fuentes por GPS e integración completa de mapas interactivos.
-- Comunidad: Sistema de validación por feedback y filtros avanzados de búsqueda.
-- Control: Panel de moderación exclusivo para administradores y gestión de contenido.
+![Tablero de seguimiento Sprint 2 - Parte 1](./assets/images/sprint2_parte1.png)  
+![Tablero de seguimiento Sprint 2 - Parte 2](./assets/images/sprint2_parte2.png)  
 
----
+*Figura: Tareas realizadas en el Jira durante el Sprint 2.*
 
-### SPRINT 3
-**Planificación inicial**
-- Robustez: Gestión de excepciones en todos los módulos de la App.
-- Interfaz: Optimización del diseño Responsive y la Accesibilidad.
-- Documentación: Elaboración de la memoria técnica y documentación final.
-- Promoción: Creación del vídeo demo y de la presentación del proyecto.
+### 3.2.2 Release notes
+- **Funcionalidades:** Gestión de fuentes por GPS e integración de mapas interactivos.
 
-![Tablero de seguimiento Parte 1](./assets/images/sprint3_parte1.png)
-![Tablero de seguimiento Parte 2](./assets/images/sprint3_parte2.png)
+- **Comunidad:** Sistema de validación de información mediante comentarios y filtros de búsqueda.
 
-*Figuras: Tareas implementadas en Jira durante el Sprint 3.*
+- **Control:** Panel de moderación para administradores y gestión de contenido.
 
-**Release Notes**
 
-- UX: Interfaz 100% responsive, accesible y con gestión global de errores.
-- Calidad: Entrega de memoria técnica, vídeo promocional y carga optimizada.
-- Ajustes: Refactorización de código y pulido final de elementos gráficos.
+### 3.3 SPRINT 3
 
----
+### 3.3.1 Planificación inicial 
+En el tercer sprint se enfocó en la optimización, la documentación final y la preparación de la presentación:
+
+- **Estabilidad:** Gestión de errores y excepciones en todos los módulos de la aplicación.
+
+- **Interfaz:** Mejoras en el diseño adaptable (responsive) y la accesibilidad.
+
+- **Documentación:** Elaboración de la memoria técnica y documentación final del proyecto.
+
+- **Promoción:** Creación del vídeo demo y preparación de la presentación final.
+
+![Tablero de seguimiento Sprint 3 - Parte 1](./assets/images/sprint3_parte1.png)  
+![Tablero de seguimiento Sprint 3 - Parte 2](./assets/images/sprint3_parte2.png)  
+
+*Figura: Tareas realizadas en el Jira durante el Sprint 3.*
+
+### 3.3.2 Release notes
+- **Estabilidad y rendimiento:** Corrección de errores y optimización general de la aplicación.
+
+- **Usabilidad:** Mejoras en la experiencia del usuario y la accesibilidad.
+
+- **Entrega final:** Documentación completa, demo de la aplicación y material para la presentación.
 
 ## 4. CODIFICACIÓN
 
 En este apartado se facilitará el enlace al repositorio en GitHub donde se ha alojado el código fuente del proyecto, permitiendo consultar el historial de versiones y la colaboración entre los desarrolladores.
 
-**Control de versiones**
-- Repositorio en GitHub: [ https://github.com/locojack555/Aguamap ]
-
----
+### 4.1 Control de versiones
+- Repositorio en GitHub: [enlace](https://github.com/locojack555/Aguamap)
 
 ## 5. Recursos del proyecto
 
 En este apartado se recopilarán los materiales complementarios, incluyendo un vídeo demostrativo de la aplicación en funcionamiento y los portafolios profesionales de los miembros del equipo de desarrollo.
 
-**Video demo**
+### 5.1 Demo de la aplicación
 
+- Vídeo: [enlace](https://drive.google.com/file/d/1ZK3Q-GuLDarfJJrBha7spoPw1VquN-xH/view?usp=sharing)
 
-**Portafolio**
-- Desarollador 1 (Jack Santiago Arévalo Montesinos): [ https://github.com/locojack555/Aguamap ] 
-- Desarollador 2 (Luis Alfredo Mariño): [ https://github.com/lamarinog/AguaMap ] 
-- Desarollador 3 (Cristina Jiménez Cardoso): [ https://github.com/CristinaJimenez2006/AguaMap ] 
-- Desarollador 4 (Adrià González Consuegra): [ https://github.com/Deleuze58/AguaMap.git ] 
+### 5.2 Portafolio
+
+- Desarollador 1 (Jack Santiago Arévalo Montesinos): [enlace](https://github.com/locojack555/Aguamap)
+
+- Desarollador 2 (Luis Alfredo Mariño): [enlace](https://github.com/lamarinog/AguaMap)
+
+- Desarollador 3 (Cristina Jiménez Cardoso): [enlace](https://github.com/CristinaJimenez2006/AguaMap)
+
+- Desarollador 4 (Adrià González Consuegra): [enlace](https://github.com/Deleuze58/AguaMap.git)
 
 
 
 ## 6. LÍNEAS FUTURAS
 
-En este apartado se plantearán las posibles mejoras y nuevas funcionalidades que podrían incorporarse en versiones posteriores de AguaMap, con el objetivo de seguir evolucionando el proyecto.
+En este apartado se plantearán las posibles mejoras y nuevas funcionalidades que podrían incorporarse en versiones posteriores en AguaMap, con el objetivo de seguir evolucionando el proyecto.
 
----
+### 6.1. Notificaciones
 
-### 1. Sistema de notificaciones inteligentes
+La aplicación enviará avisos automáticos que permitirán a los usuarios actuar según la situación:
 
-Este sistema mantendrá informados a los usuarios en todo momento sobre lo que sucede a su alrededor:
+- Fuentes de agua cercanas.
+- Cambios en el estado de las fuentes (si funcionan o están en mantenimiento).
+- Recordatorios para beber agua.
 
-- **Avisos de fuentes cercanas:** Cuando un usuario pasee por la ciudad, recibirá notificaciones indicándole que hay una fuente de agua potable cerca de su ubicación actual.
-- **Alertas de fuentes favoritas:** Si un usuario marca una fuente como favorita, recibirá avisos cuando esta esté averiada o vuelva a funcionar.
-- **Recordatorios para beber agua:** El sistema enviará notificaciones para recordar al usuario que debe hidratarse, teniendo en cuenta su actividad física y el clima del momento.
-- **Notificaciones por proximidad:** Aunque esta funcionalidad se descartó temporalmente en la versión 1.2, se prevé implementarla en el futuro para avisar de fuentes cercanas sin necesidad de tener la aplicación abierta.
+Estos avisos ayudarán a los usuarios a organizar sus recorridos y actividades de forma más práctica.
 
----
+### 6.2. Juego y recompensas
 
-### 2. Gamificación y sistema de reputación
+Se incorporarán elementos de juego que motiven a los usuarios a interactuar con la aplicación:
 
-Para hacer la experiencia más divertida y motivar a los usuarios a participar activamente:
+- Puntos o logros por acciones como reportar o valorar fuentes.
+- Niveles al completar tareas.
+- Insignias al completar rutas.
 
-- **Rankings locales y globales:** Los usuarios podrán ver su posición en clasificaciones por barrio, ciudad o a nivel mundial, compitiendo por ser los más activos.
-- **Eventos especiales:** Se organizarán actividades temporales como la *"Semana de la fuente escondida"*, donde los usuarios deberán encontrar fuentes secretas para ganar premios.
-- **Modo multijugador:** Los usuarios podrán jugar partidas de AguaQuest con amigos o con otros usuarios en tiempo real.
-- **Niveles de dificultad:** El minijuego ofrecerá diferentes niveles (fácil, medio, difícil) para que tanto principiantes como expertos puedan disfrutar.
-- **Temporadas y recompensas:** Cada cierto tiempo se renovarán los desafíos y los usuarios podrán obtener recompensas exclusivas por participar durante esa temporada.
+Esto fomentará que los usuarios exploren más y usen la aplicación de forma continuada.
 
----
+### 6.3. Comunidad y comunicación
 
-### 3. Funcionalidades sociales
+Se habilitarán herramientas de comunicación para que los usuarios compartan información y experiencias:
 
-AguaMap quiere convertirse en una comunidad donde los usuarios puedan interactuar entre ellos:
+- Chats individuales y grupales sobre fuentes o rutas.
+- Foros para intercambiar información y experiencias.
+- Seguir a otros usuarios y ver sus actividades.
 
-- **Comunidades locales:** Los usuarios podrán unirse a grupos de su barrio o distrito para compartir información sobre las fuentes de su zona.
-- **Sistema de amigos:** Podrán agregar a otros usuarios para seguir su actividad, ver sus logros y competir con ellos.
-- **Compartir en redes sociales:** Será posible publicar puntuaciones, rutas realizadas y nuevas fuentes descubiertas en plataformas como Instagram, Twitter o Facebook.
-- **Foros y chats:** Se habilitarán espacios de discusión donde los usuarios podrán comentar el estado de una fuente específica, resolver dudas o compartir experiencias.
+Estas funciones permitirán construir una comunidad activa y colaborativa dentro de la aplicación.
 
----
+### 6.4. Uso sin Internet
 
-### 4. Modo offline
+La aplicación podrá usarse sin conexión, garantizando acceso a funciones esenciales:
 
-Para que la aplicación sea útil incluso sin conexión a Internet:
+- Consultar el mapa con las fuentes guardadas.
+- Ver información de cada fuente (descripción y estado).
+- Guardar valoraciones, comentarios y rutas, que se sincronizarán al reconectarse.
 
-- **Mapa sin conexión:** Los usuarios podrán consultar el mapa y ver la ubicación de las fuentes aunque no tengan conexión a Internet.
-- **Acceso en zonas rurales:** Esta funcionalidad mejorará notablemente la experiencia en áreas con poca cobertura móvil, como montañas o parques naturales, permitiendo a excursionistas y deportistas encontrar agua fácilmente.
+Esto hará que la aplicación sea útil en zonas con poca cobertura o durante actividades al aire libre.
 
----
+### 6.5. Accesibilidad e idiomas
 
-### 5. Accesibilidad e internacionalización
+Se adaptará la aplicación para que todos los usuarios puedan utilizarla de manera cómoda e inclusiva:
 
-AguaMap quiere ser una aplicación para todos, independientemente de sus capacidades o idioma:
+- Lectores de pantalla y navegación por voz.
+- Modos de alto contraste y ajuste de tamaño de letra.
+- Traducción a varios idiomas, incluyendo locales y los más hablados.
 
-- **Compatibilidad con lectores de pantalla:** La aplicación funcionará correctamente con TalkBack, permitiendo a personas con discapacidad visual utilizarla sin problemas.
-- **Modos de contraste alto:** Se incorporarán opciones visuales para personas con daltonismo o dificultades para distinguir colores.
-- **Textos adaptables:** Los tamaños de fuente se podrán ajustar siguiendo las pautas de accesibilidad WCAG.
-- **Más idiomas:** Además de catalán, castellano e inglés, se traducirá la aplicación a idiomas como árabe, chino, rumano o amazig, facilitando su uso a personas de diferentes culturas.
+Esto permitirá un uso accesible y global de la aplicación.
 
----
+### 6.6. Navegación y rutas
 
-### 6. Navegación avanzada
+Se mejorará la guía hacia las fuentes de agua mediante funciones que faciliten el desplazamiento:
 
-Para facilitar el camino hasta las fuentes de agua:
+- Indicaciones paso a paso en mapas interactivos.
+- Rutas seguras para caminar, en bici u otros medios.
+- Mapa con concentración de usuarios.
 
-- **Indicaciones paso a paso:** La aplicación se integrará con Google Maps o Waze para ofrecer rutas detalladas hasta la fuente seleccionada.
-- **Mapa de calor:** Se mostrarán las zonas con mayor concentración de fuentes y también aquellas donde hay más usuarios utilizando la aplicación.
-- **Rutas optimizadas:** El sistema calculará la mejor ruta para encontrar la fuente más cercana teniendo en cuenta el trayecto actual del usuario, ideal para cuando va caminando o en bicicleta.
+Esto permitirá que los usuarios lleguen a las fuentes de forma segura y eficiente.
 
----
+### 6.7. Impacto ambiental
 
-### 7. Estadísticas ambientales
+Se mostrarán datos sobre cómo el uso de la aplicación contribuye al cuidado del medio ambiente:
 
-Para que los usuarios puedan ver el impacto positivo que generan usando AguaMap:
+- Cantidad de botellas reutilizables usadas.
+- Estimación de reducción de emisiones de CO₂.
+- Datos por ciudad y por usuario.
+- Gráficos del ahorro de plástico y reducción de emisiones con el tiempo.
 
-- **Ahorro de plástico:** La aplicación calculará cuántas botellas de plástico ha dejado de usar cada persona gracias a rellenar su botella reutilizable en las fuentes.
-- **Reducción de CO₂:** Se estimará la cantidad de emisiones de dióxido de carbono que se han evitado al no producir ni transportar agua embotellada.
-- **Impacto colectivo:** Se mostrarán estadísticas globales, por ciudad y por usuario, para que todos puedan ver cómo contribuyen al cuidado del medio ambiente.
-- **Gráficos evolutivos:** Los usuarios podrán visualizar en gráficos cómo ha ido aumentando su ahorro de plástico y reducción de CO₂ con el paso del tiempo.
+Esto fomentará hábitos sostenibles y aumentará la conciencia ambiental de los usuarios.
 
 # 7. CONCLUSIÓN
 
-En este apartado se resumirán los logros alcanzados con el desarrollo de AguaMap, destacando su utilidad práctica y el impacto positivo que genera en la sociedad y el medio ambiente.
+El desarrollo del proyecto **AguaMap** ha permitido diseñar e implementar una aplicación móvil orientada a facilitar la localización de puntos de agua potable en entornos urbanos. El objetivo principal del proyecto ha sido mejorar la accesibilidad a este recurso mediante el uso de tecnologías de geolocalización, promoviendo al mismo tiempo hábitos de consumo más saludables y sostenibles.
 
-AguaMap ya es una realidad: una aplicación que funciona y cumple con su propósito. Nace con la misión de conectar a las personas con las fuentes de agua potable, haciendo que beber agua del grifo sea más fácil, saludable y sostenible.
+A lo largo del desarrollo del proyecto se han aplicado diferentes conocimientos relacionados con el desarrollo de aplicaciones móviles, la gestión de bases de datos NoSQL y el uso de servicios en la nube. La aplicación ha sido desarrollada utilizando **Android Studio** como entorno de desarrollo y el lenguaje de programación **Kotlin**. Además, se han empleado herramientas como **Firebase** para la gestión de datos y la autenticación de usuarios, **Cloudinary** para el almacenamiento y gestión de las imágenes asociadas a las fuentes de agua, y **Jetpack Compose** para el diseño de la interfaz de usuario. Asimismo, el uso de control de versiones mediante **GitHub** ha facilitado la organización del trabajo y la colaboración entre los distintos miembros del equipo.
 
-**¿Qué hemos conseguido?**
+La aplicación desarrollada permite a los usuarios localizar fuentes de agua potable cercanas, consultar información sobre cada punto y participar mediante valoraciones y comentarios. Asimismo, se ha incorporado un componente de gamificación a través del minijuego **AguaQuest**, con el objetivo de fomentar la participación de los usuarios y hacer más dinámica la experiencia dentro de la aplicación.
 
-- Los usuarios pueden encontrar fácilmente cualquier fuente de agua potable gracias a los mapas interactivos.
-- Hemos creado el minijuego AguaQuest, que hace más divertido y participativo el uso de la aplicación.
-- La información de las fuentes es fiable porque administradores y usuarios trabajan juntos para mantenerla actualizada.
-- La aplicación está preparada para crecer sin problemas gracias a la tecnología Firebase y Jetpack Compose.
-- Cualquier persona puede usarla, independientemente de sus capacidades o del dispositivo que tenga.
+Desde una perspectiva social y ambiental, AguaMap contribuye a dar mayor visibilidad a las infraestructuras públicas de agua potable y a fomentar el uso de botellas reutilizables, reduciendo así el consumo de plásticos de un solo uso. En este sentido, el proyecto se alinea con los principios de sostenibilidad promovidos por **Naciones Unidas** dentro de la **Agenda 2030 para el Desarrollo Sostenible**.
 
-**¿Qué impacto estamos generando?**
-
-- Ahora los ciudadanos conocen y valoran más las fuentes públicas de su ciudad.
-- Cada vez más gente usa botellas reutilizables en lugar de comprar agua embotellada, reduciendo el plástico.
-- Los usuarios beben agua con más frecuencia, mejorando su salud e hidratación.
-- Entre todos estamos ayudando a cuidar el planeta y a luchar contra el cambio climático.
-
-**En definitiva...**
-
-AguaMap es mucho más que un mapa de fuentes. Es una herramienta que demuestra que la tecnología puede ayudar a construir ciudades más sostenibles, personas más saludables y un mundo con menos plástico. Pequeños gestos, como rellenar una botella, pueden generar un gran cambio si los hacemos entre todos.
+En conclusión, AguaMap representa una propuesta tecnológica orientada a mejorar el acceso a servicios públicos y a promover hábitos más sostenibles en la vida cotidiana. Asimismo, el proyecto establece una base sólida para futuras mejoras y ampliaciones que permitan seguir desarrollando la aplicación y aumentar su impacto en la sociedad.
 
 ---

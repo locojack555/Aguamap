@@ -1,7 +1,7 @@
 package cat.copernic.aguamap1.domain.usecase.sound
 
-import cat.copernic.aguamap1.domain.model.SoundType
-import cat.copernic.aguamap1.domain.repository.SoundRepository
+import cat.copernic.aguamap1.domain.model.sound.SoundType
+import cat.copernic.aguamap1.domain.repository.sound.SoundRepository
 import javax.inject.Inject
 
 /**

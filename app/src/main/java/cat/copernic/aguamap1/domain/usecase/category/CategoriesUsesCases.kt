@@ -1,7 +1,7 @@
 package cat.copernic.aguamap1.domain.usecase.category
 
-import cat.copernic.aguamap1.domain.model.Category
-import cat.copernic.aguamap1.domain.repository.CategoryRepository
+import cat.copernic.aguamap1.domain.model.category.Category
+import cat.copernic.aguamap1.domain.repository.category.CategoryRepository
 import javax.inject.Inject
 
 /**

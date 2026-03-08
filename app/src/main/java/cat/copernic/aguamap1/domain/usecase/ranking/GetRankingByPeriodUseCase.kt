@@ -1,8 +1,8 @@
 package cat.copernic.aguamap1.domain.usecase.ranking
 
-import cat.copernic.aguamap1.domain.model.RankingPeriod
-import cat.copernic.aguamap1.domain.model.UserRanking
-import cat.copernic.aguamap1.domain.repository.RankingRepository
+import cat.copernic.aguamap1.domain.model.ranking.RankingPeriod
+import cat.copernic.aguamap1.domain.model.ranking.UserRanking
+import cat.copernic.aguamap1.domain.repository.ranking.RankingRepository
 import javax.inject.Inject
 
 /**

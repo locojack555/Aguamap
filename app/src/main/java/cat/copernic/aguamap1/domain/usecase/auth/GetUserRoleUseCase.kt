@@ -1,7 +1,7 @@
 package cat.copernic.aguamap1.domain.usecase.auth
 
-import cat.copernic.aguamap1.domain.model.UserRole
-import cat.copernic.aguamap1.domain.repository.AuthRepository
+import cat.copernic.aguamap1.domain.model.user.UserRole
+import cat.copernic.aguamap1.domain.repository.auth.AuthRepository
 import javax.inject.Inject
 
 /**

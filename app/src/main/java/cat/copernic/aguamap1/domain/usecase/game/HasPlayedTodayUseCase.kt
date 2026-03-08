@@ -1,6 +1,6 @@
 package cat.copernic.aguamap1.domain.usecase.game
 
-import cat.copernic.aguamap1.domain.repository.GameRepository
+import cat.copernic.aguamap1.domain.repository.game.GameRepository
 import javax.inject.Inject
 
 /**

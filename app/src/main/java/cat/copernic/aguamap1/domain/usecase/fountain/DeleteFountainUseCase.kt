@@ -1,6 +1,6 @@
 package cat.copernic.aguamap1.domain.usecase.fountain
 
-import cat.copernic.aguamap1.domain.repository.FountainRepository
+import cat.copernic.aguamap1.domain.repository.fountain.FountainRepository
 import javax.inject.Inject
 
 /**

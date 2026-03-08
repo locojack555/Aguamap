@@ -1,6 +1,6 @@
 package cat.copernic.aguamap1.ui.map
 
-import cat.copernic.aguamap1.domain.model.Fountain
+import cat.copernic.aguamap1.domain.model.fountain.Fountain
 
 /**
  * Representa el estado inmutable de la pantalla del Mapa en un momento dado.

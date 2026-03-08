@@ -9,7 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
-import cat.copernic.aguamap1.presentation.navigationInitial.NavigationWrapper
+import cat.copernic.aguamap1.aplication.navigation.navigationInitial.NavigationWrapper
 import cat.copernic.aguamap1.ui.theme.AguaMap1Theme
 import dagger.hilt.android.AndroidEntryPoint
 import org.osmdroid.config.Configuration
