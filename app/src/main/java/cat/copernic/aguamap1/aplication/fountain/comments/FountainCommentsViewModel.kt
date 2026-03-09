@@ -11,7 +11,10 @@ import cat.copernic.aguamap1.domain.model.comment.Comment
 import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.domain.repository.auth.AuthRepository
 import cat.copernic.aguamap1.domain.repository.fountain.FountainRepository
-import cat.copernic.aguamap1.domain.usecase.comment.*
+import cat.copernic.aguamap1.domain.usecase.comment.AddCommentUseCase
+import cat.copernic.aguamap1.domain.usecase.comment.CensorCommentUseCase
+import cat.copernic.aguamap1.domain.usecase.comment.DeleteCommentUseCase
+import cat.copernic.aguamap1.domain.usecase.comment.UpdateCommentUseCase
 import cat.copernic.aguamap1.domain.usecase.fountain.GetFountainsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -41,9 +44,9 @@ class FountainCommentsViewModel @Inject constructor(
     private fun getString(resId: Int): String = getApplication<Application>().getString(resId)
 
     // --- ESTADO DE LA INTERFAZ ---
-    var comments by mutableStateOf<List<Comment>>(emptyList()) ; private set
-    var reportSuccess by mutableStateOf(false) ; private set
-    var errorMessage by mutableStateOf<String?>(null) ; private set
+    var comments by mutableStateOf<List<Comment>>(emptyList()); private set
+    var reportSuccess by mutableStateOf(false); private set
+    var errorMessage by mutableStateOf<String?>(null); private set
 
     private var commentsJob: Job? = null
 
@@ -80,18 +83,29 @@ class FountainCommentsViewModel @Inject constructor(
                 timestamp = System.currentTimeMillis()
             )
 
-            addCommentUseCase(fountain, newComment).onFailure {
+            // Pasamos fountain.id en lugar del objeto completo para la transacción
+            addCommentUseCase(fountain.id, newComment).onFailure {
                 errorMessage = getString(R.string.error_add_comment)
             }
         }
     }
 
-    /**
-     * Actualiza el contenido y la valoración de un comentario preexistente.
-     */
+    // Dentro de FountainCommentsViewModel
+    var isOperating by mutableStateOf(false); private set
+
     fun editComment(fountain: Fountain, oldComment: Comment, newRating: Int, newText: String) {
         viewModelScope.launch {
-            updateCommentUseCase(fountain, oldComment, newRating, newText).onFailure {
+            isOperating = true
+            updateCommentUseCase(
+                fountainId = fountain.id,
+                oldComment = oldComment,
+                newRating = newRating,
+                newText = newText
+            ).onSuccess {
+                isOperating = false
+                // Aquí podrías cerrar un diálogo o mostrar un Toast
+            }.onFailure {
+                isOperating = false
                 errorMessage = getString(R.string.error_edit_generic)
             }
         }
@@ -102,7 +116,8 @@ class FountainCommentsViewModel @Inject constructor(
      */
     fun deleteComment(fountain: Fountain, comment: Comment) {
         viewModelScope.launch {
-            deleteCommentUseCase(fountain, comment).onFailure {
+            // Solo necesitamos los IDs para que el Repo haga su magia atómica
+            deleteCommentUseCase(fountain.id, comment.id).onFailure {
                 errorMessage = getString(R.string.error_delete_generic)
             }
         }
@@ -138,15 +153,21 @@ class FountainCommentsViewModel @Inject constructor(
     /**
      * Finaliza la observación de datos y limpia la lista de comentarios.
      */
-    fun stopObserving() { commentsJob?.cancel(); comments = emptyList() }
+    fun stopObserving() {
+        commentsJob?.cancel(); comments = emptyList()
+    }
 
     /**
      * Reinicia el estado de confirmación de reporte.
      */
-    fun clearReportSuccess() { reportSuccess = false }
+    fun clearReportSuccess() {
+        reportSuccess = false
+    }
 
     /**
      * Elimina mensajes de error pendientes en la UI.
      */
-    fun clearError() { errorMessage = null }
+    fun clearError() {
+        errorMessage = null
+    }
 }

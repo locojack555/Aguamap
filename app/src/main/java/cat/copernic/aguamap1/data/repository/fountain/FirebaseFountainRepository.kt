@@ -173,10 +173,32 @@ class FirebaseFountainRepository @Inject constructor(
         return try {
             val fRef = db.collection("fountains").document(fountainId)
             val cRef = fRef.collection("comments").document()
-            db.runTransaction { t ->
-                t.set(cRef, comment.copy(id = cRef.id))
-                t.update(fRef, "totalRatings", FieldValue.increment(1))
+
+            db.runTransaction { transaction ->
+                // 1. Obtener datos actuales de la fuente directamente del servidor
+                val snapshot = transaction.get(fRef)
+                val currentTotal = snapshot.getLong("totalRatings") ?: 0L
+                val currentAverage = snapshot.getDouble("ratingAverage") ?: 0.0
+
+                // 2. Lógica de negocio del promedio
+                val newTotal = currentTotal + 1
+                val newSum = (currentAverage * currentTotal) + comment.rating
+                val rawAverage = newSum / newTotal
+                // Redondeo a 1 decimal
+                val newAverage = kotlin.math.round(rawAverage * 10) / 10.0
+
+                // 3. Guardar el comentario con su ID generado
+                transaction.set(cRef, comment.copy(id = cRef.id))
+
+                // 4. Actualizar la fuente con los nuevos valores
+                transaction.update(
+                    fRef, mapOf(
+                        "totalRatings" to newTotal,
+                        "ratingAverage" to newAverage
+                    )
+                )
             }.await()
+
             updateUserCommentsCount(comment.userId, comment.userName, 1)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -206,11 +228,40 @@ class FirebaseFountainRepository @Inject constructor(
     override suspend fun updateComment(
         fId: String,
         cId: String,
-        up: Map<String, Any>
+        updates: Map<String, Any>,
+        oldRating: Int?,
+        newRating: Int?
     ): Result<Unit> {
         return try {
-            db.collection("fountains").document(fId).collection("comments").document(cId).update(up)
-                .await()
+            val fRef = db.collection("fountains").document(fId)
+            val cRef = fRef.collection("comments").document(cId)
+
+            db.runTransaction { transaction ->
+                val fSnapshot = transaction.get(fRef)
+
+                // SANEAMIENTO: Si la fuente es antigua y no tiene estos campos, los inicializamos a 0
+                val currentTotal = fSnapshot.getLong("totalRatings") ?: 0L
+                val currentAverage = fSnapshot.getDouble("ratingAverage") ?: 0.0
+
+                // Solo recalculamos si ambos ratings son proporcionados y la nota cambió
+                if (oldRating != null && newRating != null && oldRating != newRating) {
+                    if (currentTotal > 0) {
+                        val currentSum = currentAverage * currentTotal
+                        val rawAverage = (currentSum - oldRating + newRating) / currentTotal
+                        val newAverage = kotlin.math.round(rawAverage * 10) / 10.0
+
+                        transaction.update(fRef, "ratingAverage", newAverage)
+                    }
+                }
+
+                // Si detectamos que los campos eran nulos en el servidor, los grabamos como 0 por defecto
+                if (!fSnapshot.contains("totalRatings")) {
+                    transaction.update(fRef, "totalRatings", 0)
+                    transaction.update(fRef, "ratingAverage", 0.0)
+                }
+
+                transaction.update(cRef, updates)
+            }.await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -220,17 +271,51 @@ class FirebaseFountainRepository @Inject constructor(
     /**
      * Borra un comentario y resta 1 al contador de valoraciones de la fuente y del usuario.
      */
-    override suspend fun deleteComment(fId: String, cId: String): Result<Unit> {
+    override suspend fun deleteComment(fountainId: String, commentId: String): Result<Unit> {
         return try {
-            val fRef = db.collection("fountains").document(fId)
-            val cRef = fRef.collection("comments").document(cId)
-            val doc = cRef.get().await()
-            val uid = doc.getString("userId") ?: ""
-            db.runTransaction { t ->
-                t.delete(cRef)
-                t.update(fRef, "totalRatings", FieldValue.increment(-1))
+            val fRef = db.collection("fountains").document(fountainId)
+            val cRef = fRef.collection("comments").document(commentId)
+
+            db.runTransaction { transaction ->
+                // 1. Obtener el comentario para saber qué puntuación hay que restar
+                val commentSnapshot = transaction.get(cRef)
+                if (!commentSnapshot.exists()) return@runTransaction // El comentario ya no existe
+
+                val commentRating = commentSnapshot.getDouble("rating") ?: 0.0
+                val userId = commentSnapshot.getString("userId") ?: ""
+                val userName = commentSnapshot.getString("userName") ?: ""
+
+                // 2. Obtener la fuente para recalcular la media
+                val fountainSnapshot = transaction.get(fRef)
+                val currentTotal = fountainSnapshot.getLong("totalRatings") ?: 0L
+                val currentAverage = fountainSnapshot.getDouble("ratingAverage") ?: 0.0
+
+                // 3. Lógica de reversión aritmética
+                val newTotal = (currentTotal - 1).coerceAtLeast(0)
+                val newAverage = if (newTotal > 0) {
+                    val currentSum = currentAverage * currentTotal
+                    val rawAverage = (currentSum - commentRating) / newTotal
+                    kotlin.math.round(rawAverage * 10) / 10.0
+                } else {
+                    0.0 // Si no quedan comentarios, ambos a cero
+                }
+
+                // 4. Ejecutar cambios
+                transaction.delete(cRef)
+                transaction.update(
+                    fRef, mapOf(
+                        "totalRatings" to newTotal,
+                        "ratingAverage" to newAverage
+                    )
+                )
+
+                // Retornamos datos necesarios para el contador de usuario fuera de la transacción si es necesario
+                mapOf("uid" to userId, "name" to userName)
             }.await()
-            if (uid.isNotEmpty()) updateUserCommentsCount(uid, "User", -1)
+
+            // Opcional: Actualizar el contador del usuario (restar 1)
+            // updateUserCommentsCount(userId, userName, -1)
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -75,14 +75,16 @@ interface FountainRepository {
 
     /**
      * Modifica el contenido de un comentario existente.
-     * @param fountainId ID de la fuente contenedora.
-     * @param commentId ID del comentario específico.
-     * @param updates Campos a modificar (ej. texto, puntuación).
+     * Permite actualizar el promedio de la fuente si se proporcionan los ratings.
+     * * @param oldRating Si es null, no se recalcula la media de la fuente.
+     * @param newRating Si es null, no se recalcula la media de la fuente.
      */
     suspend fun updateComment(
-        fountainId: String,
-        commentId: String,
-        updates: Map<String, Any>
+        fId: String,
+        cId: String,
+        updates: Map<String, Any>,
+        oldRating: Int? = null,
+        newRating: Int? = null
     ): Result<Unit>
 
     /**
@@ -108,7 +110,11 @@ interface FountainRepository {
      * @param userName Nombre para mostrar (para redundancia en estadísticas).
      * @param increment Valor positivo para añadir o negativo para restar.
      */
-    suspend fun updateUserFountainsCount(userId: String, userName: String, increment: Int): Result<Unit>
+    suspend fun updateUserFountainsCount(
+        userId: String,
+        userName: String,
+        increment: Int
+    ): Result<Unit>
 
     /**
      * Modifica el contador histórico de comentarios realizados por el usuario.
@@ -116,7 +122,11 @@ interface FountainRepository {
      * @param userName Nombre para mostrar.
      * @param increment Valor de ajuste del contador.
      */
-    suspend fun updateUserCommentsCount(userId: String, userName: String, increment: Int): Result<Unit>
+    suspend fun updateUserCommentsCount(
+        userId: String,
+        userName: String,
+        increment: Int
+    ): Result<Unit>
 
     /**
      * Consulta cuántas fuentes ha creado un usuario específico.

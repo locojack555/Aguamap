@@ -10,22 +10,13 @@ import javax.inject.Inject
  *
  * @property repository El repositorio de fuentes, que gestiona las subcolecciones de comentarios en Firestore.
  */
-class CensorCommentUseCase @Inject constructor(
-    private val repository: FountainRepository
-) {
-    /**
-     * Ejecuta la lógica de censura mediante una actualización atómica de campos.
-     * * @param fountainId El identificador de la fuente donde reside el comentario.
-     * @param commentId El identificador del comentario que se desea censurar.
-     * @return [Result] que indica si la operación en la base de datos fue exitosa.
-     */
+class CensorCommentUseCase @Inject constructor(private val repository: FountainRepository) {
     suspend operator fun invoke(fountainId: String, commentId: String): Result<Unit> {
-        // Preparamos los cambios: censuramos el contenido y cerramos el reporte
         val updates = mapOf(
             "censored" to true,
             "reported" to false
         )
-
+        // Al no pasar oldRating ni newRating, el repo solo actualiza el comentario
         return repository.updateComment(fountainId, commentId, updates)
     }
 }

@@ -3,6 +3,7 @@ package cat.copernic.aguamap1.aplication.game
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.aplication.sound.SoundManager
 import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
 import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.domain.model.game.GameSession
@@ -11,7 +12,6 @@ import cat.copernic.aguamap1.domain.usecase.game.CalculateDistanceUseCase
 import cat.copernic.aguamap1.domain.usecase.game.CalculateScoreUseCase
 import cat.copernic.aguamap1.domain.usecase.game.HasPlayedTodayUseCase
 import cat.copernic.aguamap1.domain.usecase.game.SaveGameSessionUseCase
-import cat.copernic.aguamap1.aplication.sound.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -40,7 +40,7 @@ class GameViewModel @Inject constructor(
     private val errorResourceProvider: ErrorResourceProvider
 ) : ViewModel() {
 
-    private val VALIDATION_DISTANCE_METERS = 5.0 // Distancia máxima para permitir jugar
+    private val VALIDATION_DISTANCE_METERS = 30.0 // Distancia máxima para permitir jugar
     private var checkCanPlayJob: Job? = null
     private var lastCheckTime = 0L
 
