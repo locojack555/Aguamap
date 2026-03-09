@@ -7,6 +7,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("release_config") {
+            storeFile = file("C:\\Users\\luisb\\Documents\\ClaveAguaMap")
+            keyAlias = "key0"
+            keyPassword = "123456"
+            storePassword = "123456"
+        }
+    }
     namespace = "cat.copernic.aguamap1"
     compileSdk {
         version = release(36)
@@ -29,6 +37,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release_config")
         }
     }
     compileOptions {

@@ -84,9 +84,14 @@ class GameViewModel @Inject constructor(
     fun checkCanPlay(userLat: Double, userLng: Double) {
         if (userLat == 0.0) return
         if (_isLoading.value) return
-        if (_gameState.value != GameState.Initial && _gameState.value != GameState.TooFar) return
 
-        // Evitar spam de llamadas si el GPS fluctúa rápido
+        // Permitimos la ejecución si estamos en Initial, TooFar o Error
+        if (_gameState.value != GameState.Initial &&
+            _gameState.value != GameState.TooFar &&
+            _gameState.value != GameState.Error
+        ) return
+
+        // Evitar spam de llamadas si el GPS fluctúa rápido (2 segundos de margen)
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastCheckTime < 2000) return
         lastCheckTime = currentTime
@@ -256,9 +261,14 @@ class GameViewModel @Inject constructor(
         super.onCleared()
     }
 
+    /**
+     * Reset del estado y reintento de validación.
+     */
     fun retryGame(lat: Double, lng: Double) {
         _gameState.value = GameState.Initial
         _error.value = null
+        _isLoading.value = false
+        lastCheckTime = 0L // Reseteamos el temporizador para que checkCanPlay se ejecute sí o sí
         checkCanPlay(lat, lng)
     }
 

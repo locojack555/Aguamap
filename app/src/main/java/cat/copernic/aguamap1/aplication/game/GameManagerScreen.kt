@@ -24,13 +24,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.aplication.game.components.ErrorScreen
 import cat.copernic.aguamap1.aplication.game.components.LoadingPartida
 import cat.copernic.aguamap1.aplication.game.screens.GameInstructionsScreen
 import cat.copernic.aguamap1.aplication.game.screens.GamePlayScreen
 import cat.copernic.aguamap1.aplication.game.screens.GameResultScreen
 import cat.copernic.aguamap1.aplication.utils.PermissionRequestUI
+import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.ui.theme.Blanco
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -121,8 +121,9 @@ fun GameScreen(
     /**
      * DISPARADOR DE LÓGICA DE NEGOCIO:
      * Una vez tenemos ubicación, comprobamos si el usuario puede jugar (límites diarios y proximidad).
+     * Se añade gameState como clave para que reaccione al reintento (retry).
      */
-    LaunchedEffect(isLocationReady) {
+    LaunchedEffect(isLocationReady, gameState) {
         if (isLocationReady && gameState == GameViewModel.GameState.Initial) {
             viewModel.checkCanPlay(currentUserLat, currentUserLng)
         }
