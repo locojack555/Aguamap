@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.domain.model.comment.Comment
-import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.domain.model.comment.ReportedComment
+import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.domain.repository.fountain.FountainRepository
 import cat.copernic.aguamap1.domain.usecase.comment.CensorCommentUseCase
 import com.google.firebase.firestore.FirebaseFirestore
@@ -69,7 +69,7 @@ class ModerationViewModel @Inject constructor(
             try {
                 // 1. Obtener los documentos de reporte (Metadatos del reporte)
                 val snapshot = db.collection("reportsComments")
-                    .whereEqualTo("type", "COMMENT_REPORT")
+                    //.whereEqualTo("type", "COMMENT_REPORT")
                     .get()
                     .await()
 
