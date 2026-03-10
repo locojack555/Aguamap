@@ -7,6 +7,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("release_config") {
+            storeFile = file("C:\\Users\\luisb\\Documents\\ClaveAguaMap")
+            keyAlias = "key0"
+            keyPassword = "123456"
+            storePassword = "123456"
+        }
+    }
     namespace = "cat.copernic.aguamap1"
     compileSdk {
         version = release(36)
@@ -29,6 +37,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release_config")
         }
     }
     compileOptions {
@@ -65,6 +74,11 @@ dependencies {
     implementation(libs.firebase.database.ktx)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Para calcular los Geohashes (necesarios para que las fuentes aparezcan en tu mapa)
+    implementation("com.firebase:geofire-android-common:3.2.0")
+
 
 
     implementation(libs.androidx.core.ktx)

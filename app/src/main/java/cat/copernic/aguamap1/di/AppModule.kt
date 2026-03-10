@@ -5,23 +5,25 @@ package cat.copernic.aguamap1.di
 import android.content.Context
 import cat.copernic.aguamap1.data.cloudinary.CloudinaryService
 import cat.copernic.aguamap1.data.error.ErrorResourceProviderImpl
-import cat.copernic.aguamap1.data.repository.AndroidSoundRepository
-import cat.copernic.aguamap1.data.repository.FirebaseAuthRepository
-import cat.copernic.aguamap1.data.repository.FirebaseCategoryRepository
-import cat.copernic.aguamap1.data.repository.FirebaseFountainRepository
-import cat.copernic.aguamap1.data.repository.FirebaseGameRepository
-import cat.copernic.aguamap1.data.repository.FirebaseRankingRepository
-import cat.copernic.aguamap1.data.repository.FirebaseReportRepository
-import cat.copernic.aguamap1.data.repository.RealtimeStatusRepositoryImpl
+import cat.copernic.aguamap1.data.repository.sound.AndroidSoundRepository
+import cat.copernic.aguamap1.data.repository.auth.FirebaseAuthRepository
+import cat.copernic.aguamap1.data.repository.category.FirebaseCategoryRepository
+import cat.copernic.aguamap1.data.repository.fountain.FirebaseFountainRepository
+import cat.copernic.aguamap1.data.repository.game.FirebaseGameRepository
+import cat.copernic.aguamap1.data.repository.ranking.FirebaseRankingRepository
+import cat.copernic.aguamap1.data.repository.fountain.FirebaseReportRepository
+import cat.copernic.aguamap1.data.repository.status.RealtimeStatusRepositoryImpl
 import cat.copernic.aguamap1.domain.error.ErrorResourceProvider
-import cat.copernic.aguamap1.domain.repository.AuthRepository
-import cat.copernic.aguamap1.domain.repository.CategoryRepository
-import cat.copernic.aguamap1.domain.repository.FountainRepository
-import cat.copernic.aguamap1.domain.repository.GameRepository
-import cat.copernic.aguamap1.domain.repository.RankingRepository
-import cat.copernic.aguamap1.domain.repository.RealtimeStatusRepository
-import cat.copernic.aguamap1.domain.repository.ReportRepository
-import cat.copernic.aguamap1.domain.repository.SoundRepository
+import cat.copernic.aguamap1.domain.repository.auth.AuthRepository
+import cat.copernic.aguamap1.domain.repository.category.CategoryRepository
+import cat.copernic.aguamap1.domain.repository.fountain.FountainRepository
+import cat.copernic.aguamap1.domain.repository.game.GameRepository
+import cat.copernic.aguamap1.domain.repository.ranking.RankingRepository
+import cat.copernic.aguamap1.domain.repository.status.RealtimeStatusRepository
+import cat.copernic.aguamap1.domain.repository.fountain.ReportRepository
+import cat.copernic.aguamap1.domain.repository.sound.SoundRepository
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
@@ -122,5 +124,13 @@ object AppModule {
         @ApplicationContext context: Context // Hilt te lo pasa aquí
     ): CloudinaryService {
         return CloudinaryService(context) // Y ahora se lo pasas al constructor
+    }
+
+    @Provides
+    @Singleton
+    fun provideFusedLocationProviderClient(
+        @ApplicationContext context: Context
+    ): FusedLocationProviderClient {
+        return LocationServices.getFusedLocationProviderClient(context)
     }
 }
