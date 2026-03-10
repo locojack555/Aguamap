@@ -463,7 +463,7 @@ En este apartado se recopilarán los materiales complementarios, incluyendo un v
 
 - Desarollador 2 (Luis Alfredo Mariño): [enlace](https://github.com/lamarinog/AguaMap)
 
-- Desarollador 3 (Cristina Jiménez Cardoso): [enlace](https://github.com/CristinaJimenez2006/AguaMap)
+- Desarollador 3 (Cristina Jiménez Cardoso): [enlace](https://github.com/CristinaJimenez2006/AguaMap.git)
 
 - Desarollador 4 (Adrià González Consuegra): [enlace](https://github.com/Deleuze58/AguaMap.git)
 
