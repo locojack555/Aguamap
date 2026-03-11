@@ -66,6 +66,14 @@ class AddFountainViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null); private set
     var categories by mutableStateOf<List<Category>>(emptyList()); private set
 
+    /* Añadir solo estas líneas al ViewModel (nada más cambia):
+    var currentStep by mutableStateOf(1)
+        private set
+
+    fun goToStep2() { currentStep = 2 }
+    fun goToStep1() { currentStep = 1 }
+    fun goToStep3() { currentStep = 3 }*/
+
     /**
      * Propiedad computada que valida si el formulario puede enviarse.
      * Verifica campos vacíos, carga de imágenes y validez de coordenadas.
