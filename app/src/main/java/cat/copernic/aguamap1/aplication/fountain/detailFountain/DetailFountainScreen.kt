@@ -212,19 +212,6 @@ fun DetailFountainScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    "Direccion",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Negro
-                )
-                Text(
-                    uiFountain.direccion.ifBlank { "No hay direccion" },
-                    color = NegroSuave
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 // 5. ESPECIFICACIONES TÉCNICAS
                 FountainSpecs(uiFountain, viewModel, isOpRealtime)
 
