@@ -83,4 +83,6 @@ interface AuthRepository {
 
     /** Recupera la URL de la imagen de perfil del usuario actual. */
     suspend fun getCurrentUserProfilePicture(): String?
+    suspend fun getCurrentUserBio(): String?
+    suspend fun updateUserBio(userId: String, bio: String): Result<Unit>
 }

@@ -74,12 +74,14 @@ fun RankingHeader() {
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
+
             }
             Text(
                 text = stringResource(id = R.string.ranking_subtitle),
                 color = Color.White.copy(alpha = 0.8f),
                 fontSize = 14.sp
             )
+
         }
     }
 }
@@ -132,8 +134,10 @@ fun TimeSelectorSection(
  * Resalta las tres primeras posiciones con iconos especiales y colores metálicos.
  */
 @Composable
-fun RankingItem(player: UserRanking) {
+//para lo del objeto userranking
+fun RankingItem(player: UserRanking/*,onClick: () -> Unit = {}*/) {
     Card(
+        /*(onClick = onClick,*/
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = if (player.isCurrentUser) colorResource(id = R.color.cremaSuave) else Color.White
@@ -200,6 +204,16 @@ fun RankingItem(player: UserRanking) {
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
+               /* Text(
+                    text = "Nivel ${player.level}",
+                    fontSize = 11.sp,
+                    color = when (player.level) {
+                        5 -> Color(0xFFFFD700)  // oro
+                        4 -> Color(0xFFC0C0C0)  // plata
+                        3 -> Color(0xFFCD7F32)  // bronce
+                        else -> Color.Gray
+                    }
+                )*/
             }
 
             // PUNTUACIÓN: Badge con color dinámico según el podio

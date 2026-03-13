@@ -38,6 +38,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.aplication.profile.ProfileViewModel
 import cat.copernic.aguamap1.aplication.profile.edit.components.EditProfileBottomBar
+import cat.copernic.aguamap1.aplication.profile.edit.components.ProfileBioSection
 import cat.copernic.aguamap1.aplication.profile.edit.components.ProfileImageSection
 import cat.copernic.aguamap1.aplication.profile.edit.components.ProfileNameSection
 import cat.copernic.aguamap1.aplication.utils.rememberImagePickerHelper
@@ -66,6 +67,7 @@ fun EditProfileScreen(
     val isSuccess by viewModel.isSuccess.collectAsState()
     val selectedImageUri by viewModel.selectedImageUri.collectAsState()
 
+    var bio by remember(profileState.bio) { mutableStateOf(profileState.bio) }
     // Estado local para el campo de texto (iniciado con el nombre actual del perfil)
     var nombre by remember(profileState.userName) { mutableStateOf(profileState.userName) }
 
@@ -102,18 +104,17 @@ fun EditProfileScreen(
         bottomBar = {
             // El botón solo se habilita si hay cambios pendientes y no se está procesando nada
             EditProfileBottomBar(
-                isEnabled = (selectedImageUri != null || nombre != profileState.userName) && !isSaving && !isUploadingPicture,
+                isEnabled = (selectedImageUri != null || nombre != profileState.userName || bio != profileState.bio) && !isSaving && !isUploadingPicture,
                 isLoading = isSaving || isUploadingPicture,
                 onSave = {
+                    val nombreCambiado = nombre != profileState.userName
+                    val bioCambiada = bio != profileState.bio
+                    val fotoCambiada = selectedImageUri != null
+
                     when {
-                        // Caso 1: Cambia foto y nombre
-                        selectedImageUri != null && nombre != profileState.userName -> {
-                            viewModel.saveProfilePicture { viewModel.updateProfile(nombre) {} }
-                        }
-                        // Caso 2: Solo cambia la foto
-                        selectedImageUri != null -> viewModel.saveProfilePicture {}
-                        // Caso 3: Solo cambia el nombre
-                        nombre != profileState.userName -> viewModel.updateProfile(nombre) {}
+                        fotoCambiada && nombreCambiado -> viewModel.saveProfilePicture { viewModel.updateProfileAndBio(nombre, bio) {} }
+                        fotoCambiada -> viewModel.saveProfilePicture { if (bioCambiada) viewModel.updateBio(bio) }
+                        nombreCambiado || bioCambiada -> viewModel.updateProfileAndBio(nombre, bio) {}
                     }
                 }
             )
@@ -151,6 +152,12 @@ fun EditProfileScreen(
                 ProfileNameSection(
                     value = nombre,
                     onValueChange = { nombre = it },
+                    enabled = !isSaving && !isUploadingPicture
+                )
+
+                ProfileBioSection(
+                    value = bio,
+                    onValueChange = { bio = it },
                     enabled = !isSaving && !isUploadingPicture
                 )
             }

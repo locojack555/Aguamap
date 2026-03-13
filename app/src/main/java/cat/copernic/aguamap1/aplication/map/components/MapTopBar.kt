@@ -67,13 +67,19 @@ import cat.copernic.aguamap1.ui.theme.Negro
 fun MapTopBar(
     isMapView: Boolean,
     onToggleView: () -> Unit,
-    viewModel: MapViewModel
+    //poner el buscador abajo
+    //modifier : Modifier,
+    viewModel: MapViewModel,
 ) {
     // Contenedor principal redondeado con sombra para la barra de búsqueda
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+        /*
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)*/,
         shape = RoundedCornerShape(28.dp),
         color = Blanco,
         shadowElevation = 6.dp

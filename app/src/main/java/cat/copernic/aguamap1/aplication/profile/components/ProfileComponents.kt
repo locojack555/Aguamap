@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.aplication.profile.components
 
+import android.graphics.fonts.FontStyle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
@@ -147,12 +149,23 @@ fun CabeceraPerfil(profileState: ProfileState, isAdmin: Boolean) {
                         color = Color.White.copy(alpha = 0.9f),
                         fontSize = 15.sp
                     )
+
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = profileState.bio,
+                            fontSize = 13.sp,
+                            color = Color.White.copy(alpha = 0.85f),
+                            textAlign = TextAlign.Center
+                        )
+
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // FILA DE ESTADÍSTICAS (Fuentes, Valoraciones y Puntos)
+            // si quieres una encima de la otra pon column
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly

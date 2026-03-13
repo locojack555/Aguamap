@@ -17,6 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.aplication.Luis
 import cat.copernic.aguamap1.aplication.category.CategoriesScreen
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainScreen
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainViewModel
@@ -173,9 +174,21 @@ fun NavigationGraph(
                     onFountainClick = { fountain ->
                         mapViewModel.selectFountain(fountain)
                         navController.navigate("fountain_detail")
+                    },
+                    onLuisClick = {
+                        navController.navigate("Luis")
                     }
                 )
             }
+
+            composable("Luis") {
+                Luis(
+                    onLuisClick = {
+                        navController.navigate(BottomNavItem.Categories.route)
+                    }
+                )
+            }
+
 
             // --- RUTA: JUEGO (GAMIFICACIÓN) ---
             composable(BottomNavItem.Game.route) {
@@ -210,7 +223,23 @@ fun NavigationGraph(
 
             // --- RUTA: RANKING DE USUARIOS ---
             composable(BottomNavItem.Ranking.route) { RankingScreen() }
-
+            /* pasar objeto ranking a otra pantalla
+            val rankingViewModel: RankingViewModel = hiltViewModel()
+            // Ruta ranking
+            composable(BottomNavItem.Ranking.route) {
+                RankingScreen(
+                    viewModel = rankingViewModel,
+                    onPlayerClick = { player ->
+                        rankingViewModel.selectPlayer(player)
+                        navController.navigate("player_detail")
+                    }
+                )
+            }
+            composable("player_detail") {
+            val player = rankingViewModel.selectedPlayer
+            player?.let { PlayerDetailScreen(it) }
+            }
+             */
             // --- RUTA: PERFIL DEL USUARIO ---
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen(

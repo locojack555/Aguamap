@@ -78,6 +78,7 @@ class ProfileViewModel @Inject constructor(
                 val fountainsCount = getUserFountainsCountUseCase(userId)
                 val commentsCount = getUserCommentsCountUseCase(userId)
                 val historicStats = getCurrentUserHistoricStatsUseCase(userId)
+                val bio = authRepository.getCurrentUserBio()
 
                 _profileState.update { currentState ->
                     currentState.copy(
@@ -87,7 +88,8 @@ class ProfileViewModel @Inject constructor(
                         profilePictureUrl = profilePicture,
                         points = historicStats?.points ?: currentState.points,
                         fountainsCount = fountainsCount,
-                        ratingsCount = commentsCount
+                        ratingsCount = commentsCount,
+                        bio = bio ?: currentState.bio
                     )
                 }
             } catch (e: Exception) {
@@ -217,5 +219,44 @@ class ProfileViewModel @Inject constructor(
 
     fun clearSelectedImage() {
         _selectedImageUri.value = null
+    }
+
+    fun updateBio(bio: String, onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            _isSaving.value = true
+            try {
+                val userId = authRepository.getCurrentUserUid() ?: throw Exception()
+                val result = authRepository.updateUserBio(userId, bio)
+                if (result.isFailure) throw Exception()
+                loadUserData()
+                _isSuccess.value = true
+                onComplete()
+            } catch (e: Exception) {
+                _errorResId.value = R.string.error_updating_profile
+            } finally {
+                _isSaving.value = false
+            }
+        }
+    }
+    fun updateProfileAndBio(nombre: String, bio: String, onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            _isSaving.value = true
+            try {
+                val userId = authRepository.getCurrentUserUid() ?: throw Exception()
+                val currentEmail = authRepository.getCurrentUserEmail() ?: ""
+                authRepository.updateUserProfile(userId, nombre, currentEmail)
+                    .getOrThrow()
+                if (nombre != authRepository.getCurrentUserName())
+                    authRepository.updateUserName(nombre)
+                authRepository.updateUserBio(userId, bio).getOrThrow()
+                loadUserData()
+                _isSuccess.value = true
+                onComplete()
+            } catch (e: Exception) {
+                _errorResId.value = R.string.error_updating_profile
+            } finally {
+                _isSaving.value = false
+            }
+        }
     }
 }

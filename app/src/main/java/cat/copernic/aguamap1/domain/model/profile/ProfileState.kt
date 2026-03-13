@@ -20,5 +20,6 @@ data class ProfileState (
     val profilePictureUrl: String? = null, // Foto de perfil opcional (Gestionada vía Cloudinary)
     val fountainsCount: Int = 0,
     val ratingsCount: Int = 0,
-    val points: Int = 0
+    val points: Int = 0,
+    val bio: String = ""
 )

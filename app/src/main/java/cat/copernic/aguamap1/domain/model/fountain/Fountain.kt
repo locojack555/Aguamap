@@ -43,6 +43,7 @@ data class Fountain(
     val votedByPositive: List<String> = emptyList(),
     val votedByNegative: List<String> = emptyList(),
     val description: String = "",
+    //val moreInformation: String = "",
     val imageUrl: String = "",
     val dateCreated: Date = Date(),
     val ratingAverage: Double = 0.0,

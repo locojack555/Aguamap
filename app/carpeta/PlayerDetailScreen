@@ -1,0 +1,11 @@
+```kotlin
+@Composable
+fun PlayerDetailScreen(player: UserRanking) {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        Text(player.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text("Posición: #${player.position}")
+        Text("Puntos: ${player.points}")
+        Text("Fuentes: ${player.discovered}")
+        Text("Partidas: ${player.games}")
+    }
+}

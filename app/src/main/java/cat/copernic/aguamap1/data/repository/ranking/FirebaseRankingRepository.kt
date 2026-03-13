@@ -70,6 +70,7 @@ class FirebaseRankingRepository @Inject constructor(
                     discovered = sesiones.distinctBy { it.fountainId }.size, // Fuentes únicas descubiertas hoy
                     games = sesiones.size,
                     isCurrentUser = userId == idUsuarioActual
+                    //,level = calculateLevel(sesiones.sumOf { it.score })
                 )
             }
             .sortedByDescending { it.points } // Ordenamos de mayor a menor puntuación
@@ -105,6 +106,7 @@ class FirebaseRankingRepository @Inject constructor(
                 discovered = doc.getLong("totalDiscovered")?.toInt() ?: 0,
                 games = doc.getLong("gamesCount")?.toInt() ?: 0,
                 isCurrentUser = doc.getString("userId") == idUsuarioActual
+                //,level = calculateLevel(doc.getLong("totalScore")?.toInt() ?: 0)
             )
         }
     }
@@ -140,6 +142,7 @@ class FirebaseRankingRepository @Inject constructor(
                     discovered = fuentesDescubiertas,
                     games = partidasTotales,
                     isCurrentUser = userId == idUsuarioActual
+                   // ,level = calculateLevel(puntosTotales)
                 )
             }
             .sortedByDescending { it.points }
@@ -183,4 +186,13 @@ class FirebaseRankingRepository @Inject constructor(
             null
         }
     }
+   /* private fun calculateLevel(points: Int): Int {
+        return when {
+            points >= 10000 -> 5
+            points >= 5000  -> 4
+            points >= 2000  -> 3
+            points >= 500   -> 2
+            else            -> 1
+        }
+    }*/
 }

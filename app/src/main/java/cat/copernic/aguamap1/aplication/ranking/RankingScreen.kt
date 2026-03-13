@@ -39,7 +39,8 @@ import cat.copernic.aguamap1.aplication.ranking.components.TotalPointsFooter
  * de tiempo (Día, Mes, Año).
  */
 @Composable
-fun RankingScreen(viewModel: RankingViewModel = hiltViewModel()) {
+//para lo del objeto userranking
+fun RankingScreen(viewModel: RankingViewModel = hiltViewModel()/*,onPlayerClick: (UserRanking) -> Unit = {}*/) {
     // Suscripción al estado del ViewModel con gestión de ciclo de vida
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -105,6 +106,10 @@ fun RankingScreen(viewModel: RankingViewModel = hiltViewModel()) {
                     ) {
                         items(state.players) { player ->
                             RankingItem(player)
+                            //para lo del objeto userranking
+                            /*
+                            RankingItem(player = player, onClick = { onPlayerClick(player) })
+                             */
                         }
                     }
                 }

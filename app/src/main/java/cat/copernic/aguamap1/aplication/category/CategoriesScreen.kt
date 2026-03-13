@@ -20,10 +20,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.aplication.Luis
 import cat.copernic.aguamap1.domain.model.category.Category
 import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.aplication.category.components.CategoriesHeader
@@ -50,7 +52,8 @@ fun CategoriesScreen(
     viewModel: CategoryViewModel = hiltViewModel(),
     userLat: Double?,
     userLng: Double?,
-    onFountainClick: (Fountain) -> Unit
+    onFountainClick: (Fountain) -> Unit,
+    onLuisClick: () -> Unit
 ) {
     // Sincronización de ubicación: Actualiza el estado del VM cuando cambian las coordenadas
     LaunchedEffect(userLat, userLng) {
@@ -77,7 +80,7 @@ fun CategoriesScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgGray50)
+            .background(Color(255,253,208))
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Cabecera interactiva con búsqueda y filtros
@@ -110,6 +113,9 @@ fun CategoriesScreen(
                             showDetailDialog = true
                         }
                     )
+                    Luis(onLuisClick = {
+                        onLuisClick()
+                    })
                 }
             }
         }

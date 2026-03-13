@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.compose.material3)
     implementation(libs.firebase.database.ktx)
+    implementation(libs.androidx.compose.ui.text)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation("com.google.code.gson:gson:2.10.1")

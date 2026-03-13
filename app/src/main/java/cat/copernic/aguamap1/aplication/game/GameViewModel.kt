@@ -132,13 +132,13 @@ class GameViewModel @Inject constructor(
                 // Validación 2: Proximidad física (Geofencing manual)
                 var minD = Double.MAX_VALUE
                 var isNear = false
-                for (f in allFountains) {
+                /*for (f in allFountains) {
                     val d = calculateDistanceUseCase(userLat, userLng, f.latitude, f.longitude)
                     if (d < minD) minD = d
                     if (d <= VALIDATION_DISTANCE_METERS) {
                         isNear = true; break
                     }
-                }
+                }*/
 
                 _distanceToFountain.value = minD
 

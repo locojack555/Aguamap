@@ -15,5 +15,6 @@ data class User(
     val nom: String = "",
     val email: String = "",
     val role: UserRole = UserRole.USER,
-    val language: String = "es"
+    val language: String = "es",
+    val bio: String = ""
 )

@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.aplication.profile
 
+import android.graphics.fonts.FontStyle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
@@ -66,7 +69,7 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             // 1. CABECERA: Muestra foto, nombre y estadísticas (puntos, fuentes, etc.)
-            CabeceraPerfil(profileState, isAdmin)
+            CabeceraPerfil(profileState, isAdmin, )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -104,7 +107,6 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-
                 // 4. ACCIÓN FINAL: Botón de cierre de sesión
                 BotonCerrarSesion(onClick = {
                     navigateToLogin()

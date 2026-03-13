@@ -1,0 +1,1790 @@
+PERMISOS
+Proteger una ruta entera de navegación
+NavigationGraph.kt
+composable("admin_panel") {
+    // Si el usuario no es admin, vuelve atrás automáticamente
+    LaunchedEffect(Unit) {
+        if (!adminViewModel.isAdmin) {
+            navController.popBackStack()
+        }
+    }
+
+    if (adminViewModel.isAdmin) {
+        AdminPanelScreen(onBack = { navController.popBackStack() })
+    }
+}
+CATEGORIAS (Permitir que el USER también pueda eliminar categorías)
+CategoryDetailDialog.kt
+Antes
+if (isAdmin) {  // <-- aquí decides quién ve el botón Delete
+    IconButton(onClick = onEditCategory) { ... }
+    IconButton(onClick = onDeleteCategory) { ... }
+}
+Podrías separarlo:
+Después
+if (isAdmin) {
+    IconButton(onClick = onEditCategory) { ... }  // solo admin edita
+}
+if (canDelete) {  // admin Y user pueden borrar
+    IconButton(onClick = onDeleteCategory) { ... }
+}
+
+COMENTAROS FUENTES (SOLO PUEDE COMENTAR 1 VEZ)
+FountainCommentsViewModel — en addComment()
+Antes de crear el comentario, verificar si el usuario ya tiene uno en la lista:
+fun addComment(fountain: Fountain, rating: Int, text: String) {
+    viewModelScope.launch {
+        val uid = authRepository.getCurrentUserUid() ?: return@launch
+
+        // Verificar si el usuario ya ha comentado
+        if (comments.any { it.userId == uid }) {
+            errorMessage = "Ya has comentado esta fuente"
+            return@launch
+        }
+
+        val uName = authRepository.getCurrentUserName() ?: getString(R.string.default_user_name)
+        val newComment = Comment(
+            userId = uid,
+            userName = uName,
+            rating = rating,
+            comment = text,
+            timestamp = System.currentTimeMillis()
+        )
+        addCommentUseCase(fountain, newComment).onFailure {
+            errorMessage = getString(R.string.error_add_comment)
+        }
+    }
+}
+FountainCommentsSection — ocultar el botón "Añadir comentario"
+Si el usuario ya tiene un comentario, no mostrar el botón:
+val hasAlreadyCommented = comments.any { it.userId == currentUserId }
+TextButton(
+    onClick = onAddClick,
+    enabled = !hasAlreadyCommented  // <-- deshabilitar
+) {
+    Text(
+        text = if (hasAlreadyCommented) "Ya comentaste"
+               else stringResource(R.string.add_comment),
+        color = if (hasAlreadyCommented) GrisClaro else Blue10,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+ORDENACIÓN Y LIMITACION
+
+RANKING (ORDENAR)
+
+FirebaseRankingRepository.kt
+Diario (línea ~57):
+.sortedBy { it.points }
+
+Anual (línea ~100):
+.sortedBy { it.points }
+
+Mensual, cambia la dirección en la query de Firestore:
+.orderBy("totalScore", Query.Direction.ASCENDING)
+
+
+RANKING (LIMITAR)
+
+FirebaseRankingRepository.kt
+Cambia los tres .take() y .limit():
+Diario y Anual:
+.take(100)
+
+Mensual:
+.limit(100)
+
+
+CATEGORIAS (ORDENAR SENCILLO)
+
+CategoryViewModel.kt.
+Antes
+Sustituye el bloque actual que tiene sortedBy { it.distanceFromUser ?: Double.MAX_VALUE }
+Despues
+Por valoración (mayor primero):
+.mapValues { entry ->
+    entry.value.sortedByDescending { it.ratingAverage }
+}
+
+Por fecha de creación (más recientes primero):
+.mapValues { entry ->
+    entry.value.sortedByDescending { it.dateCreated }
+}
+
+CATEGORIAS (ORDENAR DIFICIL (ESCOGER))
+utils/FilterState.kt
+enum class SortOrder { DISTANCE, RATING, DATE }
+CategoryViewModel.kt
+var sortOrder by mutableStateOf(SortOrder.DISTANCE)
+Cambia el mapValues dentro de fountainsByCategory:
+.mapValues { entry ->
+    entry.value.sortedWith(
+        when (sortOrder) {
+            SortOrder.DISTANCE -> compareBy { it.distanceFromUser ?: Double.MAX_VALUE }
+            SortOrder.RATING   -> compareByDescending { it.ratingAverage }
+            SortOrder.DATE -> compareByDescending { it.dateCreated }
+        }
+    )
+}
+
+Añade la función para cambiarlo desde la UI:
+fun setSortOrder(order: SortOrder) {
+    sortOrder = order
+}
+CategoryDetailDialog.kt
+Añade un selector de ordenación encima de la LazyColumn. Necesitarás pasar sortOrder y onSortChange como parámetros:
+fun CategoryDetailDialog(
+    ...
+    sortOrder: SortOrder,
+    onSortChange: (SortOrder) -> Unit
+)
+
+Y el selector dentro del diálogo, entre el Divider y la LazyColumn:
+Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.spacedBy(8.dp)
+) {
+    SortOrder.entries.forEach { order ->
+        val label = when (order) {
+            SortOrder.DISTANCE -> "Distancia"
+            SortOrder.RATING   -> "Valoración"
+            SortOrder.DATE     -> "Fecha"
+        }
+        FilterChip(
+            selected = sortOrder == order,
+            onClick = { onSortChange(order) },
+            label = { Text(label, fontSize = 12.sp) }
+        )
+    }
+}
+CategoriesScreen.kt
+Pasa los nuevos parámetros al diálogo:
+CategoryDetailDialog(
+    ...
+    sortOrder = viewModel.sortOrder,
+    onSortChange = { viewModel.setSortOrder(it) }
+)
+
+COMENTARIOS FUENTE (ORDENAR)
+
+En FountainCommentsViewModel, en el método observeComments():
+comments = list.sortedByDescending { it.timestamp }
+Aquí es donde se ordena. Puedes cambiarlo por:
+Por fecha ascendente (más antiguos primero):
+comments = list.sortedBy { it.timestamp }
+
+Por valoración descendente (mejor puntuación primero):
+comments = list.sortedByDescending { it.rating }
+
+Por valoración ascendente:
+comments = list.sortedBy { it.rating }
+
+Combinado (primero por rating, luego por fecha):
+comments = list.sortedWith(compareByDescending<Comment> { it.rating }.thenByDescending { it.timestamp })
+
+FUENTES (SE QUITAR FILTROS DE ORDENAR)
+Ejemplo DISTANCE_DESC y RATING_ASC
+utils/FilterState.kt
+enum class SortOption {
+    DISTANCE_ASC,
+    // DISTANCE_DESC,  <-- eliminar
+    RATING_DESC,
+    // RATING_ASC,     <-- eliminar
+    DATE_DESC,
+    DATE_ASC
+}
+
+MapViewModel.kt — eliminar los casos del when:
+val sorted = when (filterState.sortBy) {
+    SortOption.DISTANCE_ASC -> filtered.sortedBy { it.distanceFromUser ?: Double.MAX_VALUE }
+    // SortOption.DISTANCE_DESC -> ...  <-- eliminar
+    SortOption.RATING_DESC -> filtered.sortedByDescending { it.ratingAverage }
+    // SortOption.RATING_ASC -> ...     <-- eliminar
+    SortOption.DATE_DESC -> filtered.sortedByDescending { it.dateCreated }
+    SortOption.DATE_ASC -> filtered.sortedBy { it.dateCreated }
+}
+
+MapTopBar.kt — eliminar las opciones visuales donde el usuario las selecciona. Es este bloque when dentro del forEach:
+SortOption.entries.forEach { option ->
+    Row(...) {
+        RadioButton(...)
+        Text(
+            text = when (option) {
+                SortOption.DISTANCE_ASC -> stringResource(R.string.sort_distance_asc)
+                SortOption.DISTANCE_DESC -> stringResource(R.string.sort_distance_desc)  // <-- eliminar
+                SortOption.RATING_DESC -> stringResource(R.string.sort_rating_desc)
+                SortOption.RATING_ASC -> stringResource(R.string.sort_rating_asc)        // <-- eliminar
+                SortOption.DATE_DESC -> stringResource(R.string.sort_date_desc)
+                SortOption.DATE_ASC -> stringResource(R.string.sort_date_asc)
+            },
+            ...
+        )
+    }
+}
+
+GAME (QUITAR RESTRICCIÓN DE PROXIMIDAD PARA JUGAR)
+
+GameViewModel.kt — línea con VALIDATION_DISTANCE_METERS:
+
+private val VALIDATION_DISTANCE_METERS = 5.0 // ← Cambia esto o elimina la validación
+
+Y más abajo en checkCanPlay(), elimina o comenta el bloque entero:
+// Validación 2: Proximidad física (Geofencing manual)
+var minD = Double.MAX_VALUE
+var isNear = false
+for (f in allFountains) { ... }
+
+// Cambia esto:
+if (isNear) {
+    _currentFountain.value = allFountains.random()
+    _gameState.value = GameState.Instructions
+} else {
+    _gameState.value = GameState.TooFar
+}
+
+// Por esto (sin restricción):
+_currentFountain.value = allFountains.random()
+_gameState.value = GameState.Instructions
+
+
+
+
+PASAR DATOS
+
+RANKING (COGIENDOLO EN EL RANKING)
+
+RankingViewModel.kt — añade solo esto:
+
+var selectedPlayer by mutableStateOf<UserRanking?>(null)
+    private set
+
+fun selectPlayer(player: UserRanking) {
+    selectedPlayer = player
+}
+
+
+NavigationGraph.kt — añade el VM arriba junto a `mapViewModel` y toca las 2 rutas:
+
+// Arriba, junto a los otros ViewModels compartidos
+val rankingViewModel: RankingViewModel = hiltViewModel()
+
+// Ruta ranking
+composable(BottomNavItem.Ranking.route) {
+    RankingScreen(
+        viewModel = rankingViewModel,
+        onPlayerClick = { player ->
+            rankingViewModel.selectPlayer(player)
+            navController.navigate("player_detail")
+        }
+    )
+}
+
+// Ruta detalle jugador
+composable("player_detail") {
+    val player = rankingViewModel.selectedPlayer
+    player?.let { PlayerDetailScreen(it) }
+}
+
+RankingScreen.kt — añade el parámetro:
+
+fun RankingScreen(
+    viewModel: RankingViewModel = hiltViewModel(),
+    onPlayerClick: (UserRanking) -> Unit = {}
+)
+// Y en el LazyColumn:
+RankingItem(player = player, onClick = { onPlayerClick(player) })
+
+
+RankingComponents.kt — hacer la Card clickable:
+
+fun RankingItem(player: UserRanking, onClick: () -> Unit = {}) {
+    Card(onClick = onClick, ...)
+
+
+PlayerDetailScreen.kt— archivo nuevo:
+
+@Composable
+fun PlayerDetailScreen(player: UserRanking) {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        Text(player.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text("Posición: #${player.position}")
+        Text("Puntos: ${player.points}")
+        Text("Fuentes: ${player.discovered}")
+        Text("Partidas: ${player.games}")
+    }
+}
+
+USUARIO (COGIENDOLO EN EL RANKING)
+
+Ranking.kt - Añade userId:
+val userId: String = ""
+FirebaseRankingRepository.kt - En getDailyRanking donde construyes UserRanking
+
+userId = userId
+En getMonthlyRanking y getYearlyRanking:
+userId = doc.getString("userId") ?: ""
+AuthRepository.kt (interfaz) - Añade:
+suspend fun getUserById(uid: String): User?
+FirebaseAuthRepository.kt - Añade la implementación:
+
+override suspend fun getUserById(uid: String): User? {
+    return try {
+        val doc = firestore.collection("users").document(uid).get().await()
+        User(
+            uid = doc.getString("uid") ?: "",
+            nom = doc.getString("nom") ?: "",
+            email = doc.getString("email") ?: "",
+            role = UserRole.valueOf(doc.getString("role") ?: "USER"),
+            language = doc.getString("language") ?: "es",
+            birthDate = doc.getString("birthDate") ?: ""
+        )
+    } catch (e: Exception) { null }
+}
+
+RankingViewModel.kt - Añade el repositorio de auth en el constructor:
+class RankingViewModel @Inject constructor(
+    private val getRankingByPeriodUseCase: GetRankingByPeriodUseCase,
+    private val authRepository: AuthRepository  // añadir
+)
+
+Y las variables y función:
+var selectedUserForDetail: User? = null
+    private set
+
+fun loadUserById(userId: String, onReady: () -> Unit) {
+    viewModelScope.launch {
+        val user = authRepository.getUserById(userId)
+        if (user != null) {
+            selectedUserForDetail = user
+            onReady()
+        }
+    }}
+
+RankingComponents.kt - En RankingItem añade el parámetro onClick:
+
+fun RankingItem(player: UserRanking, onClick: () -> Unit = {}) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        // ... resto igual
+RankingScreen.kt - Añade el parámetro a la firma:
+fun RankingScreen(
+    viewModel: RankingViewModel = hiltViewModel(),
+    onPlayerClick: () -> Unit = {}
+)
+Donde llamas a RankingItem:
+items(state.players) { player ->
+    RankingItem(
+        player = player,
+        onClick = {
+            viewModel.loadUserById(player.userId) {
+                onPlayerClick()
+            }
+        }
+    )
+}
+
+NavigationGraph.kt - Declara el ViewModel compartido al inicio:
+val rankingViewModel: RankingViewModel = hiltViewModel()
+Busca RankingScreen() y sustitúyelo por esto:
+RankingScreen(
+    viewModel = rankingViewModel,
+    onPlayerClick = { navController.navigate("player_detail") }
+)
+Añade la ruta:
+composable("player_detail") {
+    val user = rankingViewModel.selectedUserForDetail
+    if (user != null) {
+        PlayerDetailScreen(
+            user = user,
+            onBack = { navController.popBackStack() }
+        )
+    }
+}
+PlayerDetailScreen.kt (archivo nuevo)
+@Composable
+fun PlayerDetailScreen(
+    user: User,
+    onBack: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF1F3F4))) {
+
+        Box(
+            modifier = Modifier.fillMaxWidth().background(AguaMapGradient)
+                .padding(top = 48.dp, bottom = 24.dp)
+        ) {
+            IconButton(onClick = onBack, modifier = Modifier.align(Alignment.TopStart)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(Icons.Default.AccountCircle, null, tint = Color.White, modifier = Modifier.size(72.dp))
+                Spacer(Modifier.height(8.dp))
+                Text(user.nom, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (user.role == UserRole.ADMIN) "Administrador" else "Usuario",
+                    color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp
+                )
+            }
+        }
+
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("📧 ${user.email}", fontSize = 14.sp, color = Color.DarkGray)
+            Text("🌐 ${user.language}", fontSize = 14.sp, color = Color.DarkGray)
+            if (user.birthDate.isNotBlank()) {
+                Text("🎂 ${user.birthDate}", fontSize = 14.sp, color = Color.DarkGray)
+                Text("📅 ${user.age} años", fontSize = 14.sp, color = Color.Gray)
+            }
+        }
+    }
+}
+
+FUENTE (COGIENDOLO EN EL NAVIGATIONGRAPH)
+Mira tu código en NavigationGraph.kt línea 172 — ya está hecho:
+composable(BottomNavItem.Categories.route) {
+    CategoriesScreen(
+        userLat = currentLatitude,
+        userLng = currentLongitude,
+        onFountainClick = { fountain ->
+            mapViewModel.selectFountain(fountain)
+            navController.navigate("fountain_detail")  // <- aquí va a fountain_detail
+        }
+    )
+}
+
+Solo cambia "fountain_detail" por "mi_nueva_pantalla" y añade la ruta:
+
+Cambio 2 — añade la ruta dentro del NavHost:
+composable("fountain_nueva") {
+    val fountain = mapViewModel.selectedFountainForDetail
+    if (fountain != null) {
+        FountainNuevaPantalla(
+            fountain = fountain,
+            onBack = {
+                mapViewModel.clearSelectedFountain()
+                navController.popBackStack()
+            }
+        )
+    }
+}
+FountainNuevaPantalla.kt (nuevo archivo)
+
+@Composable
+fun FountainNuevaPantalla(
+    fountain: Fountain,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(text = fountain.name, style = MaterialTheme.typography.titleLarge)
+        Text(text = "Estado: ${fountain.status}")
+        Text(text = "Latitud: ${fountain.latitude}")
+        Text(text = "Longitud: ${fountain.longitude}")
+
+        Button(onClick = onBack) {
+            Text("Volver")
+        }
+    }
+}
+
+CATEGORIA (COGIENDOLO EN EL NAVIGATIONGRAPH)
+1. CategoryDetailScreen.kt — pantalla completa (nuevo archivo) - carpeta
+2. MapViewModel.kt — añadir estas líneas junto a selectedFountainForDetail:
+// Junto al import de Fountain, añadir:
+import cat.copernic.aguamap1.domain.model.category.Category
+
+// Junto a selectedFountainForDetail:
+var selectedCategoryForDetail by mutableStateOf<Category?>(null)
+    private set
+
+fun selectCategory(category: Category) {
+    selectedCategoryForDetail = category
+}
+
+fun clearSelectedCategory() {
+    selectedCategoryForDetail = null
+}
+3. NavigationGraph.kt — añadir ruta y modificar CategoriesScreen:
+// Modificar la ruta de Categorías existente:
+composable(BottomNavItem.Categories.route) {
+    CategoriesScreen(
+        userLat = currentLatitude,
+        userLng = currentLongitude,
+        onFountainClick = { fountain ->
+            mapViewModel.selectFountain(fountain)
+            navController.navigate("fountain_detail")
+        },
+        onCategoryClick = { category ->         // ← AÑADIR
+            mapViewModel.selectCategory(category)
+            navController.navigate("category_detail")
+        }
+    )
+}
+
+// Añadir nueva ruta justo después:
+composable("category_detail") {
+    val selectedCategory = mapViewModel.selectedCategoryForDetail
+    if (selectedCategory != null) {
+        CategoryDetailScreen(
+            category = selectedCategory,
+            isAdmin = mapViewModel.isAdmin,     // exponer isAdmin en MapViewModel (ver paso 4)
+            onBack = {
+                mapViewModel.clearSelectedCategory()
+                navController.popBackStack()
+            },
+            onEdit = { /* abrir formulario edición si se requiere */ },
+            onDelete = { /* lógica borrado si se requiere */ }
+        )
+    }
+}
+
+4. CategoriesScreen.kt — añadir parámetro onCategoryClick:
+@Composable
+fun CategoriesScreen(
+    viewModel: CategoryViewModel = hiltViewModel(),
+    userLat: Double?,
+    userLng: Double?,
+    onFountainClick: (Fountain) -> Unit,
+    onCategoryClick: ((Category) -> Unit)? = null    // ← AÑADIR (nullable = sin romper nada)
+) {
+    // ...
+    // En el LazyColumn, cambiar el onClick del CategoryItem:
+    items(categories, key = { it.id }) { category ->
+        CategoryItem(
+            category = category,
+            count = fountainsByCategory[category.id]?.size ?: 0,
+            onClick = {
+                if (onCategoryClick != null) {
+                    onCategoryClick(category)       // navega a pantalla
+                } else {
+                    selectedCategory = category     // comportamiento anterior (diálogo)
+                    showDetailDialog = true
+                }
+            }
+        )
+    }
+
+5. MapViewModel.kt — exponer isAdmin si no está ya público:
+// Buscar la línea donde se define isAdmin y asegurarse que no es private:
+var isAdmin by mutableStateOf(false)
+    private set   // ← quitar "private set" o dejarlo si ya se accede desde fuera
+
+
+AÑADIR NUEVO CAMPO
+
+GAME SESSION (JUEGO)
+
+Ejemplo: añadir timeUsed: Int (segundos que tardó en responder)
+
+Subcambio 1 — GameSession.kt
+📄  GameSession.kt
+data class GameSession(
+    val userId: String = "",
+    val userName: String = "",
+    val score: Int = 0,
+    val distance: Double = 0.0,
+    val date: Date = Date(),
+    val fountainId: String = "",
+    val fountainName: String = "",
+    val timeUsed: Int = 0   // ← NUEVO: segundos tardados
+)
+
+
+Subcambio 2 — Capturar el tiempo en GameViewModel
+📄  GameViewModel.kt — función saveSession()
+// El tiempo usado = tiempo inicial - tiempo restante
+// El timer empieza en 30 (o el valor configurado) y baja hasta 0
+
+private suspend fun saveSession() {
+    val user = auth.currentUser ?: return
+    val timeUsed = 30 - _remainingTime.value   // ← calcular tiempo
+
+    val session = GameSession(
+        userId      = user.uid,
+        userName    = user.displayName ?: "User",
+        score       = _score.value,
+        distance    = _distance.value,
+        date        = Date(),
+        fountainId  = _currentFountain.value?.id ?: "",
+        fountainName = _currentFountain.value?.name ?: "",
+        timeUsed    = timeUsed   // ← añadir aquí
+    )
+    saveGameSessionUseCase(session)
+}
+
+
+Subcambio 3 — Mostrar en pantalla de resultado
+📄  GameResultScreen.kt
+// Añadir junto a la puntuación y distancia:
+val timeUsed by viewModel.score.collectAsStateWithLifecycle() // si tienes StateFlow
+// O acceder desde la sesión guardada
+
+Text(
+    text = "Tiempo: ${30 - remainingTime} segundos",
+    fontSize = 18.sp,
+    fontWeight = FontWeight.Medium
+)
+
+
+
+CATEGORIAS
+Category.kt
+data class Category(
+    val id: String = "",
+    val name: String = "",
+    val imageUrl: String = "",
+    val description: String = "",
+    val moreInformation: String = ""  // ← NUEVO
+)
+CategoryViewModel.kt
+Añade la variable de estado del formulario junto a las demás:
+var moreInformation by mutableStateOf("")
+
+Y actualiza saveCategory para incluirlo en el objeto:
+val categoryData = Category(
+    id = categoryToEdit?.id ?: "",
+    name = name,
+    description = description,
+    imageUrl = finalUrl,
+    moreInformation = moreInformation  // ← NUEVO
+)
+
+Actualiza onEditCategory para cargarlo al editar:
+fun onEditCategory(category: Category) {
+    categoryToEdit = category
+    name = category.name
+    description = category.description
+    currentImageUrl = category.imageUrl
+    selectedImageUri = null
+    moreInformation = category.moreInformation  // ← NUEVO
+}
+
+Y resetForm para limpiarlo:
+fun resetForm() {
+    name = ""; description = ""; selectedImageUri = null; currentImageUrl = ""
+    categoryToEdit = null; uploadProgress = 0; errorMessage = null
+    moreInformation = ""  // ← NUEVO
+}
+
+CategoryFormDialog.kt - Añade el nuevo OutlinedTextField debajo del de descripción:
+OutlinedTextField(
+    value = viewModel.moreInformation,
+    onValueChange = { viewModel.moreInformation = it },
+    label = { Text(stringResource(R.string.category_form_more_information)) },
+    modifier = Modifier.fillMaxWidth(),
+    minLines = 3,
+    shape = RoundedCornerShape(12.dp)
+)
+
+CategoryDetailDialog.kt-Muestra el campo debajo de la descripción si no está vacío:
+if (category.description.isNotEmpty()) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(text = category.description, color = GrisOscuro, fontSize = 14.sp)
+}
+
+// ← NUEVO bloque
+if (category.moreInformation.isNotEmpty()) {
+    Spacer(modifier = Modifier.height(6.dp))
+    Text(
+        text = category.moreInformation,
+        color = GrisOscuro,
+        fontSize = 13.sp
+    )
+}
+Strings.xml-Añade la cadena de texto para el label del campo:
+<string name="category_form_more_information">Más información</string>
+
+FUENTE
+Fountain.kt-Añade esta línea después de val description: String = "",:
+val moreInformation: String = "",
+
+AddFountainViewModel.kt-Añade el estado junto a description:
+var description by mutableStateOf("")
+var moreInformation by mutableStateOf("")  // AÑADIR
+
+En openAddFountain(), dentro del if (fountain != null):
+description = fountain.description
+moreInformation = fountain.moreInformation  // AÑADIR
+
+En resetForm():
+name = ""; description = ""; moreInformation = ""  // AÑADIR moreInformation = ""
+
+En saveFountain(), bloque updatedFields:
+"description" to description,
+"moreInformation" to moreInformation,  // AÑADIR
+
+En saveFountain(), bloque newFountain:
+description = description,
+moreInformation = moreInformation,  // AÑADIR
+
+AddFountainScreen.kt-Añade este bloque justo después del OutlinedTextField de descripción:
+OutlinedTextField(
+    value = viewModel.moreInformation,
+    onValueChange = { viewModel.moreInformation = it },
+    label = { Text("Más información") },
+    placeholder = { Text("Horario, accesibilidad, notas...") },
+    modifier = Modifier.fillMaxWidth(),
+    minLines = 2,
+    shape = RoundedCornerShape(12.dp),
+    colors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = Negro,
+        unfocusedBorderColor = Negro,
+        focusedTextColor = Negro
+    )
+)
+DetailFountainScreen.kt-Añade esto justo después del bloque donde se muestra uiFountain.description:
+
+if (uiFountain.moreInformation.isNotBlank()) {
+   Spacer(modifier = Modifier.height(16.dp))
+   Text(
+       "Más información",
+       fontWeight = FontWeight.Bold,
+       fontSize = 16.sp,
+       color = Negro
+   )
+   Text(uiFountain.moreInformation, color = NegroSuave)
+}else{
+   Spacer(modifier = Modifier.height(16.dp))
+   Text(
+       "Más información",
+       fontWeight = FontWeight.Bold,
+       fontSize = 16.sp,
+       color = Negro
+   )
+   Text("No hay información", color = NegroSuave)
+}
+
+USUARIO
+EJEMPLO 1
+User.kt-Añade el campo al final del data class y la propiedad calculada:
+val birthDate: String = ""
+) {
+    val age: Int
+        get() {
+            if (birthDate.isBlank()) return 0
+            return try {
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val birth = sdf.parse(birthDate) ?: return 0
+                val today = Calendar.getInstance()
+                val birthCal = Calendar.getInstance().apply { time = birth }
+                var age = today.get(Calendar.YEAR) - birthCal.get(Calendar.YEAR)
+                if (today.get(Calendar.DAY_OF_YEAR) < birthCal.get(Calendar.DAY_OF_YEAR)) age--
+                age
+            } catch (e: Exception) { 0 }
+        }
+}
+FirebaseAuthRepository.kt-En completeRegistration, añade al userMap:
+"birthDate" to ""
+Donde mapeas el documento a User, añade:
+birthDate = document.getString("birthDate") ?: ""
+EditProfileViewModel.kt-Añade la variable junto a las demás:
+var birthDate by mutableStateOf("")
+    private set
+fun onBirthDateChange(value: String) { birthDate = value }
+
+En loadUserData() donde asignas los campos, añade:
+birthDate = user.birthDate
+
+En la función donde guardas el perfil (update/save), añade:
+"birthDate" to birthDate
+
+EditProfileComponents.kt-Donde están los OutlinedTextField del formulario, añade uno nuevo:
+OutlinedTextField(
+    value = viewModel.birthDate,
+    onValueChange = { viewModel.onBirthDateChange(it) },
+    label = { Text("Fecha de nacimiento") },
+    placeholder = { Text("dd/MM/yyyy") },
+    modifier = Modifier.fillMaxWidth(),
+    singleLine = true,
+    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+)
+UserDetailScreen.kt-Donde muestras el email e idioma, añade debajo:
+if (user.birthDate.isNotBlank()) {
+    Text("🎂 ${user.birthDate}", fontSize = 14.sp, color = Color.DarkGray)
+    Text("📅 ${user.age} años", fontSize = 14.sp, color = Color.Gray)
+}
+
+EJEMPLO 2 (MOSTRALO EN EL PERFIL TMB)
+
+
+
+COMENTARIOS
+1. Comment.kt — Añadir el campo al modelo
+data class Comment(
+    val id: String = "",
+    val userId: String = "",
+    val userName: String = "",
+    val title: String = "",        // ← NUEVO
+    val rating: Int = 0,
+    val comment: String = "",
+    val censored: Boolean = false,
+    val reported: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
+)
+2. AddCommentDialog.kt — Campo de título en el formulario
+Añade el campo justo antes del OutlinedTextField del texto del comentario:
+var title by remember { mutableStateOf(initialTitle) }  // ← nuevo state
+
+// Añade el parámetro a la firma:
+fun AddCommentDialog(
+    initialRating: Int = 5,
+    initialTitle: String = "",     // ← NUEVO
+    initialText: String = "",
+    isEditing: Boolean = false,
+    onDismiss: () -> Unit,
+    onConfirm: (Int, String, String) -> Unit  // rating, title, text
+)
+
+// En el Column del contenido, antes del campo de texto:
+OutlinedTextField(
+    value = title,
+    onValueChange = { title = it },
+    label = { Text(stringResource(R.string.dialog_comment_title_label)) },
+    modifier = Modifier.fillMaxWidth(),
+    singleLine = true,
+    shape = RoundedCornerShape(12.dp),
+    placeholder = { Text(stringResource(R.string.dialog_comment_title_placeholder)) },
+    colors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Negro,
+        unfocusedTextColor = Negro,
+        focusedBorderColor = Negro,
+        unfocusedBorderColor = Negro,
+        cursorColor = Blue10
+    )
+)
+
+// En el botón confirmar:
+onClick = { onConfirm(rating, title, text) }
+
+3. FountainCommentsViewModel.kt — Pasar el título al crear/editar
+En addComment():
+fun addComment(fountain: Fountain, rating: Int, title: String, text: String) {
+    viewModelScope.launch {
+        val uid = authRepository.getCurrentUserUid() ?: return@launch
+        val uName = authRepository.getCurrentUserName() ?: getString(R.string.default_user_name)
+
+        val newComment = Comment(
+            userId = uid,
+            userName = uName,
+            title = title,          // ← NUEVO
+            rating = rating,
+            comment = text,
+            timestamp = System.currentTimeMillis()
+        )
+        addCommentUseCase(fountain.id, newComment).onFailure {
+            errorMessage = getString(R.string.error_add_comment)
+        }
+    }
+}
+
+En editComment():
+fun editComment(fountain: Fountain, oldComment: Comment, newRating: Int, newTitle: String, newText: String) {
+    viewModelScope.launch {
+        isOperating = true
+        updateCommentUseCase(
+            fountainId = fountain.id,
+            oldComment = oldComment,
+            newRating = newRating,
+            newTitle = newTitle,    // ← NUEVO
+            newText = newText
+        )
+        // ...
+    }
+}
+4. UpdateCommentUseCase.kt — Incluir el título en el mapa de actualización
+suspend operator fun invoke(
+    fountainId: String,
+    oldComment: Comment,
+    newRating: Int,
+    newTitle: String,       // ← NUEVO
+    newText: String
+): Result<Unit> {
+    val updates = mapOf(
+        "title" to newTitle,            // ← NUEVO
+        "rating" to newRating,
+        "comment" to newText,
+        "reported" to false,
+        "timestamp" to System.currentTimeMillis()
+    )
+    return repository.updateComment(
+        fId = fountainId,
+        cId = oldComment.id,
+        updates = updates,
+        oldRating = oldComment.rating,
+        newRating = newRating
+    )
+}
+5. Mostrar el título en la vista pública del comentario
+En el componente donde renderizas cada Comment (la tarjeta pública), añade encima del texto del comentario:
+if (comment.title.isNotBlank()) {
+    Text(
+        text = comment.title,
+        fontWeight = FontWeight.Bold,
+        fontSize = 15.sp,
+        color = Color(0xFF212121)
+    )
+    Spacer(Modifier.height(4.dp))
+}
+
+6. ModerationComponents.kt — Mostrar el título en la tarjeta de moderación
+En ReportedCommentCard, dentro del bloque if (item.comment != null), justo antes del texto del comentario:
+if (item.comment.title.isNotBlank()) {
+    Text(
+        text = item.comment.title,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
+        color = Color(0xFF212121)
+    )
+    Spacer(Modifier.height(4.dp))
+}
+Text(
+    text = item.comment.comment.ifBlank { stringResource(R.string.reports_no_description) },
+    // ...
+)
+
+7. strings.xml
+<string name="dialog_comment_title_label">Título</string>
+<string name="dialog_comment_title_placeholder">Resume tu experiencia en una frase</string>
+
+RANKING
+Ranking.kt-Añade el campo al final del data class:
+val level: Int = 0
+FirebaseRankingRepository.kt-El nivel lo calculamos a partir de los puntos, no hace falta guardarlo en Firebase. Añade esta función privada al final de la clase:
+private fun calculateLevel(points: Int): Int {
+    return when {
+        points >= 10000 -> 5
+        points >= 5000  -> 4
+        points >= 2000  -> 3
+        points >= 500   -> 2
+        else            -> 1
+    }
+}
+Luego en los 3 sitios donde construyes UserRanking (getDailyRanking, getMonthlyRanking, getYearlyRanking), añade:
+level = calculateLevel(points)
+Por ejemplo en getDailyRanking quedaría:
+UserRanking(
+    position = 0,
+    name = ...,
+    points = sesiones.sumOf { it.score },
+    discovered = ...,
+    games = sesiones.size,
+    isCurrentUser = userId == idUsuarioActual,
+    level = calculateLevel(sesiones.sumOf { it.score })  // añadir esto
+)
+RankingComponents.kt-En RankingItem, dentro del Row donde muestras nombre y puntos, añade debajo del nombre:
+Text(
+    text = "Nivel ${player.level}",
+    fontSize = 11.sp,
+    color = when (player.level) {
+        5 -> Color(0xFFFFD700)  // oro
+        4 -> Color(0xFFC0C0C0)  // plata
+        3 -> Color(0xFFCD7F32)  // bronce
+        else -> Color.Gray
+    }
+)
+LENGUAJE (AÑADIR UNO NUEVO)
+Ejemplo, francés (fr):
+SettingsScreen.kt — 2 cambios-En SettingsScreen, ampliar la validación del idioma inicial:
+// Línea ~52 — añadir "fr" a la lista de idiomas válidos
+val initial = if (languageCode in listOf("es", "ca", "en", "fr")) languageCode else "es"
+
+En AguaMapLanguageSelector, añadir la nueva entrada a la lista:
+val languages = listOf(
+    "es" to stringResource(id = R.string.lang_es),
+    "ca" to stringResource(id = R.string.lang_ca),
+    "en" to stringResource(id = R.string.lang_en),
+    "fr" to stringResource(id = R.string.lang_fr)  // ← AÑADIR
+)
+res/values/strings.xml — añadir la etiqueta del idioma
+<string name="lang_fr">French</string>
+Y lo mismo en cada values-es/strings.xml, values-ca/strings.xml, etc., con su traducción (Francés, Francès...).
+res/values-fr/strings.xml — crear el archivo con todas las traducciones
+Crea la carpeta values-fr/ y copia el strings.xml base traduciéndolo al francés.
+
+OTROS
+GAME (Cambiar el tiempo de la partida)
+GameViewModel.kt — dos sitios:
+// Al iniciar el juego
+fun onStartGameClicked() {
+    _remainingTime.value = 30  // ← Cambia aquí
+}
+
+// Al resetear
+fun clearGameState() {
+    _remainingTime.value = 30  // ← Y aquí también
+}
+
+GAME (Dónde se calcula la distancia?)
+Hay dos cálculos distintos:
+CalculateDistanceUseCase.kt → fórmula de Haversine, calcula la distancia entre dos coordenadas geográficas. Es la que se usa para calcular cuántos puntos ganas.
+
+
+GameViewModel.kt → dentro de checkCanPlay(), usa esa misma fórmula para comprobar si estás cerca de una fuente antes de jugar, y dentro de finishGame() para calcular la distancia final entre tu pin y la fuente real.
+
+
+CalculateScoreUseCase.kt → convierte esa distancia en puntos. Si quieres cambiar los rangos de puntuación, es aquí:
+
+
+return when {
+    distance < 50 -> 1000
+    distance < 100 -> 800
+    distance < 500 -> 500
+    distance < 1000 -> 200
+    else -> 50
+}
+GAME (AÑADIR LÍMITE DE VIDAS EN VEZ DE TIEMPO)
+Añadir un contador de intentos. Si el usuario confirma y está muy lejos, pierde una vida.
+📄 GameViewModel.kt
+// 1. Añadir estado de vidas:
+private val _lives = MutableStateFlow(3)
+val lives: StateFlow<Int> = _lives.asStateFlow()
+
+// 2. Modificar finishGame() para restar vidas si está lejos:
+fun finishGame() {
+    viewModelScope.launch {
+        val f = _currentFountain.value ?: return@launch
+        val g = _userGuessPos.value
+
+        if (g == null) { handleLoss(); return@launch }
+
+        val d = calculateDistanceUseCase(g.first, g.second, f.latitude, f.longitude)
+        _distance.value = d
+
+        if (d > 1000) {  // Si está a más de 1km, pierde una vida
+            _lives.value -= 1
+            if (_lives.value <= 0) {
+                handleLoss()
+            }
+            // Si le quedan vidas, puede intentarlo de nuevo
+            return@launch
+        }
+
+        _score.value = calculateScoreUseCase(d)
+        saveSession()
+        _gameState.value = GameState.Finished
+    }
+}
+
+// 3. Reiniciar vidas en onStartGameClicked():
+fun onStartGameClicked() {
+    _lives.value = 3   // ← añadir
+    _gameState.value = GameState.Playing
+    // ... resto igual
+}
+
+// 4. En la UI, mostrar las vidas:
+val lives by viewModel.lives.collectAsStateWithLifecycle()
+Text(text = "Vidas: ${"❤️".repeat(lives)}")
+
+
+GAME (Jugar más de una vez al día )
+FirebaseGameRepository.kt, elimina o comenta el método hasPlayedToday() y en GameViewModel.kt quita la llamada:
+// Elimina este bloque en checkCanPlay()
+val hasPlayed = hasPlayedTodayUseCase(userId).getOrDefault(false)
+if (hasPlayed) { ... }
+
+GAME (JUGAR DOS VECES AL DIA)
+Cambio 1 — FirebaseGameRepository.kt línea 54
+Cambia any por count >= 2:
+// ANTES (línea 54):
+val hasPlayed = snapshot.documents.any { doc ->
+    val sessionDate = doc.getDate("date") ?: return@any false
+    val cal = Calendar.getInstance().apply { time = sessionDate }
+    cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+            cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+}
+Result.success(hasPlayed)
+
+// DESPUÉS:
+val sessionsTodayCount = snapshot.documents.count { doc ->
+    val sessionDate = doc.getDate("date") ?: return@count false
+    val cal = Calendar.getInstance().apply { time = sessionDate }
+    cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+            cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+}
+Result.success(sessionsTodayCount >= 2)
+Cambio 2 — strings.xml (opcional pero recomendado)
+Busca game_error_daily_limit y actualiza el texto:
+<string name="game_error_daily_limit">Ya has jugado tus 2 partidas de hoy. ¡Vuelve mañana!</string>
+
+GAME (Rangos de puntuación)
+CalculateScoreUseCase.kt, modifica el when:
+return when {
+    distance < 50 -> 1000
+    distance < 100 -> 800
+    // etc.
+}
+
+GAME (Rangos de puntuación (BONUS TIEMPO))
+CalculateScoreUseCase.kt, modifica el when:
+// MODIFICADO con bonus por tiempo restante:
+// (tendrías que pasar también el remainingTime al UseCase)
+operator fun invoke(distance: Double, timeLeft: Int = 0): Int {
+    val baseScore = when {
+        distance < 50  -> 1000
+        distance < 100 -> 800
+        distance < 500 -> 500
+        else           -> 200
+    }
+    val timeBonus = timeLeft * 5   // 5 puntos por cada segundo restante
+    return baseScore + timeBonus
+}
+
+GAME ( Incluir tiempo restante en la puntuación)
+Si el examen pide que el tiempo restante sume puntos:
+📄  CalculateScoreUseCase.kt — con parámetro de tiempo
+// Cambiar la firma para recibir también el tiempo restante:
+operator fun invoke(distance: Double, remainingTime: Int = 0): Int {
+    val baseScore = when {
+        distance < 50  -> 1000
+        distance < 100 -> 800
+        distance < 500 -> 500
+        else           -> 200
+    }
+    // Bonus de tiempo: 10 puntos por cada segundo restante
+    val timeBonus = remainingTime * 10
+    return baseScore + timeBonus
+}
+
+// En GameViewModel.finishGame(), pasar el tiempo restante:
+_score.value = calculateScoreUseCase(_distance.value, _remainingTime.value)
+
+
+
+GAME (Fuentes cercana al usuario)
+GameViewModel.kt, en checkCanPlay() cambia:
+// De esto:
+_currentFountain.value = allFountains.random()
+
+// A esto:
+_currentFountain.value = allFountains.minByOrNull { f ->
+    calculateDistanceUseCase(userLat, userLng, f.latitude, f.longitude)
+}
+
+GAME (Cronómetro hacia adelante hasta 1 minuto)
+GameViewModel.kt, tres cambios:
+// 1. Cambiar valor inicial
+_remainingTime.value = 0  // empieza en 0
+
+// 2. Cambiar el timer para que sume en vez de restar
+while (_remainingTime.value < 60 && _gameState.value == GameState.Playing) {
+    delay(1000)
+    _remainingTime.value += 1
+}
+
+// 3. Condición de fin de tiempo
+if (_remainingTime.value == 60 && _gameState.value == GameState.Playing) { ... }
+
+Y en GamePlayScreen.kt, el color rojo:
+// Ahora es rojo cuando queda poco:
+color = if (remainingTime < 10) Rojo else Color.Black
+
+// Con cuenta adelante, rojo cuando queda poco tiempo:
+color = if (remainingTime > 50) Rojo else Color.Black
+
+GAME (Cambiar colores de los pins)
+GameMapView.kt, busca los setTint:
+// Marcador usuario (verde):
+drawable?.setTint(android.graphics.Color.parseColor("#34A853"))
+
+// Marcador real (rojo):
+drawable?.setTint(android.graphics.Color.parseColor("#FF4444"))
+
+GAME (Quitar pantalla de instrucciones)
+ GameViewModel.kt, en checkCanPlay():
+// De esto:
+_gameState.value = GameState.Instructions
+
+// A esto (salta directamente al juego):
+_currentFountain.value = allFountains.random()
+onStartGameClicked()
+
+GAME (Cambiar zoom inicial del mapa)
+GameMapView.kt:
+map.controller.setZoom(17.0) // ← Cambia este valor (más alto = más zoom)
+
+GAME (Desactivar música de fondo)
+OPCION 1- QUITAR CODIGO
+GameViewModel.kt, comenta las llamadas a soundManager:
+// En onStartGameClicked():
+// soundManager.startBackgroundMusic()  ← comentar
+
+// En onBackToHomePressed() y onCleared():
+// soundManager.stopBackgroundMusic()   ← comentar
+
+// En handleLoss() y saveSession():
+// soundManager.playLossSound()         ← comentar
+// soundManager.playWinSound()          ← comentar
+
+OPCION 2 - CREAR BOTON
+GameViewModel.kt — añadir función toggle
+private val _isMusicEnabled = MutableStateFlow(true)
+val isMusicEnabled: StateFlow<Boolean> = _isMusicEnabled.asStateFlow()
+
+fun toggleMusic() {
+    _isMusicEnabled.value = !_isMusicEnabled.value
+    if (_isMusicEnabled.value) {
+        soundManager.startBackgroundMusic()
+    } else {
+        soundManager.stopBackgroundMusic()
+    }
+}
+GamePlayScreen.kt — añadir el botón en la UI
+val isMusicEnabled by viewModel.isMusicEnabled.collectAsState()
+
+IconButton(onClick = { viewModel.toggleMusic() }) {
+    Icon(
+        painter = painterResource(
+            if (isMusicEnabled) R.drawable.ic_volume_on
+            else R.drawable.ic_volume_off
+        ),
+        contentDescription = null
+    )
+}
+Resources — añadir los iconos de volumen
+Simplemente descarga los drawables volume_on y volume_off de Material Icons y añádelos a res/drawable/.
+
+RANKING (HACERLO SEMANAL)
+RankingPeriod.kt — Añadir el valor al enum
+enum class RankingPeriod {
+    DAY,
+    WEEK,   // <-- AÑADIR ESTA LÍNEA
+    MONTH,
+    YEAR
+}
+FirebaseRankingRepository.kt — Añadir getWeeklyRanking() y registrarlo en el when. Añadir esta función (cópiala justo después de getDailyRanking()):
+override suspend fun getWeeklyRanking(): List<UserRanking> {
+    val calendar = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+        add(Calendar.DAY_OF_YEAR, -7)  // 7 días atrás
+    }
+    val inicioSemana = calendar.time
+    val idUsuarioActual = authRepository.getCurrentUserUid()
+
+    val snapshot = db.collection("gameSessions")
+        .whereGreaterThanOrEqualTo("date", inicioSemana)
+        .get()
+        .await()
+
+    return snapshot.documents
+        .mapNotNull { doc ->
+            try {
+                GameSession(
+                    userId = doc.getString("userId") ?: return@mapNotNull null,
+                    userName = doc.getString("userName") ?: "",
+                    score = doc.getLong("score")?.toInt() ?: 0,
+                    date = doc.getDate("date") ?: Date(),
+                    fountainId = doc.getString("fountainId") ?: ""
+                )
+            } catch (e: Exception) { null }
+        }
+        .groupBy { it.userId }
+        .map { (userId, sesiones) ->
+            UserRanking(
+                position = 0,
+                name = sesiones.firstOrNull()?.userName?.takeIf { it.isNotBlank() } ?: "Jugador",
+                points = sesiones.sumOf { it.score },
+                discovered = sesiones.distinctBy { it.fountainId }.size,
+                games = sesiones.size,
+                isCurrentUser = userId == idUsuarioActual
+            )
+        }
+        .sortedByDescending { it.points }
+        .take(10)
+        .mapIndexed { index, usuario -> usuario.copy(position = index + 1) }
+}
+
+Modificar el when en getRankingByPeriod() :
+override suspend fun getRankingByPeriod(period: RankingPeriod): List<UserRanking> {
+    return when (period) {
+        RankingPeriod.DAY   -> getDailyRanking()
+        RankingPeriod.WEEK  -> getWeeklyRanking()  // <-- AÑADIR ESTA LÍNEA
+        RankingPeriod.MONTH -> getMonthlyRanking()
+        RankingPeriod.YEAR  -> getYearlyRanking()
+    }
+}
+
+RankingRepository.kt (interfaz de dominio) — Declarar el método
+suspend fun getWeeklyRanking(): List<UserRanking>  // <-- AÑADIR
+RankingViewModel.kt — Añadir el mapeo en el when:
+val period = when (periodResId) {
+    R.string.ranking_day   -> RankingPeriod.DAY
+    R.string.ranking_week  -> RankingPeriod.WEEK   // <-- AÑADIR
+    R.string.ranking_month -> RankingPeriod.MONTH
+    R.string.ranking_year  -> RankingPeriod.YEAR
+    else -> RankingPeriod.DAY
+}
+
+strings.xml
+<string name="ranking_week">Semana</string>
+<string name="ranking_title_week">Clasificación semanal</string>
+
+RankingComponents.kt — TimeSelectorSection, lista opciones:
+val opciones = listOf(
+    R.string.ranking_day,
+    R.string.ranking_week,    // <-- AÑADIR
+    R.string.ranking_month,
+    R.string.ranking_year
+)
+
+RankingScreen.kt — when del título dinámico:
+val titleRes = when (seleccionadoResId) {
+    R.string.ranking_day   -> R.string.ranking_title_day
+    R.string.ranking_week  -> R.string.ranking_title_week   // <-- AÑADIR
+    R.string.ranking_month -> R.string.ranking_title_month
+    else                   -> R.string.ranking_title_year
+}
+RANKING (HACERLO TRIMESTRAL)
+RankingPeriod.kt
+Añade el nuevo valor:
+TRIMESTER
+
+RankingRepository.kt (interfaz)
+Añade:
+suspend fun getTrimesterRanking(): List<UserRanking>
+
+FirebaseRankingRepository.kt
+Añade la función después de getMonthlyRanking:
+override suspend fun getTrimesterRanking(): List<UserRanking> {
+    val calendar = Calendar.getInstance()
+    val mesActual = calendar.get(Calendar.MONTH) + 1
+    val añoActual = calendar.get(Calendar.YEAR)
+    val idUsuarioActual = authRepository.getCurrentUserUid()
+
+    // Calculamos los 3 meses del trimestre actual
+    val mesesTrimestre = when (mesActual) {
+        in 1..3  -> listOf(1, 2, 3)
+        in 4..6  -> listOf(4, 5, 6)
+        in 7..9  -> listOf(7, 8, 9)
+        else     -> listOf(10, 11, 12)
+    }
+
+    val snapshot = db.collection("monthlyRanking")
+        .whereEqualTo("year", añoActual)
+        .whereIn("month", mesesTrimestre)
+        .get()
+        .await()
+
+    return snapshot.documents
+        .groupBy { it.getString("userId") ?: "" }
+        .map { (userId, documentos) ->
+            UserRanking(
+                position = 0,
+                name = documentos.firstOrNull()?.getString("userName")?.takeIf { it.isNotBlank() } ?: "Jugador",
+                points = documentos.sumOf { it.getLong("totalScore") ?: 0L }.toInt(),
+                discovered = documentos.sumOf { it.getLong("totalDiscovered") ?: 0L }.toInt(),
+                games = documentos.sumOf { it.getLong("gamesCount") ?: 0L }.toInt(),
+                isCurrentUser = userId == idUsuarioActual
+            )
+        }
+        .sortedByDescending { it.points }
+        .take(10)
+        .mapIndexed { index, usuario -> usuario.copy(position = index + 1) }
+}
+
+Y en getRankingByPeriod añade el caso:
+RankingPeriod.TRIMESTER -> getTrimesterRanking()
+
+RankingViewModel.kt
+En el when del mapeo de periodResId a RankingPeriod:
+R.string.ranking_trimester -> RankingPeriod.TRIMESTER
+
+strings.xml (todos los idiomas)
+Añade:
+<string name="ranking_trimester">Trimestre</string>
+
+RankingComponents.kt
+En TimeSelectorSection añade el nuevo periodo a la lista:
+val opciones = listOf(R.string.ranking_day, R.string.ranking_month, R.string.ranking_trimester, R.string.ranking_year)
+
+FUENTES (VALIDACION VOTOS (EN VEZ DE 3  CONFIRMAR 5)
+DetailFountainViewModel.kt
+val newStatus = if (updatedVotes >= 5) StateFountain.ACCEPTED else fountain.status
+
+DetailFountainScreen.kt
+if (uiFountain.status == StateFountain.PENDING && uiFountain.positiveVotes < 5) {
+    ValidationCard(..., 5, ...)
+}
+
+FUENTES (FILTRAR POR ESTADO)
+Añadir el campo a utils/FilterState.kt (PENDING/ACCEPTED)
+data class FilterState(
+    val selectedCategory: Category? = null,
+    val onlyOperational: Boolean = false,
+    val minRating: Float = 0f,
+    val maxDistanceKm: Float = 10f,
+    val sortBy: SortOption = SortOption.DISTANCE_ASC,
+    val selectedStatus: StateFountain? = null  // null = mostrar todas
+)
+Añadir el filtro en MapViewModel.kt dentro de applyFilterAndSort()
+Justo después del filtro de operatividad (paso 3), añade:
+Filtro por estado (PENDING / ACCEPTED)
+filterState.selectedStatus?.let { status ->
+    filtered = filtered.filter { it.status == status }
+}
+
+(Opcional) Añadir el control en la UI — MapTopBar.kt
+Dentro del FilterDropDown, añade un selector de estado. Por ejemplo con dos chips:
+// Filtro por estado
+Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    listOf(null, StateFountain.PENDING, StateFountain.ACCEPTED).forEach { estado ->
+        val label = when (estado) {
+            null -> "Todas"
+            StateFountain.PENDING -> "Pendiente"
+            StateFountain.ACCEPTED -> "Aceptadas"
+        }
+        FilterChip(
+            selected = tempState.selectedStatus == estado,
+            onClick = { tempState = tempState.copy(selectedStatus = estado) },
+            label = { Text(label) }
+        )
+    }
+}
+
+FUENTES (FILTRAR POR MES)
+Boolean para filtrar por fuentes añadidas este mes.
+FilterState.kt
+data class FilterState(
+    val selectedCategory: Category? = null,
+    val onlyOperational: Boolean = false,
+    val minRating: Float = 0f,
+    val maxDistanceKm: Float = 10f,
+    val sortBy: SortOption = SortOption.DISTANCE_ASC,
+    val onlyThisMonth: Boolean = false   // ← NUEVO
+)
+
+MapViewModel.kt
+// Dentro de applyFilterAndSort(), añadir el nuevo filtro:
+if (filterState.onlyThisMonth) {
+    val calendar = Calendar.getInstance()
+    calendar.set(Calendar.DAY_OF_MONTH, 1)
+    calendar.set(Calendar.HOUR_OF_DAY, 0)
+    calendar.set(Calendar.MINUTE, 0)
+    val startOfMonth = calendar.time
+    filtered = filtered.filter { it.dateCreated.after(startOfMonth) }
+}
+Switch en la UI del filtro
+MapTopBar.kt o donde está el panel de filtros
+// Añadir dentro del bloque de Opciones de Filtro:
+Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+) {
+    Text("Solo este mes", fontWeight = FontWeight.Medium)
+    Switch(
+        checked = filterState.onlyThisMonth,
+        onCheckedChange = {
+            viewModel.updateFilters(filterState.copy(onlyThisMonth = it))
+        }
+    )
+}
+
+
+COLORES Y ESTILOS
+FORMA BOTÓN
+// Redondeado suave (el más usado en tu app, ej: 12.dp)
+Button(shape = RoundedCornerShape(12.dp), ...)
+
+// Totalmente redondo (pill / cápsula)
+Button(shape = RoundedCornerShape(50), ...)
+
+// Esquinas cortadas (estilo diamante)
+Button(shape = CutCornerShape(8.dp), ...)
+
+// Rectangular sin redondeo
+Button(shape = RectangleShape, ...)
+
+// Solo algunas esquinas redondeadas
+Button(shape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp), ...)
+//Cuadrado
+/*Button(
+   onClick = { viewModel.onLoginClick() },
+   modifier = Modifier
+       .fillMaxWidth(0.7f)
+       .align(Alignment.CenterHorizontally)
+       .height(54.dp),
+   shape = RectangleShape,
+   colors = ButtonDefaults.buttonColors(containerColor = Blue10)
+) {
+   Text(
+       text = stringResource(R.string.login_btn_enter),
+       fontSize = 16.sp,
+       fontWeight = FontWeight.Bold,
+       color = Blanco
+   )
+}*/
+FORMA IMAGEN (AsyncImage / Image)
+Se hace con .clip() en el modifier:
+AsyncImage(
+    model = url,
+    modifier = Modifier
+        .size(80.dp)
+        .clip(CircleShape)          // Círculo (perfil)
+        // .clip(RoundedCornerShape(12.dp))  // Redondeada
+        // .clip(RectangleShape)             // Sin forma
+Forma de una Card / Surface / Dialog
+Card(shape = RoundedCornerShape(24.dp), ...)
+Surface(shape = CircleShape, ...)
+
+Forma del TextField / OutlinedTextField
+OutlinedTextField(
+    shape = RoundedCornerShape(20.dp),  // más redondeado
+    ...
+)
+
+Cambiar el color principal de fondo de una pantalla
+En el Composable de la pantalla, busca el modifier .background() y cambia el Color.
+ProfileScreen.kt (o cualquier Screen)
+Column(
+    modifier = Modifier
+        .fillMaxSize()
+        .background(Color(0xFFE3F2FD))  // Azul claro
+)
+
+Tamaño
+Modifier.size(48.dp)           // cuadrado
+Modifier.width(200.dp).height(48.dp)
+Modifier.fillMaxWidth()
+Modifier.fillMaxWidth(0.5f)    // 50% del ancho
+
+Cambiar tamaño de texto
+// Cambiar fontSize en un Text:
+Text(
+    text = "Hola",
+    fontSize = 24.sp,     // CAMBIAR AQUÍ (era 16.sp por ejemplo)
+    fontWeight = FontWeight.Bold,
+    color = Color(0xFF1A73E8)
+)
+
+Cambiar tamaño de botón y márgenes
+Button(
+    onClick = { /* acción */ },
+    modifier = Modifier
+        .fillMaxWidth()           // Ancho total (quitar si no lo quieres)
+        .height(56.dp)            // ALTURA del botón
+        .padding(horizontal = 24.dp), // MARGEN horizontal
+    shape = RoundedCornerShape(12.dp),  // Bordes redondeados
+    colors = ButtonDefaults.buttonColors(
+        containerColor = Color(0xFF1A73E8)  // Color de fondo del botón
+    )
+) {
+    Text(text = "Guardar", fontSize = 16.sp, color = Color.White)
+}
+Color de botón
+Button(
+    colors = ButtonDefaults.buttonColors(
+        containerColor = AzulOscuro,     // fondo
+        contentColor = Color.White       // texto e iconos
+    )
+)
+
+Cambiar el color del TopBar / Header
+FountainDetailHeader.kt o el componente de cabecera
+Si usas TopAppBar de Material3:
+TopAppBar(
+    title = { Text("Detalle Fuente") },
+    colors = TopAppBarDefaults.topAppBarColors(
+        containerColor = Color(0xFF1A73E8),   // Fondo del TopBar
+        titleContentColor = Color.White,       // Color del título
+        navigationIconContentColor = Color.White
+    )
+)
+
+// Si usas Box/Row como header custom:
+Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .background(Color(0xFF0D47A1))  // Cambiar aquí
+        .padding(16.dp)
+)
+
+Cambiar color de un icono o texto concreto
+// Icono:
+Icon(
+    imageVector = Icons.Default.Edit,
+    contentDescription = "Editar",
+    tint = Color(0xFF1A73E8)  // CAMBIAR COLOR AQUÍ
+)
+
+// Texto:
+Text(
+    text = profileState.userName,
+    color = Color(0xFF212121),  // CAMBIAR COLOR AQUÍ
+    fontSize = 18.sp,
+    fontWeight = FontWeight.Bold
+)
+
+
+CAMBIAR COLORES PINES DE MAPA
+OSMMapContent.kt
+
+val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
+val wrapped = drawable?.let {
+   val w = DrawableCompat.wrap(it).mutate()
+   DrawableCompat.setTint(w, Rojo.toArgb()) → aqui
+}
+
+DIVIDIR PANTALLAS
+Aplicación
+
+POP-UP
+Gestión del backstack
+El backstack es la pila de pantallas. Cuando navegas hacia adelante, la pantalla anterior se queda en la pila. popUpTo te permite limpiarla.
+
+// NAVEGAR HACIA ADELANTE (añade al backstack):
+navController.navigate("fountain_detail")
+
+// VOLVER ATRÁS (quita del backstack):
+navController.popBackStack()
+
+// NAVEGAR Y BORRAR HISTORIAL (login → home, no volver al login):
+navController.navigate(RootScreen.Home.route) {
+    popUpTo(RootScreen.Login.route) { inclusive = true }
+    //                                ↑ true  = borra también el Login
+    //                                  false = borra todo lo que hay ENCIMA del
+                                                Login
+}
+
+// CERRAR SESIÓN (volver al Login borrando toda la Home):
+rootNavController.navigate(RootScreen.Login.route) {
+    popUpTo(RootScreen.Home.route) { inclusive = true }
+}
+
+// EVITAR INSTANCIAS DUPLICADAS (si ya está en el backstack, no crear otra):
+navController.navigate(BottomNavItem.Map.route) {
+    launchSingleTop = true
+}
+
+FIREBASE
+
+Añadir subcambio en Firebase (subcolección)
+
+
+Ejemplo — Añadir fotos adicionales a una fuente
+Queremos guardar múltiples fotos por fuente en: fountains/{id}/photos
+
+Subcambio 1 — Modelo Photo.kt
+📄  Photo.kt
+data class Photo(
+    val id: String = "",
+    val url: String = "",
+    val uploadedBy: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+
+Subcambio 2 — Repository: leer y guardar fotos
+📄  FirebaseFountainRepository.kt — añadir métodos
+// GUARDAR foto en subcolección:
+suspend fun addPhoto(fountainId: String, photo: Photo): Result<Unit> {
+    return try {
+        val ref = db.collection("fountains").document(fountainId)
+                    .collection("photos").document()
+        ref.set(photo.copy(id = ref.id)).await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+}
+
+// LEER fotos de la subcolección:
+fun fetchPhotos(fountainId: String): Flow<Result<List<Photo>>> = callbackFlow {
+    val sub = db.collection("fountains").document(fountainId)
+        .collection("photos")
+        .orderBy("timestamp")
+        .addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(Result.failure(error))
+            } else {
+                val photos = snapshot?.documents?.mapNotNull {
+                    it.toObject(Photo::class.java)?.copy(id = it.id)
+                } ?: emptyList()
+                trySend(Result.success(photos))
+            }
+        }
+    awaitClose { sub.remove() }
+}
+
+// BORRAR foto:
+suspend fun deletePhoto(fountainId: String, photoId: String): Result<Unit> {
+    return try {
+        db.collection("fountains").document(fountainId)
+            .collection("photos").document(photoId)
+            .delete().await()
+        Result.success(Unit)
+    } catch (e: Exception) { Result.failure(e) }
+}
+
+
+Subcambio 3 — UseCase
+📄  FetchPhotosUseCase.kt
+class FetchPhotosUseCase @Inject constructor(
+    private val repository: FountainRepository
+) {
+    operator fun invoke(fountainId: String) = repository.fetchPhotos(fountainId)
+}
+
+class AddPhotoUseCase @Inject constructor(
+    private val repository: FountainRepository
+) {
+    suspend operator fun invoke(fountainId: String, photo: Photo) =
+        repository.addPhoto(fountainId, photo)
+}
+
+
+Subcambio 4 — ViewModel
+📄  DetailFountainViewModel.kt o nuevo PhotoViewModel.kt
+@HiltViewModel
+class PhotoViewModel @Inject constructor(
+    private val fetchPhotosUseCase: FetchPhotosUseCase,
+    private val addPhotoUseCase: AddPhotoUseCase
+) : ViewModel() {
+
+    var photos by mutableStateOf<List<Photo>>(emptyList())
+        private set
+
+    fun loadPhotos(fountainId: String) {
+        viewModelScope.launch {
+            fetchPhotosUseCase(fountainId).collect { result ->
+                result.onSuccess { photos = it }
+            }
+        }
+    }
+
+    fun addPhoto(fountainId: String, url: String, userId: String) {
+        viewModelScope.launch {
+            val photo = Photo(url = url, uploadedBy = userId)
+            addPhotoUseCase(fountainId, photo)
+        }
+    }
+}
+
+
+Subcambio 5 — UI: mostrar la lista de fotos
+📄  DetailFountainScreen.kt
+// Leer fotos del ViewModel:
+LaunchedEffect(fountain.id) {
+    photoViewModel.loadPhotos(fountain.id)
+}
+
+// Mostrar en LazyRow (fotos en horizontal):
+LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    items(photoViewModel.photos) { photo ->
+        AsyncImage(
+            model = photo.url,
+            contentDescription = null,
+            modifier = Modifier.size(120.dp).clip(RoundedCornerShape(12.dp)),
+            contentScale = ContentScale.Crop
+        )
+    }
+}

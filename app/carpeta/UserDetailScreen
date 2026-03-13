@@ -1,0 +1,38 @@
+@Composable
+fun PlayerDetailScreen(
+    user: User,
+    onBack: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF1F3F4))) {
+
+        Box(
+            modifier = Modifier.fillMaxWidth().background(AguaMapGradient)
+                .padding(top = 48.dp, bottom = 24.dp)
+        ) {
+            IconButton(onClick = onBack, modifier = Modifier.align(Alignment.TopStart)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(Icons.Default.AccountCircle, null, tint = Color.White, modifier = Modifier.size(72.dp))
+                Spacer(Modifier.height(8.dp))
+                Text(user.nom, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (user.role == UserRole.ADMIN) "Administrador" else "Usuario",
+                    color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp
+                )
+            }
+        }
+
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("📧 ${user.email}", fontSize = 14.sp, color = Color.DarkGray)
+            Text("🌐 ${user.language}", fontSize = 14.sp, color = Color.DarkGray)
+            if (user.birthDate.isNotBlank()) {
+                Text("🎂 ${user.birthDate}", fontSize = 14.sp, color = Color.DarkGray)
+                Text("📅 ${user.age} años", fontSize = 14.sp, color = Color.Gray)
+            }
+        }
+    }
+}

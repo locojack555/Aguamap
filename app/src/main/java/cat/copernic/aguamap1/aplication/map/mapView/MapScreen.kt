@@ -122,7 +122,9 @@ fun MapScreen(
                     MapTopBar(
                         isMapView = isMapView,
                         onToggleView = { viewModel.toggleView() },
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        //poner el buscador abajo
+                        //modifier=Modifier.align(Alignment.BottomCenter)
                     )
                 }
             }

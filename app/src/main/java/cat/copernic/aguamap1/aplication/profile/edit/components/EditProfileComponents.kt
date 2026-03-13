@@ -234,6 +234,38 @@ fun ProfileNameSection(value: String, onValueChange: (String) -> Unit, enabled: 
     }
 }
 
+@Composable
+fun ProfileBioSection(value: String, onValueChange: (String) -> Unit, enabled: Boolean) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text="Bio",
+                fontWeight = FontWeight.SemiBold,
+                color = AzulOscuro
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = enabled,
+                shape = RoundedCornerShape(12.dp),
+                singleLine = false,
+                maxLines =3,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Negro,
+                    unfocusedBorderColor = Negro,
+                    focusedTextColor = Negro
+                )
+            )
+        }
+    }
+}
+
 /**
  * Barra inferior con el botón de guardado.
  * Maneja el estado de carga (loading) y la habilitación del botón.

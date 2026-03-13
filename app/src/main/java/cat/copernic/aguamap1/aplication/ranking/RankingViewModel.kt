@@ -27,7 +27,14 @@ class RankingViewModel @Inject constructor(
     private val _state = MutableStateFlow(RankingState())
     val state: StateFlow<RankingState> = _state
 
+    /* objeto rankinguser pasarlo
+    var selectedPlayer by mutableStateOf<UserRanking?>(null)
+    private set
 
+    fun selectPlayer(player: UserRanking) {
+        selectedPlayer = player
+    }
+     */
     /**
      * Carga el ranking filtrado por el periodo seleccionado.
      * * @param periodResId El ID del recurso de string (R.string) que identifica el periodo (Día, Mes, Año).

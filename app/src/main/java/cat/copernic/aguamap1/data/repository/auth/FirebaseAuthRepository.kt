@@ -315,4 +315,18 @@ class FirebaseAuthRepository @Inject constructor(
             null
         }
     }
+
+    override suspend fun getCurrentUserBio(): String? {
+        val uid = getCurrentUserUid() ?: return null
+        return try {
+            firestore.collection("users").document(uid).get().await().getString("bio")
+        } catch (e: Exception) { null }
+    }
+
+    override suspend fun updateUserBio(userId: String, bio: String): Result<Unit> {
+        return try {
+            firestore.collection("users").document(userId).update("bio", bio).await()
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
 }

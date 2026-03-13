@@ -1,0 +1,130 @@
+package cat.copernic.aguamap1.aplication.category
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.domain.model.category.Category
+import cat.copernic.aguamap1.ui.theme.*
+import coil.compose.AsyncImage
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoryDetailScreen(
+    category: Category,
+    isAdmin: Boolean,
+    onBack: () -> Unit,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {}
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(category.name, fontWeight = FontWeight.Bold, color = AzulOscuro) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = AzulOscuro)
+                    }
+                },
+                actions = {
+                    if (isAdmin) {
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit), tint = InfoBlue)
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), tint = Rojo)
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Blanco)
+            )
+        },
+        containerColor = BgGray50
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Imagen de cabecera
+            AsyncImage(
+                model = category.imageUrl,
+                contentDescription = category.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentScale = ContentScale.Crop,
+                error = painterResource(R.drawable.gota)
+            )
+
+            // Tarjeta de información
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Blanco),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = category.name,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = AzulOscuro
+                    )
+
+                    if (category.description.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = GrisClaro, thickness = 0.5.dp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = stringResource(R.string.fountain_description),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Gris
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = category.description,
+                            fontSize = 15.sp,
+                            color = GrisOscuro,
+                            lineHeight = 22.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = GrisClaro, thickness = 0.5.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // ID visible solo para admin
+                    if (isAdmin) {
+                        Text(
+                            text = "ID: ${category.id}",
+                            fontSize = 11.sp,
+                            color = GrisClaro
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

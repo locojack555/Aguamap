@@ -18,5 +18,6 @@ data class UserRanking(
     val points: Int = 0,
     val discovered: Int = 0,
     val games: Int = 0,
-    val isCurrentUser: Boolean = false
+    val isCurrentUser: Boolean = false,
+    //val level: Int = 0
 )
