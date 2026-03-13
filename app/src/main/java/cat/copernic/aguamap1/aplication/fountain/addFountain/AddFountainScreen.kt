@@ -132,8 +132,8 @@ fun AddFountainScreen(
                 OutlinedTextField(
                     value = viewModel.direccion,
                     onValueChange = { viewModel.direccion = it },
-                    label = { Text("Direccion") },
-                    placeholder = { Text("Direccion de la fuente") },
+                    label = { Text("Lugar") },
+                    placeholder = { Text("Lugar de la fuente") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
