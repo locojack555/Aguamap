@@ -51,6 +51,7 @@ data class Fountain(
     val createdBy: String = "",
     val positiveVotes: Int = 0,
     val negativeVotes: Int = 0,
+    val caudal: Int = 0,
 
     /**
      * @get:Exclude evita que Firestore intente leer/escribir este campo directamente

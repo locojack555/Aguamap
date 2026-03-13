@@ -17,6 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.aplication.CreditosScreen
 import cat.copernic.aguamap1.aplication.category.CategoriesScreen
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainScreen
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainViewModel
@@ -210,6 +211,8 @@ fun NavigationGraph(
 
             // --- RUTA: RANKING DE USUARIOS ---
             composable(BottomNavItem.Ranking.route) { RankingScreen() }
+
+            composable(BottomNavItem.Creditos.route){ CreditosScreen() }
 
             // --- RUTA: PERFIL DEL USUARIO ---
             composable(BottomNavItem.Profile.route) {

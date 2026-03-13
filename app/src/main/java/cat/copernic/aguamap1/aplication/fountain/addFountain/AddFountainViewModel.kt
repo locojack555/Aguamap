@@ -66,13 +66,16 @@ class AddFountainViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null); private set
     var categories by mutableStateOf<List<Category>>(emptyList()); private set
 
-    /* Añadir solo estas líneas al ViewModel (nada más cambia):
+    var caudal by mutableStateOf(0); private set
     var currentStep by mutableStateOf(1)
         private set
 
     fun goToStep2() { currentStep = 2 }
     fun goToStep1() { currentStep = 1 }
-    fun goToStep3() { currentStep = 3 }*/
+
+    fun updateCaudal(value: Int) {
+        caudal = value
+    }
 
     /**
      * Propiedad computada que valida si el formulario puede enviarse.
@@ -202,7 +205,8 @@ class AddFountainViewModel @Inject constructor(
                         operational = isOperational,
                         category = category,
                         description = description,
-                        imageUrl = imageUrl
+                        imageUrl = imageUrl,
+                        caudal = caudal
                     )
                     createFountainUseCase(newFountain, isUserAdmin = false).getOrThrow()
                 }

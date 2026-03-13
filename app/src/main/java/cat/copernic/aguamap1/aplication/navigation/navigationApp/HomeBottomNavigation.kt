@@ -34,7 +34,8 @@ fun HomeBottomNavigation(navController: NavHostController) {
         BottomNavItem.Categories,
         BottomNavItem.Game,
         BottomNavItem.Ranking,
-        BottomNavItem.Profile
+        BottomNavItem.Profile,
+        BottomNavItem.Creditos
     )
 
 

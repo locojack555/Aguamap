@@ -115,7 +115,7 @@ fun OSMMapContent(
                 marker.title = fountain.name
 
                 // Personalización del color del PIN según estado/categoría
-                val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
+                val drawable = ContextCompat.getDrawable(context, R.drawable.icono_on)
                 val wrapped = drawable?.let {
                     val w = DrawableCompat.wrap(it).mutate()
                     DrawableCompat.setTint(w, fountain.getMarkerColor())

@@ -1,4 +1,5 @@
 <resources>
+    <string name="creditos">Credits</string>
     <string name="app_name">AguaMap</string>
     <string name="pass_on">Show</string>
     <string name="pass_off">Hide</string>
