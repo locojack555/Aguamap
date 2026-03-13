@@ -31,10 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.aplication.fountain.addFountain.components.FountainCategorySection
 import cat.copernic.aguamap1.aplication.fountain.addFountain.components.FountainHeader
 import cat.copernic.aguamap1.aplication.fountain.addFountain.components.FountainImageSection
-import cat.copernic.aguamap1.aplication.fountain.addFountain.components.FountainLocationSection
 import cat.copernic.aguamap1.aplication.utils.rememberImagePickerHelper
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
@@ -52,8 +50,9 @@ fun AddFountainScreen(
     onDismiss: () -> Unit,             // Función para cerrar la pantalla
     latitude: Double,                  // Latitud inicial (si se abre desde el mapa)
     longitude: Double,                 // Longitud inicial
-    viewModel: AddFountainViewModel,   // ViewModel inyectado
-    onFountainCreated: () -> Unit      // Callback para ejecutar tras éxito
+    viewModel: AddFountainViewModel,
+    onFountainCreated: () -> Unit,
+    onNavigateToPracticar: () -> Unit// Callback para ejecutar tras éxito
 ) {
     // Determina si estamos en modo edición o creación basándose en si existe un objeto cargado
     val isEditing = viewModel.fountainToEdit != null
@@ -130,8 +129,23 @@ fun AddFountainScreen(
                     )
                 )
 
-                // 4. Inputs de Texto: Descripción (Multilínea)
                 OutlinedTextField(
+                    value = viewModel.direccion,
+                    onValueChange = { viewModel.direccion = it },
+                    label = { Text("Direccion") },
+                    placeholder = { Text("Direccion de la fuente") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Negro,
+                        unfocusedBorderColor = Negro,
+                        focusedTextColor = Negro
+                    )
+                )
+
+                // 4. Inputs de Texto: Descripción (Multilínea)
+                /*OutlinedTextField(
                     value = viewModel.description,
                     onValueChange = { viewModel.description = it },
                     label = { Text(stringResource(R.string.fountain_description)) },
@@ -150,7 +164,7 @@ fun AddFountainScreen(
                 FountainCategorySection(viewModel)
 
                 // 6. Sección de Ubicación: Muestra coordenadas o permite ajuste manual
-                FountainLocationSection(viewModel)
+                FountainLocationSection(viewModel)*/
 
                 // 7. Estado Operativo: Switch visual con feedback de color
                 Surface(
@@ -193,12 +207,12 @@ fun AddFountainScreen(
                 // 8. Botón de Acción Principal (Guardar / Actualizar)
                 Button(
                     onClick = {
-                        viewModel.saveFountain(
+                        /*viewModel.saveFountain(
                             onSuccess = {
                                 onFountainCreated()
                                 onDismiss()
                             }
-                        )
+                        )*/ onNavigateToPracticar()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -206,7 +220,7 @@ fun AddFountainScreen(
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Blue10),
                     // Deshabilitado si se está subiendo o si el formulario no cumple requisitos
-                    enabled = !viewModel.isUploading && viewModel.isFormValid
+                    //enabled = !viewModel.isUploading && viewModel.isFormValid
                 ) {
                     // Muestra un indicador de carga mientras se comunica con el servidor
                     if (viewModel.isUploading) {
@@ -214,7 +228,7 @@ fun AddFountainScreen(
                     } else {
                         Text(
                             text = if (isEditing) stringResource(R.string.btn_update_fountain)
-                            else stringResource(R.string.btn_create_fountain),
+                            else "Continuar"/*stringResource(R.string.btn_create_fountain)*/,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )

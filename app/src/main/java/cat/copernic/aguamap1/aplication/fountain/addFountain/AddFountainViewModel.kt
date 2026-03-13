@@ -49,6 +49,9 @@ class AddFountainViewModel @Inject constructor(
     var selectedCategory by mutableStateOf<Category?>(null)
     var isOperational by mutableStateOf(true)
 
+    var direccion by mutableStateOf("")
+
+
     // --- LÓGICA DE COORDENADAS ---
     var useGpsLocation by mutableStateOf(true)
     var manualLatitude by mutableStateOf("")
@@ -182,7 +185,8 @@ class AddFountainViewModel @Inject constructor(
                         "operational" to isOperational,
                         "imageUrl" to imageUrl,
                         "latitude" to location.latitude,
-                        "longitude" to location.longitude
+                        "longitude" to location.longitude,
+                        "direccion" to direccion
                     )
                     updateFountainUseCase(fountainToEdit!!.id, updatedFields).getOrThrow()
                 } else {
@@ -194,6 +198,7 @@ class AddFountainViewModel @Inject constructor(
                         operational = isOperational,
                         category = category,
                         description = description,
+                        direccion = direccion,
                         imageUrl = imageUrl
                     )
                     createFountainUseCase(newFountain, isUserAdmin = false).getOrThrow()

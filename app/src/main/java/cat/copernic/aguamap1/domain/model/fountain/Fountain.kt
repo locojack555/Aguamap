@@ -2,7 +2,6 @@ package cat.copernic.aguamap1.domain.model.fountain
 
 import cat.copernic.aguamap1.domain.model.category.Category
 import cat.copernic.aguamap1.domain.model.comment.Comment
-import cat.copernic.aguamap1.domain.model.fountain.StateFountain
 import com.google.firebase.firestore.Exclude
 import java.util.Date
 
@@ -51,6 +50,7 @@ data class Fountain(
     val createdBy: String = "",
     val positiveVotes: Int = 0,
     val negativeVotes: Int = 0,
+    val direccion: String = "",
 
     /**
      * @get:Exclude evita que Firestore intente leer/escribir este campo directamente

@@ -37,9 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.domain.model.comment.Comment
-import cat.copernic.aguamap1.domain.model.fountain.Fountain
-import cat.copernic.aguamap1.domain.model.fountain.StateFountain
 import cat.copernic.aguamap1.aplication.fountain.comments.FountainCommentsViewModel
 import cat.copernic.aguamap1.aplication.fountain.detailFountain.components.FountainActionButtons
 import cat.copernic.aguamap1.aplication.fountain.detailFountain.components.FountainCommentsSection
@@ -50,6 +47,9 @@ import cat.copernic.aguamap1.aplication.fountain.detailFountain.components.MainR
 import cat.copernic.aguamap1.aplication.fountain.detailFountain.components.OtherReportDialog
 import cat.copernic.aguamap1.aplication.fountain.detailFountain.components.ValidationCard
 import cat.copernic.aguamap1.aplication.utils.getStatusColor
+import cat.copernic.aguamap1.domain.model.comment.Comment
+import cat.copernic.aguamap1.domain.model.fountain.Fountain
+import cat.copernic.aguamap1.domain.model.fountain.StateFountain
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Gris
 import cat.copernic.aguamap1.ui.theme.GrisOscuro
@@ -207,6 +207,19 @@ fun DetailFountainScreen(
                 )
                 Text(
                     uiFountain.description.ifBlank { stringResource(R.string.no_description) },
+                    color = NegroSuave
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    "Direccion",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Negro
+                )
+                Text(
+                    uiFountain.direccion.ifBlank { "No hay direccion" },
                     color = NegroSuave
                 )
 

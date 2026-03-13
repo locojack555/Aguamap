@@ -17,6 +17,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cat.copernic.aguamap1.R
+import cat.copernic.aguamap1.aplication.CreditosScreen
+import cat.copernic.aguamap1.aplication.Practicar
 import cat.copernic.aguamap1.aplication.category.CategoriesScreen
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainScreen
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainViewModel
@@ -28,7 +30,6 @@ import cat.copernic.aguamap1.aplication.game.GameViewModel
 import cat.copernic.aguamap1.aplication.game.components.LoadingPartida
 import cat.copernic.aguamap1.aplication.map.mapView.MapScreen
 import cat.copernic.aguamap1.aplication.map.mapView.MapViewModel
-import cat.copernic.aguamap1.aplication.sound.SoundManager
 import cat.copernic.aguamap1.aplication.navigation.navigationInitial.RootScreen
 import cat.copernic.aguamap1.aplication.profile.ProfileScreen
 import cat.copernic.aguamap1.aplication.profile.ProfileViewModel
@@ -39,6 +40,7 @@ import cat.copernic.aguamap1.aplication.profile.reports.FountainReportsScreen
 import cat.copernic.aguamap1.aplication.profile.reports.FountainReportsViewModel
 import cat.copernic.aguamap1.aplication.profile.settings.SettingsScreen
 import cat.copernic.aguamap1.aplication.ranking.RankingScreen
+import cat.copernic.aguamap1.aplication.sound.SoundManager
 import cat.copernic.aguamap1.ui.theme.Blanco
 import com.google.firebase.auth.FirebaseAuth
 
@@ -88,13 +90,37 @@ fun NavigationGraph(
             // --- RUTA: MAPA PRINCIPAL ---
             composable(BottomNavItem.Map.route) {
                 MapScreen(
+                    addViewModel = addFountainViewModel,
                     isHome = true,
                     viewModel = mapViewModel,
                     onFountainClick = { fountain ->
                         mapViewModel.selectFountain(fountain)
                         navController.navigate("fountain_detail")
-                    }
+                    },
+                    onNavigateToPracticar = { navController.navigate("Practicar") }
                 )
+
+                /**
+                 * OVERLAY: AÑADIR/EDITAR FUENTE
+                 * Se muestra sobre cualquier pantalla del NavHost cuando isAdding es verdadero.
+                 * Esto permite editar una fuente desde el detalle o añadir una nueva desde el mapa.
+                 */
+                if (addFountainViewModel.isAdding && currentRoute != "Practicar") {
+                    AddFountainScreen(
+                        onDismiss = { addFountainViewModel.closeAddFountain() },
+                        latitude = addFountainViewModel.selectedLocationForNewFountain?.latitude
+                            ?: 0.0,
+                        longitude = addFountainViewModel.selectedLocationForNewFountain?.longitude
+                            ?: 0.0,
+                        viewModel = addFountainViewModel,
+                        // ESTOS SON LOS PARÁMETROS QUE FALTABAN:
+                        onFountainCreated = { mapViewModel.loadFountains() },
+                        onNavigateToPracticar = {
+                            // Al navegar a Practicar, NO cerramos el diálogo para no perder el estado
+                            navController.navigate("Practicar")
+                        }
+                    )
+                }
             }
 
             // --- DETALLE DE FUENTE (GLOBAL) ---
@@ -298,21 +324,26 @@ fun NavigationGraph(
 
             // --- RUTA: AJUSTES ---
             composable("settings") { SettingsScreen(onClose = { navController.popBackStack() }) }
+
+            composable("Practicar") {
+                // Aquí le pasamos el MISMO objeto que ya viene modificado de la pantalla anterior
+                Practicar(
+                    viewModel = addFountainViewModel,
+                    onFountainCreated = {
+                        addFountainViewModel.closeAddFountain()
+                        mapViewModel.loadFountains()
+                        navController.popBackStack()
+                    },
+                    onNavigateToAdd = { navController.popBackStack() },
+                    onDismiss = { navController.popBackStack() }
+                )
+            }
+
+            composable(BottomNavItem.Creditos.route) {
+                CreditosScreen()
+            }
         }
 
-        /**
-         * OVERLAY: AÑADIR/EDITAR FUENTE
-         * Se muestra sobre cualquier pantalla del NavHost cuando isAdding es verdadero.
-         * Esto permite editar una fuente desde el detalle o añadir una nueva desde el mapa.
-         */
-        if (addFountainViewModel.isAdding) {
-            AddFountainScreen(
-                onDismiss = { addFountainViewModel.closeAddFountain() },
-                latitude = addFountainViewModel.selectedLocationForNewFountain?.latitude ?: 0.0,
-                longitude = addFountainViewModel.selectedLocationForNewFountain?.longitude ?: 0.0,
-                viewModel = addFountainViewModel,
-                onFountainCreated = { mapViewModel.loadFountains() }
-            )
-        }
+
     }
 }
