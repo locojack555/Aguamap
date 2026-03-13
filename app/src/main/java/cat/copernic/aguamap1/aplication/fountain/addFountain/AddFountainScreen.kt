@@ -129,20 +129,7 @@ fun AddFountainScreen(
                     )
                 )
 
-                OutlinedTextField(
-                    value = viewModel.direccion,
-                    onValueChange = { viewModel.direccion = it },
-                    label = { Text("Lugar") },
-                    placeholder = { Text("Lugar de la fuente") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Negro,
-                        unfocusedBorderColor = Negro,
-                        focusedTextColor = Negro
-                    )
-                )
+                
 
                 // 4. Inputs de Texto: Descripción (Multilínea)
                 /*OutlinedTextField(
@@ -203,6 +190,21 @@ fun AddFountainScreen(
                         )
                     }
                 }
+
+                OutlinedTextField(
+                    value = viewModel.direccion,
+                    onValueChange = { viewModel.direccion = it },
+                    label = { Text("Lugar") },
+                    placeholder = { Text("Lugar de la fuente") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Negro,
+                        unfocusedBorderColor = Negro,
+                        focusedTextColor = Negro
+                    )
+                )
 
                 // 8. Botón de Acción Principal (Guardar / Actualizar)
                 Button(
