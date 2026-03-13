@@ -135,16 +135,16 @@ fun CommentItem(
                                 )
                             }
                         }
-                        IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.delete_confirm),
-                                tint = Rojo,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                        
                     }
-
+                    IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete_confirm),
+                            tint = Rojo,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                     if (!isMyComment && !isAdmin && !commentObj.censored) {
                         IconButton(onClick = onReport, modifier = Modifier.size(32.dp)) {
                             Icon(

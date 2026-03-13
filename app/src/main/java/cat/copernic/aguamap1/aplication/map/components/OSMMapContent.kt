@@ -35,12 +35,12 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.domain.model.category.Category
-import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainViewModel
 import cat.copernic.aguamap1.aplication.map.mapView.MapViewModel
 import cat.copernic.aguamap1.aplication.utils.getCategoryColor
 import cat.copernic.aguamap1.aplication.utils.getMarkerColor
+import cat.copernic.aguamap1.domain.model.category.Category
+import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Gris
 import cat.copernic.aguamap1.ui.theme.Naranja
@@ -115,7 +115,7 @@ fun OSMMapContent(
                 marker.title = fountain.name
 
                 // Personalización del color del PIN según estado/categoría
-                val drawable = ContextCompat.getDrawable(context, R.drawable.pin_lleno)
+                val drawable = ContextCompat.getDrawable(context, R.drawable.icon_corona)
                 val wrapped = drawable?.let {
                     val w = DrawableCompat.wrap(it).mutate()
                     DrawableCompat.setTint(w, fountain.getMarkerColor())

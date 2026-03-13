@@ -20,16 +20,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.domain.model.category.Category
-import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.aplication.category.components.CategoriesHeader
 import cat.copernic.aguamap1.aplication.category.components.CategoryDetailDialog
 import cat.copernic.aguamap1.aplication.category.components.CategoryFormDialog
 import cat.copernic.aguamap1.aplication.category.components.CategoryItem
+import cat.copernic.aguamap1.domain.model.category.Category
+import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.ui.theme.BgGray50
 import cat.copernic.aguamap1.ui.theme.Rojo
 
@@ -79,7 +80,9 @@ fun CategoriesScreen(
             .fillMaxSize()
             .background(BgGray50)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFFFFFDD0))) {
             // Cabecera interactiva con búsqueda y filtros
             CategoriesHeader(
                 searchQuery = searchQuery,

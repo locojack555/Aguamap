@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cat.copernic.aguamap1.R
-import cat.copernic.aguamap1.ui.theme.AzulClaro
 import cat.copernic.aguamap1.ui.theme.AzulOscuro
 import cat.copernic.aguamap1.ui.theme.Blanco
 import cat.copernic.aguamap1.ui.theme.Blue10
@@ -109,8 +108,8 @@ fun CategoriesHeader(
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = AzulClaro,
-                    focusedContainerColor = AzulClaro,
+                    unfocusedContainerColor = /*AzulClaro*/Color(0xFFFFFDD0),
+                    focusedContainerColor = /*AzulClaro*/Color(0xFFFFFDD0),
                     unfocusedBorderColor = Color.Transparent,
                     focusedBorderColor = Blue10,
                     focusedTextColor = Negro

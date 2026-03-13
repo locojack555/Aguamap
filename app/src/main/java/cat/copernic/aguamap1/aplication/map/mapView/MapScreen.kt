@@ -12,7 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainScreen
 import cat.copernic.aguamap1.aplication.fountain.addFountain.AddFountainViewModel
 import cat.copernic.aguamap1.aplication.map.components.MapFloatingButtons
@@ -21,6 +20,7 @@ import cat.copernic.aguamap1.aplication.map.components.MapTopBar
 import cat.copernic.aguamap1.aplication.map.components.OSMMapContent
 import cat.copernic.aguamap1.aplication.map.listView.ListScreen
 import cat.copernic.aguamap1.aplication.utils.PermissionRequestUI
+import cat.copernic.aguamap1.domain.model.fountain.Fountain
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -42,7 +42,8 @@ fun MapScreen(
     viewModel: MapViewModel,
     addViewModel: AddFountainViewModel = hiltViewModel(),
     onFountainClick: (Fountain) -> Unit,
-    isHome: Boolean
+    isHome: Boolean,
+    onNavigateToPracticar: () -> Unit
 ) {
     // Gestión de permisos mediante la librería Accompanist
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -71,7 +72,8 @@ fun MapScreen(
                     onFountainCreated = {
                         addViewModel.closeAddFountain()
                         viewModel.loadFountains() // Refrescar puntos tras la creación
-                    }
+                    },
+                    onNavigateToPracticar = { onNavigateToPracticar() }
                 )
             }
 

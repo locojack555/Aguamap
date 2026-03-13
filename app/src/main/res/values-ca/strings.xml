@@ -22,6 +22,7 @@
     <string name="category_only_broken">Només Avariades</string>
     <string name="error_title">Atenció</string>
     <string name="category_accept">Acceptar</string>
+    <string name="credits">Creditos</string>
     <string name="category_save">Desar</string>
     <string name="category_cancel">Cancel·lar</string>
     <string name="category_form_select_image">Seleccionar imatge</string>
