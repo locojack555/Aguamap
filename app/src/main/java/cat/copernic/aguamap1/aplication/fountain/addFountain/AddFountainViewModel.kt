@@ -253,6 +253,6 @@ class AddFountainViewModel @Inject constructor(
         useGpsLocation = true; manualLatitude = ""; manualLongitude = ""
         latitudeError = null; longitudeError = null; selectedImageUri = null
         currentImageUrl = ""; isUploading = false; uploadProgress = 0
-        errorMessage = null; fountainToEdit = null
+        errorMessage = null; fountainToEdit = null; direccion = ""
     }
 }

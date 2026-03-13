@@ -333,6 +333,7 @@ fun NavigationGraph(
                         addFountainViewModel.closeAddFountain()
                         mapViewModel.loadFountains()
                         navController.popBackStack()
+                        navController.navigate(BottomNavItem.Map.route)
                     },
                     onNavigateToAdd = { navController.popBackStack() },
                     onDismiss = { navController.popBackStack() }
