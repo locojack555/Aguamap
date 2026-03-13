@@ -62,7 +62,7 @@ class AddFountainViewModel @Inject constructor(
     var isUploading by mutableStateOf(false); private set
     var uploadProgress by mutableStateOf(0); private set
 
-    //var moreInformation by mutableStateOf("")
+    var moreInformation by mutableStateOf("")
 
     // Mensajes de error generales y lista de categorías cargada desde BD
     var errorMessage by mutableStateOf<String?>(null); private set
@@ -119,7 +119,7 @@ class AddFountainViewModel @Inject constructor(
             fountainToEdit = fountain
             name = fountain.name
             description = fountain.description
-            //moreInformation = fountain.moreInformation
+            moreInformation = fountain.moreInformation
             selectedCategory = fountain.category
             isOperational = fountain.operational
             currentImageUrl = fountain.imageUrl
@@ -181,7 +181,7 @@ class AddFountainViewModel @Inject constructor(
                     val updatedFields = mapOf(
                         "name" to name,
                         "description" to description,
-                        //"moreInformation" to moreInformation,
+                        "moreInformation" to moreInformation,
                         "category" to category,
                         "operational" to isOperational,
                         "imageUrl" to imageUrl,
@@ -198,7 +198,7 @@ class AddFountainViewModel @Inject constructor(
                         operational = isOperational,
                         category = category,
                         description = description,
-                        //moreInformation = moreInformation,
+                        moreInformation = moreInformation,
                         imageUrl = imageUrl
                     )
                     createFountainUseCase(newFountain, isUserAdmin = false).getOrThrow()
@@ -249,7 +249,7 @@ class AddFountainViewModel @Inject constructor(
      * Limpia todos los estados para dejar el formulario vacío.
      */
     private fun resetForm() {
-        name = ""; description = ""; name = ""; description = ""; //moreInformation = "";
+        name = ""; description = ""; name = ""; description = ""; moreInformation = "";
         useGpsLocation = true; manualLatitude = ""; manualLongitude = ""
         latitudeError = null; longitudeError = null; selectedImageUri = null
         currentImageUrl = ""; isUploading = false; uploadProgress = 0

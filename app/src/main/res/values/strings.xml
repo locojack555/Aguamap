@@ -422,5 +422,6 @@
 
     <string name="btn_create_fountain">Crear fuente</string>
     <string name="btn_update_fountain">Guardar cambios</string>
+    <string name="nueva">Créditos</string>
 
 </resources>

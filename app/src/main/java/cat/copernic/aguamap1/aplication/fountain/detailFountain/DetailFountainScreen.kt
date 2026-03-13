@@ -175,7 +175,7 @@ fun DetailFountainScreen(
                     )
                 }
 
-               /* if (uiFountain.moreInformation.isNotBlank()) {
+               if (uiFountain.moreInformation.isNotBlank()) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         "Más información",
@@ -193,7 +193,7 @@ fun DetailFountainScreen(
                         color = Negro
                     )
                     Text("No hay información", color = NegroSuave)
-                }*/
+                }
 
 
                 Spacer(modifier = Modifier.height(16.dp))

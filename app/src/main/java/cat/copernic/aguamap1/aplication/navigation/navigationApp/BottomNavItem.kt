@@ -1,5 +1,6 @@
 package cat.copernic.aguamap1.aplication.navigation.navigationApp
 
+import androidx.compose.material3.Text
 import cat.copernic.aguamap1.R
 
 /**
@@ -28,4 +29,6 @@ sealed class BottomNavItem(val route: String, val icon: Int, val label: Int) {
 
     // Gestión del perfil del usuario, estadísticas personales y ajustes
     object Profile : BottomNavItem("account", R.drawable.account_circle_24px, R.string.profile)
+
+    object Nueva : BottomNavItem("nueva", R.drawable.account_circle_24px, R.string.nueva)
 }

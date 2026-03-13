@@ -146,7 +146,7 @@ fun AddFountainScreen(
                     )
                 )
 
-                /*OutlinedTextField(
+                OutlinedTextField(
                     value = viewModel.moreInformation,
                     onValueChange = { viewModel.moreInformation = it },
                     label = { Text("Más información") },
@@ -159,7 +159,7 @@ fun AddFountainScreen(
                         unfocusedBorderColor = Negro,
                         focusedTextColor = Negro
                     )
-                )*/
+                )
 
 
                 // 5. Componente para seleccionar categorías (Ej: Potable, No potable, etc.)

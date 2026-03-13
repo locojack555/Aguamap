@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import cat.copernic.aguamap1.Nueva
 import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.aplication.Luis
 import cat.copernic.aguamap1.aplication.category.CategoriesScreen
@@ -164,6 +165,14 @@ fun NavigationGraph(
                         }
                     )
                 }
+            }
+            composable(BottomNavItem.Nueva.route) {
+                Nueva(
+
+                    onNuevaClick = {
+                        navController.navigate(BottomNavItem.Nueva.route)
+                    }
+                )
             }
 
             // --- RUTA: CATEGORÍAS ---
