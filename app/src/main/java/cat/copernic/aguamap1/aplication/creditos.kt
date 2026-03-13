@@ -45,6 +45,7 @@ fun CreditosScreen() {
     }
 }*/
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -61,9 +63,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cat.copernic.aguamap1.R
 import cat.copernic.aguamap1.aplication.commons.AguaMapHeader
 import cat.copernic.aguamap1.ui.theme.AguaMapGradient
 import cat.copernic.aguamap1.ui.theme.Blanco
@@ -88,9 +93,22 @@ fun CreditosScreen(
             .background(AguaMapGradient),
         contentAlignment = Alignment.Center
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Cabecera con Logo
-            AguaMapHeader()
+        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painter = painterResource(R.drawable.gota),
+                contentDescription = stringResource(R.string.logo),
+                modifier = Modifier
+                    .size(160.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            Text(
+                "Creditos",
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = Negro,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
 
             Spacer(modifier = Modifier.height(56.dp))
 
@@ -107,24 +125,19 @@ fun CreditosScreen(
                         .padding(horizontal = 24.dp, vertical = 32.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Text(
-                        "Creditos:",
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Negro
-                    )
+
                     Spacer(modifier = Modifier.padding(20.dp))
                     Text(
-                        "Integrantes:",
+                        "Miembros",
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = Negro
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
-                    Text("* Luis Mariño", color = Negro, fontSize = 20.sp)
-                    Text("* Cristina Jimenez", color = Negro, fontSize = 20.sp)
-                    Text("* Adria Gonzalez", color = Negro, fontSize = 20.sp)
-                    Text("* Jack Arevalo", color = Negro, fontSize = 20.sp)
+                    Text("- Luis Mariño", color = Negro, fontSize = 20.sp)
+                    Text("- Cristina Jimenez", color = Negro, fontSize = 20.sp)
+                    Text("- Adria Gonzalez", color = Negro, fontSize = 20.sp)
+                    Text("- Jack Arevalo", color = Negro, fontSize = 20.sp)
                     Spacer(modifier = Modifier.padding(16.dp))
                     Text("13/03/2026", color = Negro, fontSize = 20.sp)
                 }

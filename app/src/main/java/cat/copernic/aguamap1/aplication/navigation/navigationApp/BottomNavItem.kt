@@ -28,5 +28,5 @@ sealed class BottomNavItem(val route: String, val icon: Int, val label: Int) {
 
     // Gestión del perfil del usuario, estadísticas personales y ajustes
     object Profile : BottomNavItem("account", R.drawable.account_circle_24px, R.string.profile)
-    object Creditos : BottomNavItem("creditos", R.drawable.icon_medalla, R.string.credits)
+    object Creditos : BottomNavItem("creditos", R.drawable.icon_corona, R.string.credits)
 }

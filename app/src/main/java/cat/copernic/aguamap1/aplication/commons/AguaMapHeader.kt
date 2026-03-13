@@ -36,13 +36,13 @@ fun AguaMapHeader(
     isSplash: Boolean = false
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        if (!isSplash) {
+        /*if (!isSplash) {
             AguaMapLanguage(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 40.dp, end = 28.dp)
             )
-        }
+        }*/
         Column(
             modifier = modifier
                 .fillMaxWidth()
